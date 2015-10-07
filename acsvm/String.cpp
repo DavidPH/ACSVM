@@ -111,6 +111,9 @@ namespace ACSVM
    //
    StringTable::~StringTable()
    {
+      for(auto &str : pd->tableString)
+         String::Delete(str);
+
       delete pd;
 
       String::Delete(strNone);
