@@ -101,10 +101,10 @@ namespace ACSVM
 
       // Check for size overflow.
       // Limit to uint32_t because that is how sizes are encoded for push.
-      if(UINT32_MAX - idxEnd < count)
+      if(UINT32_MAX - idxEnd < count * 2 + 1)
          throw std::bad_alloc();
 
-      idxEnd += count;
+      idxEnd += count * 2 + 1;
 
       if(!(buffer = static_cast<char *>(std::realloc(buffer, idxEnd))))
          throw std::bad_alloc();
