@@ -1,0 +1,127 @@
+//-----------------------------------------------------------------------------
+//
+// Copyright (C) 2015 David Hill
+//
+// See COPYING for license information.
+//
+//-----------------------------------------------------------------------------
+//
+// CodeData classes.
+//
+//-----------------------------------------------------------------------------
+
+#include "CodeData.hpp"
+
+#include "Code.hpp"
+
+#include <cstring>
+
+
+//----------------------------------------------------------------------------|
+// Extern Functions                                                           |
+//
+
+namespace ACSVM
+{
+   //
+   // CodeDataACS0 constructor
+   //
+   CodeDataACS0::CodeDataACS0(char const *args_, Code transCode_,
+      Word stackArgC_, Word transFunc_) :
+      code     {CodeACS0::None},
+      args     {args_},
+      argc     {std::strlen(args_)},
+      stackArgC{stackArgC_},
+      transCode{transCode_},
+      transFunc{transFunc_}
+   {
+   }
+
+   //
+   // CodeDataACS0 constructor
+   //
+   CodeDataACS0::CodeDataACS0(CodeACS0 code_, char const *args_,
+      Code transCode_, Word stackArgC_, Func transFunc_) :
+      code     {code_},
+      args     {args_},
+      argc     {std::strlen(args_)},
+      stackArgC{stackArgC_},
+      transCode{transCode_},
+      transFunc{transFunc_ != Func::None ? static_cast<Word>(transFunc_) : 0}
+   {
+   }
+
+   //
+   // FuncDataACS0 move constructor
+   //
+   FuncDataACS0::FuncDataACS0(FuncDataACS0 &&data) :
+      transFunc{data.transFunc},
+
+      transCodeV{data.transCodeV},
+      transCodeC{data.transCodeC}
+   {
+      data.transCodeV = nullptr;
+      data.transCodeC = 0;
+   }
+
+   //
+   // FuncDataACS0 constructor
+   //
+   FuncDataACS0::FuncDataACS0(Word transFunc_) :
+      transFunc{transFunc_},
+
+      transCodeV{nullptr},
+      transCodeC{0}
+   {
+   }
+
+   //
+   // FuncDataACS0 constructor
+   //
+   FuncDataACS0::FuncDataACS0(Word transFunc_,
+      std::initializer_list<std::pair<Word, Code>> transCodes) :
+      transFunc{transFunc_},
+
+      transCodeV{new std::pair<Word, Code>[transCodes.size()]},
+      transCodeC{transCodes.size()}
+   {
+      std::pair<Word, Code> *itr = transCodeV;
+      for(auto const &trans : transCodes)
+         *itr = trans;
+   }
+
+   //
+   // FuncDataACS0 destructor
+   //
+   FuncDataACS0::~FuncDataACS0()
+   {
+      delete[] transCodeV;
+   }
+
+   //
+   // FuncDataACS0::operator = FuncDataACS0
+   //
+   FuncDataACS0 &FuncDataACS0::operator = (FuncDataACS0 &&data)
+   {
+      std::swap(transFunc, data.transFunc);
+
+      std::swap(transCodeV, data.transCodeV);
+      std::swap(transCodeC, data.transCodeC);
+
+      return *this;
+   }
+
+   //
+   // FuncDataACS0::getTransCode
+   //
+   Code FuncDataACS0::getTransCode(Word argc) const
+   {
+      for(auto itr = transCodeV, end = itr + transCodeC; itr != end; ++itr)
+         if(itr->first == argc) return itr->second;
+
+      return Code::CallFunc;
+   }
+}
+
+// EOF
+
