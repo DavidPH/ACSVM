@@ -95,16 +95,22 @@ namespace ACSVM
       if(static_cast<std::size_t>(bufEnd - bufPtr) > count)
          return;
 
+      // Allocate extra to anticipate further reserves. +1 for null.
+      count = count * 2 + 1;
+
       std::size_t idxEnd = bufEnd - buffer;
       std::size_t idxBeg = bufBeg - buffer;
       std::size_t idxPtr = bufPtr - buffer;
 
       // Check for size overflow.
-      // Limit to uint32_t because that is how sizes are encoded for push.
-      if(UINT32_MAX - idxEnd < count * 2 + 1)
+      if(SIZE_MAX - idxEnd < count)
          throw std::bad_alloc();
 
-      idxEnd += count * 2 + 1;
+      // Check that the current segment won't pass the push limit.
+      if(UINT32_MAX - (idxEnd - idxBeg) < count)
+         throw std::bad_alloc();
+
+      idxEnd += count;
 
       if(!(buffer = static_cast<char *>(std::realloc(buffer, idxEnd))))
          throw std::bad_alloc();
