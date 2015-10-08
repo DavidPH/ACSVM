@@ -15,6 +15,7 @@
 #include "Array.hpp"
 #include "Code.hpp"
 #include "Environ.hpp"
+#include "Jump.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
 
@@ -454,7 +455,8 @@ namespace ACSVM
         NextCase();
 
       DeclCase(Jump_Stk):
-         // TODO
+         dataStk.drop();
+         BranchTo(dataStk[0] < module->jumpC ? module->jumpV[dataStk[0]].codeIdx : 0);
          NextCase();
 
          //================================================

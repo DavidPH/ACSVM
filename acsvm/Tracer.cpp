@@ -17,6 +17,7 @@
 #include "CodeData.hpp"
 #include "Environ.hpp"
 #include "Error.hpp"
+#include "Jump.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
 
@@ -178,6 +179,9 @@ namespace ACSVM
       codeC += 1 + env->getCodeData(Code::Kill)->argc;
 
       for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
+         trace(itr->codeIdx);
+
+      for(Jump *itr = module->jumpV, *end = itr + module->jumpC; itr != end; ++itr)
          trace(itr->codeIdx);
 
       // Add Kill to catch execution past end.

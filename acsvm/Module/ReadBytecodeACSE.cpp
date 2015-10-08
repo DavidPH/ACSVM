@@ -15,6 +15,7 @@
 #include "BinaryIO.hpp"
 #include "Environ.hpp"
 #include "Error.hpp"
+#include "Jump.hpp"
 #include "Script.hpp"
 
 #include <algorithm>
@@ -90,6 +91,27 @@ namespace ACSVM
       {
          *str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
       }
+   }
+
+   //
+   // Module::chunkerACSE_JUMP
+   //
+   bool Module::chunkerACSE_JUMP(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("JUMP")) return false;
+
+      if(size % 4) throw ReadError();
+
+      // Read jumps.
+      allocJumpV(size / 4);
+
+      std::size_t iter = 0;
+      for(Jump *jump = jumpV, *end = jump + jumpC; jump != end; ++jump)
+      {
+         jump->codeIdx = ReadLE4(data + iter); iter += 4;
+      }
+
+      return true;
    }
 
    //
@@ -273,7 +295,6 @@ namespace ACSVM
    //
    void Module::readChunksACSE(Byte const *data, std::size_t size, bool fakeACS0)
    {
-
       // AINI - Map Array Init
       // TODO
 
@@ -290,7 +311,7 @@ namespace ACSVM
       // TODO
 
       // JUMP - Dynamic Jump Targets
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_JUMP);
 
       // MEXP - Map Variable/Array Export
       // TODO

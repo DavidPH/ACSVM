@@ -13,7 +13,47 @@
 #include "Module.hpp"
 
 #include "Environ.hpp"
+#include "Jump.hpp"
 #include "Script.hpp"
+
+
+//----------------------------------------------------------------------------|
+// Static Functions                                                           |
+//
+
+namespace ACSVM
+{
+   //
+   // FreeV
+   //
+   template<typename T>
+   static void FreeV(T *&dataV, std::size_t &dataC)
+   {
+      if(!dataV) return;
+
+      for(T *itr = dataV + dataC; itr != dataV;)
+         (--itr)->~T();
+
+      ::operator delete(dataV);
+      dataV = nullptr;
+      dataC = 0;
+   }
+
+   //
+   // AllocV
+   //
+   template<typename T, typename... Args>
+   static void AllocV(T *&dataV, std::size_t &dataC, std::size_t count, Args const &...args)
+   {
+      if(dataV) FreeV<T>(dataV, dataC);
+
+      dataC = count;
+      dataV = static_cast<T *>(::operator new(sizeof(T) * dataC));
+
+      for(T *itr = dataV, *end = itr + dataC; itr != end; ++itr)
+         new(itr) T{args...};
+   }
+}
 
 
 //----------------------------------------------------------------------------|
@@ -73,102 +113,24 @@ namespace ACSVM
    }
 
    //
-   // Module::allocCodeV
+   // Module::alloc*
    //
-   void Module::allocCodeV(std::size_t count)
-   {
-      if(codeV) freeCodeV();
 
-      codeC = count;
-      codeV = new std::uint32_t[codeC];
-   }
-
-   //
-   // Module::allocScrNameV
-   //
-   void Module::allocScrNameV(std::size_t count)
-   {
-      if(scrNameV) freeScrNameV();
-
-      scrNameC = count;
-      scrNameV = new String*[scrNameC]{};
-   }
+   void Module::allocCodeV(std::size_t n)     {AllocV(codeV,     codeC,     n);}
+   void Module::allocJumpV(std::size_t n)     {AllocV(jumpV,     jumpC,     n);}
+   void Module::allocScrNameV(std::size_t n)  {AllocV(scrNameV,  scrNameC,  n);}
+   void Module::allocScriptV(std::size_t n)   {AllocV(scriptV,   scriptC,   n, this);}
+   void Module::allocStringV(std::size_t n)   {AllocV(stringV,   stringC,   n);}
 
    //
-   // Module::allocScriptV
+   // Module::free*
    //
-   void Module::allocScriptV(std::size_t count)
-   {
-      if(scriptV) freeScriptV();
 
-      scriptC = count;
-      scriptV = static_cast<Script *>(operator new(sizeof(Script) * scriptC));
-
-      for(Script *itr = scriptV, *end = itr + scriptC; itr != end; ++itr)
-         new(itr) Script(this);
-   }
-
-   //
-   // Module::allocStringV
-   //
-   void Module::allocStringV(std::size_t count)
-   {
-      if(stringV) freeStringV();
-
-      stringC = count;
-      stringV = new String*[stringC];
-   }
-
-   //
-   // Module::freeCodeV
-   //
-   void Module::freeCodeV()
-   {
-      if(!codeV) return;
-
-      delete[] codeV;
-      codeV = nullptr;
-      codeC = 0;
-   }
-
-   //
-   // Module::freeScrNameV
-   //
-   void Module::freeScrNameV()
-   {
-      if(!scrNameV) return;
-
-      delete[] scrNameV;
-      scrNameV = nullptr;
-      scrNameC = 0;
-   }
-
-   //
-   // Module::freeScriptV
-   //
-   void Module::freeScriptV()
-   {
-      if(!scriptV) return;
-
-      for(Script *itr = scriptV + scriptC; itr != scriptV;)
-         (--itr)->~Script();
-
-      operator delete(scriptV);
-      scriptV = nullptr;
-      scriptC = 0;
-   }
-
-   //
-   // Module::freeStringV
-   //
-   void Module::freeStringV()
-   {
-      if(!stringV) return;
-
-      delete[] stringV;
-      stringV = nullptr;
-      stringC = 0;
-   }
+   void Module::freeCodeV()     {FreeV(codeV,     codeC);}
+   void Module::freeJumpV()     {FreeV(jumpV,     jumpC);}
+   void Module::freeScrNameV()  {FreeV(scrNameV,  scrNameC);}
+   void Module::freeScriptV()   {FreeV(scriptV,   scriptC);}
+   void Module::freeStringV()   {FreeV(stringV,   stringC);}
 
    //
    // Module::reset
@@ -177,7 +139,7 @@ namespace ACSVM
    {
       freeCodeV();
     //freeFunctionV();
-    //freeJumpV();
+      freeJumpV();
       freeScrNameV();
       freeScriptV();
       freeStringV();

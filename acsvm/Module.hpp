@@ -125,6 +125,7 @@ namespace ACSVM
 
    private:
       void allocCodeV(std::size_t count);
+      void allocJumpV(std::size_t count);
       void allocScrNameV(std::size_t count);
       void allocScriptV(std::size_t count);
       void allocStringV(std::size_t count);
@@ -136,6 +137,7 @@ namespace ACSVM
          Byte const *data, std::size_t size, bool junk,
          void (Module::*alloc)(std::size_t));
 
+      bool chunkerACSE_JUMP(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SNAM(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SPTR8(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SPTR12(Byte const *data, std::size_t size, Word chunkName);
@@ -144,6 +146,7 @@ namespace ACSVM
       bool chunkerACSE_SVCT(Byte const *data, std::size_t size, Word chunkName);
 
       void freeCodeV();
+      void freeJumpV();
       void freeScrNameV();
       void freeScriptV();
       void freeStringV();
