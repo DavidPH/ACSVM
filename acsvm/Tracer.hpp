@@ -42,11 +42,11 @@ namespace ACSVM
 
       Environment *env;
 
-      std::unique_ptr<Word[]> codeIndex;
       std::unique_ptr<Byte[]> codeFound;
-      std::size_t             codeNum;
+      std::unique_ptr<Word[]> codeIndex;
+      std::size_t             codeC;
 
-      std::size_t jumpNum;
+      std::size_t jumpC;
 
    private:
       std::size_t getArgBytes(CodeDataACS0 const *opData, std::size_t iter);

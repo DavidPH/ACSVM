@@ -73,20 +73,26 @@ namespace ACSVM
       Environment *env;
       ModuleName   name;
 
-      Word       *codes;
-      std::size_t codeNum;
+      Word       *codeV;
+      std::size_t codeC;
 
-      Function  **functions;
-      std::size_t functionNum;
+      String    **funcNameV;
+      std::size_t funcNameC;
 
-      Jump       *jumps;
-      std::size_t jumpNum;
+      Function  **functionV;
+      std::size_t functionC;
 
-      Script     *scripts;
-      std::size_t scriptNum;
+      Jump       *jumpV;
+      std::size_t jumpC;
 
-      String    **strings;
-      std::size_t stringNum;
+      String    **scrNameV;
+      std::size_t scrNameC;
+
+      Script     *scriptV;
+      std::size_t scriptC;
+
+      String    **stringV;
+      std::size_t stringC;
 
       bool loaded;
 
@@ -103,6 +109,11 @@ namespace ACSVM
       static constexpr std::uint32_t ChunkID(char const (&s)[5])
          {return ChunkID(s[0], s[1], s[2], s[3]);}
 
+      static std::pair<
+         std::unique_ptr<Byte[]> /*data*/,
+         std::size_t             /*size*/>
+      DecryptStringACSE(Byte const *data, std::size_t size, std::size_t iter);
+
       static std::unique_ptr<char[]> ParseStringACS0(Byte const *first,
          Byte const *last, std::size_t len);
 
@@ -113,13 +124,29 @@ namespace ACSVM
       ScanStringACS0(Byte const *data, std::size_t size, std::size_t iter);
 
    private:
-      void allocCodes();
-      void allocScripts();
-      void allocStrings();
+      void allocCodeV(std::size_t count);
+      void allocScrNameV(std::size_t count);
+      void allocScriptV(std::size_t count);
+      void allocStringV(std::size_t count);
 
-      void freeCodes();
-      void freeScripts();
-      void freeStrings();
+      bool chunkIterACSE(Byte const *data, std::size_t size,
+         bool (Module::*chunker)(Byte const *, std::size_t, Word));
+
+      void chunkStrTabACSE(String **&strV, std::size_t &strC,
+         Byte const *data, std::size_t size, bool junk,
+         void (Module::*alloc)(std::size_t));
+
+      bool chunkerACSE_SNAM(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_SPTR8(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_SPTR12(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_STRE(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_STRL(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_SVCT(Byte const *data, std::size_t size, Word chunkName);
+
+      void freeCodeV();
+      void freeScrNameV();
+      void freeScriptV();
+      void freeStringV();
 
       void readBytecodeACS0(Byte const *data, std::size_t size);
       void readBytecodeACSE(Byte const *data, std::size_t size,
@@ -130,6 +157,8 @@ namespace ACSVM
       void readCodeACS0(Byte const *data, std::size_t size, bool compressed);
 
       String *readStringACS0(Byte const *data, std::size_t size, std::size_t iter);
+
+      void setScriptNameTypeACSE(Script *scr, Word nameInt, Word type);
    };
 }
 

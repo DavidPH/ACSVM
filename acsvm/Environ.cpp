@@ -311,7 +311,7 @@ namespace ACSVM
    void Environment::printKill(Thread *thread, Word type, Word data)
    {
       std::cerr << "ACSVM ERROR: Kill " << type << ':' << data
-         << " at " << (thread->module->codes - thread->codePtr - 3) << '\n';
+         << " at " << (thread->module->codeV - thread->codePtr - 3) << '\n';
    }
 
    //

@@ -49,7 +49,7 @@ namespace ACSVM
    {
       script  = script_;
       module  = script->module;
-      codePtr = module->codes + script->codeIdx;
+      codePtr = module->codeV + script->codeIdx;
 
       callStk.reserve(8);
       dataStk.reserve(256);

@@ -43,7 +43,7 @@
 #define BranchTo(target) \
    do \
    { \
-      codePtr = module->codes + (target); \
+      codePtr = module->codeV + (target); \
       CountBranch(); \
    } \
    while(0)
@@ -466,8 +466,8 @@ namespace ACSVM
          NextCase();
 
       DeclCase(Pstr_Stk):
-         if(dataStk[1] < module->stringNum)
-            dataStk[1] = ~module->strings[dataStk[1]]->idx;
+         if(dataStk[1] < module->stringC)
+            dataStk[1] = ~module->stringV[dataStk[1]]->idx;
          NextCase();
 
       DeclCase(Push_GblArr): /* TODO */ NextCase();

@@ -49,20 +49,13 @@ namespace ACSVM
       env{env_},
       name{std::move(name_)},
 
-      codes{nullptr},
-      codeNum{0},
-
-      functions{nullptr},
-      functionNum{0},
-
-      jumps{nullptr},
-      jumpNum{0},
-
-      scripts{nullptr},
-      scriptNum{0},
-
-      strings{nullptr},
-      stringNum{0},
+      codeV    {nullptr}, codeC    {0},
+      funcNameV{nullptr}, funcNameC{0},
+      functionV{nullptr}, functionC{0},
+      jumpV    {nullptr}, jumpC    {0},
+      scrNameV {nullptr}, scrNameC {0},
+      scriptV  {nullptr}, scriptC  {0},
+      stringV  {nullptr}, stringC  {0},
 
       loaded{false}
    {
@@ -80,72 +73,101 @@ namespace ACSVM
    }
 
    //
-   // Module::allocCodes
+   // Module::allocCodeV
    //
-   void Module::allocCodes()
+   void Module::allocCodeV(std::size_t count)
    {
-      if(codes) freeCodes();
+      if(codeV) freeCodeV();
 
-      codes = new std::uint32_t[codeNum];
+      codeC = count;
+      codeV = new std::uint32_t[codeC];
    }
 
    //
-   // Module::allocScripts
+   // Module::allocScrNameV
    //
-   void Module::allocScripts()
+   void Module::allocScrNameV(std::size_t count)
    {
-      if(scripts) freeScripts();
+      if(scrNameV) freeScrNameV();
 
-      scripts = static_cast<Script *>(operator new(sizeof(Script) * scriptNum));
+      scrNameC = count;
+      scrNameV = new String*[scrNameC]{};
+   }
 
-      for(Script *itr = scripts, *end = itr + scriptNum; itr != end; ++itr)
+   //
+   // Module::allocScriptV
+   //
+   void Module::allocScriptV(std::size_t count)
+   {
+      if(scriptV) freeScriptV();
+
+      scriptC = count;
+      scriptV = static_cast<Script *>(operator new(sizeof(Script) * scriptC));
+
+      for(Script *itr = scriptV, *end = itr + scriptC; itr != end; ++itr)
          new(itr) Script(this);
    }
 
    //
-   // Module::allocStrings
+   // Module::allocStringV
    //
-   void Module::allocStrings()
+   void Module::allocStringV(std::size_t count)
    {
-      if(strings) freeStrings();
+      if(stringV) freeStringV();
 
-      strings = new String*[stringNum];
+      stringC = count;
+      stringV = new String*[stringC];
    }
 
    //
-   // Module::freeCodes
+   // Module::freeCodeV
    //
-   void Module::freeCodes()
+   void Module::freeCodeV()
    {
-      if(!codes) return;
+      if(!codeV) return;
 
-      delete[] codes;
-      codes = nullptr;
+      delete[] codeV;
+      codeV = nullptr;
+      codeC = 0;
    }
 
    //
-   // Module::freeScripts
+   // Module::freeScrNameV
    //
-   void Module::freeScripts()
+   void Module::freeScrNameV()
    {
-      if(!scripts) return;
+      if(!scrNameV) return;
 
-      for(Script *itr = scripts + scriptNum; itr != scripts;)
+      delete[] scrNameV;
+      scrNameV = nullptr;
+      scrNameC = 0;
+   }
+
+   //
+   // Module::freeScriptV
+   //
+   void Module::freeScriptV()
+   {
+      if(!scriptV) return;
+
+      for(Script *itr = scriptV + scriptC; itr != scriptV;)
          (--itr)->~Script();
 
-      operator delete(scripts);
-      scripts = nullptr;
+      operator delete(scriptV);
+      scriptV = nullptr;
+      scriptC = 0;
    }
 
    //
-   // Module::freeStrings
+   // Module::freeStringV
    //
-   void Module::freeStrings()
+   void Module::freeStringV()
    {
-      if(!strings) return;
+      if(!stringV) return;
 
-      delete[] strings;
-      strings = nullptr;
+      delete[] stringV;
+      stringV = nullptr;
+      stringC = 0;
    }
 
    //
@@ -153,11 +175,12 @@ namespace ACSVM
    //
    void Module::reset()
    {
-      freeCodes();     codeNum     = 0;
-    //freeFunctions(); functionNum = 0;
-    //freeJumps();     jumpNum     = 0;
-      freeScripts();   scriptNum   = 0;
-      freeStrings();   stringNum   = 0;
+      freeCodeV();
+    //freeFunctionV();
+    //freeJumpV();
+      freeScrNameV();
+      freeScriptV();
+      freeStringV();
 
       loaded = false;
    }

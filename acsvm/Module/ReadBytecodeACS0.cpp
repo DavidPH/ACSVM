@@ -88,13 +88,11 @@ namespace ACSVM
 
       // Read script count.
       if(size - iter < 4) throw ReadError();
-      scriptNum = ReadLE4(data + iter); iter += 4;
-
-      allocScripts();
+      allocScriptV(ReadLE4(data + iter)); iter += 4;
 
       // Read scripts.
-      if(size - iter < scriptNum * 12) throw ReadError();
-      for(Script *scr = scripts, *end = scr + scriptNum; scr != end; ++scr)
+      if(size - iter < scriptC * 12) throw ReadError();
+      for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
       {
          scr->nameInt = ReadLE4(data + iter); iter += 4;
          scr->codeIdx = ReadLE4(data + iter); iter += 4;
@@ -113,13 +111,11 @@ namespace ACSVM
 
       // Read string count.
       if(size - iter < 4) throw ReadError();
-      stringNum = ReadLE4(data + iter); iter += 4;
-
-      allocStrings();
+      allocStringV(ReadLE4(data + iter)); iter += 4;
 
       // Read strings.
-      if(size - iter < stringNum * 4) throw ReadError();
-      for(String **str = strings, **end = str + stringNum; str != end; ++str)
+      if(size - iter < stringC * 4) throw ReadError();
+      for(String **str = stringV, **end = str + stringC; str != end; ++str)
       {
          *str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
       }
@@ -140,8 +136,7 @@ namespace ACSVM
       // Trace code paths from this module.
       tracer.trace(this);
 
-      codeNum = tracer.codeNum;
-      allocCodes();
+      allocCodeV(tracer.codeC);
 
       tracer.translate(this);
    }

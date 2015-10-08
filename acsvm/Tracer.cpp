@@ -33,10 +33,10 @@ namespace ACSVM
    TracerACS0::TracerACS0(Environment *env_, Byte const *data_,
       std::size_t size_, bool compressed_) :
       env       {env_},
-      codeIndex {new Word[size_]{}},
       codeFound {new Byte[size_]{}},
-      codeNum   {0},
-      jumpNum   {0},
+      codeIndex {new Word[size_]{}},
+      codeC     {0},
+      jumpC     {0},
       data      {data_},
       size      {size_},
       compressed{compressed_}
@@ -175,13 +175,13 @@ namespace ACSVM
    void TracerACS0::trace(Module *module)
    {
       // Add Kill to catch branches to zero.
-      codeNum += 1 + env->getCodeData(Code::Kill)->argc;
+      codeC += 1 + env->getCodeData(Code::Kill)->argc;
 
-      for(Script *itr = module->scripts, *end = itr + module->scriptNum; itr != end; ++itr)
+      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
          trace(itr->codeIdx);
 
       // Add Kill to catch execution past end.
-      codeNum += 1 + env->getCodeData(Code::Kill)->argc;
+      codeC += 1 + env->getCodeData(Code::Kill)->argc;
    }
 
    //
@@ -211,7 +211,7 @@ namespace ACSVM
          {
             // Mark as found, so that the translator generates a KILL.
             setFound(iter, iter + opSize);
-            codeNum += 1 + env->getCodeData(Code::Kill)->argc;
+            codeC += 1 + env->getCodeData(Code::Kill)->argc;
             return;
          }
 
@@ -234,7 +234,7 @@ namespace ACSVM
          {
             // -> Call(F) Drop_Nul()
          case CodeACS0::Call_Nul:
-            codeNum += 3;
+            codeC += 3;
             break;
 
          case CodeACS0::CallSpec_1L:
@@ -251,16 +251,16 @@ namespace ACSVM
          case CodeACS0::Push_Lit3B:
          case CodeACS0::Push_Lit4B:
          case CodeACS0::Push_Lit5B:
-            codeNum += opData->argc + 2;
+            codeC += opData->argc + 2;
             break;
 
          case CodeACS0::Push_LitArrB:
-            codeNum += data[iter + opSize] + 2;
+            codeC += data[iter + opSize] + 2;
             break;
 
             // -> Push_Lit(0) Retn()
          case CodeACS0::Retn_Nul:
-            codeNum += 3;
+            codeC += 3;
             break;
 
          case CodeACS0::CallFunc:
@@ -272,7 +272,7 @@ namespace ACSVM
 
                if(!opFunc)
                {
-                  codeNum += 1 + env->getCodeData(Code::Kill)->argc;
+                  codeC += 1 + env->getCodeData(Code::Kill)->argc;
                   return;
                }
 
@@ -281,9 +281,9 @@ namespace ACSVM
 
          default:
             if(opTran->code == Code::CallFunc_Lit)
-               codeNum += opData->argc + 1 + 2;
+               codeC += opData->argc + 1 + 2;
             else
-               codeNum += opTran->argc + 1;
+               codeC += opTran->argc + 1;
 
             if(opTran->code == Code::Kill)
                return;
@@ -296,12 +296,12 @@ namespace ACSVM
          {
          case CodeACS0::Jcnd_Nil:
          case CodeACS0::Jcnd_Tru:
-            ++jumpNum;
+            ++jumpC;
             trace(ReadLE4(data + iter + opSize));
             break;
 
          case CodeACS0::Jcnd_Lit:
-            ++jumpNum;
+            ++jumpC;
             trace(ReadLE4(data + iter + opSize + 4));
             break;
 
@@ -312,7 +312,7 @@ namespace ACSVM
                jumpIter = (iter + opSize + 3) & ~static_cast<std::size_t>(3);
                count = ReadLE4(data + jumpIter); jumpIter += 4;
 
-               jumpNum += count;
+               jumpC += count;
 
                // Trace all of the jump targets.
                for(; count--; jumpIter += 8)
@@ -321,7 +321,7 @@ namespace ACSVM
             break;
 
          case CodeACS0::Jump_Lit:
-            ++jumpNum;
+            ++jumpC;
             next = ReadLE4(data + iter + opSize);
             break;
 
@@ -346,9 +346,9 @@ namespace ACSVM
    //
    void TracerACS0::translate(Module *module)
    {
-      std::unique_ptr<Word*[]> jumps{new uint32_t *[jumpNum]};
+      std::unique_ptr<Word*[]> jumps{new uint32_t *[jumpC]};
 
-      Word  *codeItr = module->codes;
+      Word  *codeItr = module->codeV;
       Word **jumpItr = jumps.get();
 
       // Add Kill to catch branches to zero.
@@ -366,7 +366,7 @@ namespace ACSVM
          }
 
          // Record jump target.
-         codeIndex[iter] = codeItr - module->codes;
+         codeIndex[iter] = codeItr - module->codeV;
 
          // Read op.
          Word                opCode;
@@ -558,7 +558,7 @@ namespace ACSVM
       }
 
       // Translate script entry points.
-      for(Script *itr = module->scripts, *end = itr + module->scriptNum; itr != end; ++itr)
+      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
       {
          if(itr->codeIdx < size)
             itr->codeIdx = codeIndex[itr->codeIdx];
