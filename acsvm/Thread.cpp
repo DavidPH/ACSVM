@@ -51,8 +51,8 @@ namespace ACSVM
       module  = script->module;
       codePtr = module->codeV + script->codeIdx;
 
-      callStk.reserve(8);
-      dataStk.reserve(256);
+      callStk.reserve(CallStkSize);
+      dataStk.reserve(DataStkSize);
       localArr.alloc(script->arrNum);
       localReg.alloc(script->regNum);
 

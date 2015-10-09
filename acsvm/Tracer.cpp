@@ -17,6 +17,7 @@
 #include "CodeData.hpp"
 #include "Environ.hpp"
 #include "Error.hpp"
+#include "Function.hpp"
 #include "Jump.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
@@ -178,10 +179,15 @@ namespace ACSVM
       // Add Kill to catch branches to zero.
       codeC += 1 + env->getCodeData(Code::Kill)->argc;
 
-      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
-         trace(itr->codeIdx);
+      // Trace from entry points.
+
+      for(Function **itr = module->functionV, **end = itr + module->functionC; itr != end; ++itr)
+         if(*itr && (*itr)->module == module) trace((*itr)->codeIdx);
 
       for(Jump *itr = module->jumpV, *end = itr + module->jumpC; itr != end; ++itr)
+         trace(itr->codeIdx);
+
+      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
          trace(itr->codeIdx);
 
       // Add Kill to catch execution past end.
@@ -561,14 +567,19 @@ namespace ACSVM
             *codeItr = 0;
       }
 
-      // Translate script entry points.
-      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
+      // Translate entry points.
+
+      for(Function **itr = module->functionV, **end = itr + module->functionC; itr != end; ++itr)
       {
-         if(itr->codeIdx < size)
-            itr->codeIdx = codeIndex[itr->codeIdx];
-         else
-            itr->codeIdx = 0;
+         if(*itr && (*itr)->module == module)
+            (*itr)->codeIdx = (*itr)->codeIdx < size ? codeIndex[(*itr)->codeIdx] : 0;
       }
+
+      for(Jump *itr = module->jumpV, *end = itr + module->jumpC; itr != end; ++itr)
+         itr->codeIdx = itr->codeIdx < size ? codeIndex[itr->codeIdx] : 0;
+
+      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
+         itr->codeIdx = itr->codeIdx < size ? codeIndex[itr->codeIdx] : 0;
    }
 }
 

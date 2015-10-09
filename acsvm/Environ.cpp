@@ -15,6 +15,7 @@
 #include "CallFunc.hpp"
 #include "Code.hpp"
 #include "CodeData.hpp"
+#include "Function.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
 #include "Thread.hpp"
@@ -48,6 +49,17 @@ namespace ACSVM
             {return name->hash();}
       };
 
+      struct FuncPairHash
+      {
+         std::size_t operator () (std::pair<ModuleName, String *> const &pair) const
+            {return pair.first.hash() + pair.second->hash;}
+      };
+
+      std::unordered_map<std::pair<ModuleName, String *>, Word, FuncPairHash> functionTab;
+
+      // Reserve index 0 as no function.
+      std::vector<Function *> functionVec{nullptr};
+
       std::vector<CallFunc> tableCallFunc
       {
          #define ACSVM_FuncList(name) \
@@ -68,12 +80,8 @@ namespace ACSVM
 
       std::unordered_map<Word, FuncDataACS0> tableFuncDataACS0;
 
-      std::unordered_map<
-         ModuleName const *,
-         std::unique_ptr<Module>,
-         NameHash,
-         NameEqual>
-         tableModule;
+      std::unordered_map<ModuleName const *, std::unique_ptr<Module>,
+         NameHash, NameEqual> tableModule;
 
       std::list<Thread *> threadActive;
       std::list<Thread *> threadFree;
@@ -100,9 +108,15 @@ namespace ACSVM
 
       tableCallFunc{nullptr},
 
+      funcV{nullptr},
+      funcC{0},
+
       pd{new PrivData}
    {
       tableCallFunc = pd->tableCallFunc.data();
+
+      funcV = pd->functionVec.data();
+      funcC = pd->functionVec.size();
    }
 
    //
@@ -208,6 +222,30 @@ namespace ACSVM
    }
 
    //
+   // Environment::freeFunction
+   //
+   void Environment::freeFunction(Function *func)
+   {
+      // Null every reference to this function in every Module.
+      // O(N*M) is not very nice, but that can be fixed if/when it comes up.
+      for(auto &moduleItr : pd->tableModule)
+      {
+         auto &module = moduleItr.second;
+
+         for(Function **funcItr = module->functionV,
+            **funcEnd = funcItr + module->functionC;
+            funcItr != funcEnd; ++funcItr)
+         {
+            if(*funcItr == func)
+               *funcItr = nullptr;
+         }
+      }
+
+      pd->functionVec[func->idx] = nullptr;
+      delete func;
+   }
+
+   //
    // Environment::getCallSpec
    //
    CallSpec Environment::getCallSpec(Word spec)
@@ -256,6 +294,34 @@ namespace ACSVM
       pd->threadActive.emplace_back(thread);
 
       return thread;
+   }
+
+   //
+   // Environment::getFunction
+   //
+   Function *Environment::getFunction(Module *module, String *funcName)
+   {
+      if(funcName)
+      {
+         auto &idx = pd->functionTab[{module->name, funcName}];
+
+         if(!idx)
+         {
+            idx = pd->functionVec.size();
+            pd->functionVec.emplace_back();
+            funcV = pd->functionVec.data();
+            funcC = pd->functionVec.size();
+         }
+
+         auto &ptr = pd->functionVec[idx];
+
+         if(!ptr)
+            ptr = new Function{module, funcName, idx};
+
+         return ptr;
+      }
+      else
+         return new Function{module, nullptr, 0};
    }
 
    //
@@ -311,7 +377,7 @@ namespace ACSVM
    void Environment::printKill(Thread *thread, Word type, Word data)
    {
       std::cerr << "ACSVM ERROR: Kill " << type << ':' << data
-         << " at " << (thread->module->codeV - thread->codePtr - 3) << '\n';
+         << " at " << (thread->codePtr - thread->module->codeV - 3) << '\n';
    }
 
    //

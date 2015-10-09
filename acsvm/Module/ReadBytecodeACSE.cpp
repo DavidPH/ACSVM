@@ -15,6 +15,7 @@
 #include "BinaryIO.hpp"
 #include "Environ.hpp"
 #include "Error.hpp"
+#include "Function.hpp"
 #include "Jump.hpp"
 #include "Script.hpp"
 
@@ -91,6 +92,56 @@ namespace ACSVM
       {
          *str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
       }
+   }
+
+   //
+   // Module::chunkerACSE_FNAM
+   //
+   bool Module::chunkerACSE_FNAM(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("FNAM")) return false;
+
+      chunkStrTabACSE(funcNameV, funcNameC, data, size, false, &Module::allocFuncNameV);
+
+      return true;
+   }
+
+   //
+   // Module::chunkerACSE_FUNC
+   //
+   bool Module::chunkerACSE_FUNC(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("FUNC")) return false;
+
+      if(size % 8) throw ReadError();
+
+      // Read functions.
+      allocFunctionV(size / 8);
+
+      std::size_t iter = 0;
+      for(Function **func = functionV, **end = func + functionC; func != end; ++func)
+      {
+         Word idx     = iter / 8;
+         Word argC    = ReadLE1(data + iter); iter += 1;
+         Word locRegC = ReadLE1(data + iter); iter += 1;
+         Word flags   = ReadLE2(data + iter); iter += 2;
+         Word codeIdx = ReadLE4(data + iter); iter += 4;
+
+         // Ignore undefined functions for now.
+         if(!codeIdx) continue;
+
+         String   *funcName = idx < funcNameC ? funcNameV[idx] : nullptr;
+         Function *function = env->getFunction(this, funcName);
+
+         function->argC    = argC;
+         function->locRegC = locRegC;
+         function->flagRet = flags & 0x0001;
+         function->codeIdx = codeIdx;
+
+         *func = function;
+      }
+
+      return true;
    }
 
    //
@@ -305,9 +356,12 @@ namespace ACSVM
       // TODO
 
       // FNAM - Function Names
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_FNAM);
 
       // FUNC - Functions
+      chunkIterACSE(data, size, &Module::chunkerACSE_FUNC);
+
+      // FARY - Function Arrays
       // TODO
 
       // JUMP - Dynamic Jump Targets
@@ -330,6 +384,9 @@ namespace ACSVM
          chunkIterACSE(data, size, &Module::chunkerACSE_SPTR8);
       else
          chunkIterACSE(data, size, &Module::chunkerACSE_SPTR12);
+
+      // SARY - Script Arrays
+      // TODO
 
       // SFLG - Script Flags
       // TODO

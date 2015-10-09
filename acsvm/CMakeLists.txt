@@ -30,6 +30,7 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    CallFunc.cpp
    CodeData.cpp
    Environ.cpp
+   Function.cpp
    Module.cpp
    Module/ReadBytecodeACS0.cpp
    Module/ReadBytecodeACSE.cpp

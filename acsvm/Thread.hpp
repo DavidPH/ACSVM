@@ -33,10 +33,10 @@ namespace ACSVM
    class CallFrame
    {
    public:
-      Word   *codePtr;
-      Module *module;
-      Word    localArrNum;
-      Word    localRegNum;
+      Word       *codePtr;
+      Module     *module;
+      std::size_t locArrC;
+      std::size_t locRegC;
    };
 
    //
@@ -91,7 +91,6 @@ namespace ACSVM
 
       void start(Script *script);
 
-
       Stack<CallFrame> callStk;
       Stack<Word>      dataStk;
       Store<Array>     localArr;
@@ -104,6 +103,10 @@ namespace ACSVM
       Script *script;  // Current execution Script.
       Word    delay;   // Execution delay tics.
       Word    result;  // Code-defined thread result.
+
+
+      static constexpr std::size_t CallStkSize =   8;
+      static constexpr std::size_t DataStkSize = 256;
 
    private:
       void stop();

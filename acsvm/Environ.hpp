@@ -51,12 +51,19 @@ namespace ACSVM
       CodeDataACS0 const *findCodeDataACS0(Word code);
       FuncDataACS0 const *findFuncDataACS0(Word func);
 
+      // Used by Module when unloading.
+      void freeFunction(Function *func);
+
       CallFunc getCallFunc(Word func) {return tableCallFunc[func];}
       CallSpec getCallSpec(Word spec);
 
       CodeData const *getCodeData(Code code);
 
       Thread *getFreeThread();
+
+      Function *getFunction(Word idx) {return idx < funcC ? funcV[idx] : nullptr;}
+
+      Function *getFunction(Module *module, String *name);
 
       // Gets the named module, loading it if needed.
       Module *getModule(ModuleName const &name);
@@ -107,6 +114,9 @@ namespace ACSVM
       virtual void loadModule(Module *module) = 0;
 
       CallFunc *tableCallFunc;
+
+      Function  **funcV;
+      std::size_t funcC;
 
    private:
       struct PrivData;

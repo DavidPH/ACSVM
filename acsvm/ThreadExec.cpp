@@ -15,6 +15,7 @@
 #include "Array.hpp"
 #include "Code.hpp"
 #include "Environ.hpp"
+#include "Function.hpp"
 #include "Jump.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
@@ -31,7 +32,7 @@
 // Currently, only gcc syntax is supported.
 //
 #ifndef ACSVM_DynamicGoto
-#if defined(__GNUC__) && 0
+#if defined(__GNUC__)
 #define ACSVM_DynamicGoto 1
 #else
 #define ACSVM_DynamicGoto 0
@@ -343,12 +344,39 @@ namespace ACSVM
          //
 
       DeclCase(Call_Lit):
-         // TODO
-         NextCase();
+         {
+            Function *func;
+
+            func = *codePtr < module->functionC ? module->functionV[*codePtr] : nullptr;
+            ++codePtr;
+
+         do_call:
+            if(!func) {BranchTo(0); NextCase();}
+
+            // Reserve stack space.
+            callStk.reserve(CallStkSize);
+            dataStk.reserve(DataStkSize);
+
+            // Push call frame.
+            callStk.push({codePtr, module, localArr.size(), localReg.size()});
+
+            // Apply function data.
+            codePtr      = func->module->codeV + func->codeIdx;
+            module       = func->module;
+            localArr.alloc(func->locArrC);
+            localReg.alloc(func->locRegC);
+
+            // Read arguments.
+            dataStk.drop(func->argC);
+            memcpy(&localReg[0], &dataStk[0], func->argC * sizeof(Word));
+
+            NextCase();
 
       DeclCase(Call_Stk):
-         // TODO
-         NextCase();
+            dataStk.drop();
+            func = module->env->getFunction(dataStk[0]);
+            goto do_call;
+         }
 
       DeclCase(CallFunc):
          {
@@ -400,7 +428,15 @@ namespace ACSVM
          NextCase();
 
       DeclCase(Retn):
-         // TODO
+         // Apply call frame.
+         codePtr     = callStk[1].codePtr;
+         module      = callStk[1].module;
+         localArr.free(callStk[1].locArrC);
+         localReg.free(callStk[1].locRegC);
+
+         // Drop call frame.
+         callStk.drop();
+
          NextCase();
 
          //================================================
@@ -464,7 +500,11 @@ namespace ACSVM
          //
 
       DeclCase(Pfun_Lit):
-         /* TODO */
+         if(*codePtr < module->functionC)
+            dataStk.push(module->functionV[*codePtr]->idx);
+         else
+            dataStk.push(0);
+         ++codePtr;
          NextCase();
 
       DeclCase(Pstr_Stk):

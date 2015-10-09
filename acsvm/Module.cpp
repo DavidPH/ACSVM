@@ -13,6 +13,7 @@
 #include "Module.hpp"
 
 #include "Environ.hpp"
+#include "Function.hpp"
 #include "Jump.hpp"
 #include "Script.hpp"
 
@@ -62,6 +63,14 @@ namespace ACSVM
 
 namespace ACSVM
 {
+   //
+   // ModuleName copy constructor
+   //
+   ModuleName::ModuleName(ModuleName const &name) :
+      s{StrDup(name.s.get())}, p{name.p}, i{name.i}
+   {
+   }
+
    //
    // ModuleName::operator == ModuleName
    //
@@ -117,6 +126,8 @@ namespace ACSVM
    //
 
    void Module::allocCodeV(std::size_t n)     {AllocV(codeV,     codeC,     n);}
+   void Module::allocFuncNameV(std::size_t n) {AllocV(funcNameV, funcNameC, n);}
+   void Module::allocFunctionV(std::size_t n) {AllocV(functionV, functionC, n);}
    void Module::allocJumpV(std::size_t n)     {AllocV(jumpV,     jumpC,     n);}
    void Module::allocScrNameV(std::size_t n)  {AllocV(scrNameV,  scrNameC,  n);}
    void Module::allocScriptV(std::size_t n)   {AllocV(scriptV,   scriptC,   n, this);}
@@ -127,6 +138,8 @@ namespace ACSVM
    //
 
    void Module::freeCodeV()     {FreeV(codeV,     codeC);}
+   void Module::freeFuncNameV() {FreeV(funcNameV, funcNameC);}
+   void Module::freeFunctionV() {FreeV(functionV, functionC);}
    void Module::freeJumpV()     {FreeV(jumpV,     jumpC);}
    void Module::freeScrNameV()  {FreeV(scrNameV,  scrNameC);}
    void Module::freeScriptV()   {FreeV(scriptV,   scriptC);}
@@ -137,8 +150,16 @@ namespace ACSVM
    //
    void Module::reset()
    {
+      // Unload locally defined functions from env.
+      for(Function **func = functionV, **end = func + functionC; func != end; ++func)
+      {
+         if(*func && (*func)->module == this)
+            env->freeFunction(*func);
+      }
+
       freeCodeV();
-    //freeFunctionV();
+      freeFuncNameV();
+      freeFunctionV();
       freeJumpV();
       freeScrNameV();
       freeScriptV();
