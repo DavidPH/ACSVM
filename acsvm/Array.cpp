@@ -60,6 +60,8 @@ namespace ACSVM
    //
    void Array::FreePage(Page *&page)
    {
+      if(!page) return;
+
       delete[] page;
       page = nullptr;
    }
@@ -69,6 +71,8 @@ namespace ACSVM
    //
    void Array::FreeSegm(Segm *&segm)
    {
+      if(!segm) return;
+
       for(Page *&page : *segm)
          FreePage(page);
 
@@ -81,6 +85,8 @@ namespace ACSVM
    //
    void Array::FreeBank(Bank *&bank)
    {
+      if(!bank) return;
+
       for(Segm *&segm : *bank)
          FreeSegm(segm);
 
@@ -93,6 +99,8 @@ namespace ACSVM
    //
    void Array::FreeData(Data *&data)
    {
+      if(!data) return;
+
       for(Bank *&bank : *data)
          FreeBank(bank);
 
