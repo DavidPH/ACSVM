@@ -95,6 +95,24 @@ namespace ACSVM
    }
 
    //
+   // Module::chunkerACSE_FARY
+   //
+   bool Module::chunkerACSE_FARY(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("FARY")) return false;
+
+      if(size < 2 || (size - 2) % 4) throw ReadError();
+
+      Word        idx  = ReadLE2(data);
+      std::size_t arrC = (size - 2) / 4;
+
+      if(idx < functionC && functionV[idx])
+         functionV[idx]->locArrC = arrC;
+
+      return false;
+   }
+
+   //
    // Module::chunkerACSE_FNAM
    //
    bool Module::chunkerACSE_FNAM(Byte const *data, std::size_t size, Word chunkName)
@@ -166,6 +184,58 @@ namespace ACSVM
    }
 
    //
+   // Module::chunkerACSE_SARY
+   //
+   bool Module::chunkerACSE_SARY(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("SARY")) return false;
+
+      if(size < 2 || (size - 2) % 4) throw ReadError();
+
+      Word        nameInt = ReadLE2(data);
+      std::size_t arrC    = (size - 2) / 4;
+
+      if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
+
+      for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
+         if(scr->nameInt == nameInt) scr->locArrC = arrC;
+
+      return false;
+   }
+
+   //
+   // Module::chunkerACSE_SFLG
+   //
+   bool Module::chunkerACSE_SFLG(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("SFLG")) return false;
+
+      if(size % 4) throw ReadError();
+
+      for(std::size_t iter = 0; iter != size;)
+      {
+         Word nameInt = ReadLE2(data + iter); iter += 2;
+         Word flags   = ReadLE2(data + iter); iter += 2;
+
+         bool flagNet    = flags & 0x0001;
+         bool flagClient = flags & 0x0002;
+
+         if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
+
+         for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
+         {
+            if(scr->nameInt == nameInt)
+            {
+               scr->flagClient = flagClient;
+               scr->flagNet    = flagNet;
+            }
+         }
+      }
+
+      return false;
+   }
+
+   //
    // Module::chunkerACSE_SNAM
    //
    bool Module::chunkerACSE_SNAM(Byte const *data, std::size_t size, Word chunkName)
@@ -196,7 +266,7 @@ namespace ACSVM
       {
          Word nameInt = ReadLE2(data + iter); iter += 2;
          Word type    = ReadLE1(data + iter); iter += 1;
-         scr->argNum  = ReadLE1(data + iter); iter += 1;
+         scr->argC    = ReadLE1(data + iter); iter += 1;
          scr->codeIdx = ReadLE4(data + iter); iter += 4;
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
@@ -226,7 +296,7 @@ namespace ACSVM
          Word nameInt = ReadLE2(data + iter); iter += 2;
          Word type    = ReadLE2(data + iter); iter += 2;
          scr->codeIdx = ReadLE4(data + iter); iter += 4;
-         scr->argNum  = ReadLE4(data + iter); iter += 4;
+         scr->argC    = ReadLE4(data + iter); iter += 4;
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
          setScriptNameTypeACSE(scr, nameInt, type);
@@ -294,15 +364,15 @@ namespace ACSVM
 
       for(std::size_t iter = 0; iter != size;)
       {
-         Word nameInt = ReadLE2(data); iter += 2;
-         Word regNum  = ReadLE2(data); iter += 2;
+         Word nameInt = ReadLE2(data + iter); iter += 2;
+         Word regC    = ReadLE2(data + iter); iter += 2;
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
          for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
          {
             if(scr->nameInt == nameInt)
-               scr->regNum = regNum;
+               scr->locRegC = regC;
          }
       }
 
@@ -362,7 +432,7 @@ namespace ACSVM
       chunkIterACSE(data, size, &Module::chunkerACSE_FUNC);
 
       // FARY - Function Arrays
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_FARY);
 
       // JUMP - Dynamic Jump Targets
       chunkIterACSE(data, size, &Module::chunkerACSE_JUMP);
@@ -386,10 +456,10 @@ namespace ACSVM
          chunkIterACSE(data, size, &Module::chunkerACSE_SPTR12);
 
       // SARY - Script Arrays
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_SARY);
 
       // SFLG - Script Flags
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_SFLG);
 
       // SVCT - Script Variable Count
       chunkIterACSE(data, size, &Module::chunkerACSE_SVCT);

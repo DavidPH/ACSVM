@@ -53,10 +53,10 @@ namespace ACSVM
 
       callStk.reserve(CallStkSize);
       dataStk.reserve(DataStkSize);
-      localArr.alloc(script->arrNum);
-      localReg.alloc(script->regNum);
+      localArr.alloc(script->locArrC);
+      localReg.alloc(script->locRegC);
 
-      state   = ThreadState::Running;
+      state = ThreadState::Running;
    }
 
    //

@@ -96,7 +96,7 @@ namespace ACSVM
       {
          scr->nameInt = ReadLE4(data + iter); iter += 4;
          scr->codeIdx = ReadLE4(data + iter); iter += 4;
-         scr->argNum  = ReadLE4(data + iter); iter += 4;
+         scr->argC    = ReadLE4(data + iter); iter += 4;
 
          if(scr->nameInt >= 1000)
          {

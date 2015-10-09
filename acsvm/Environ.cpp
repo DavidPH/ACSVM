@@ -102,9 +102,9 @@ namespace ACSVM
    // Environment constructor
    //
    Environment::Environment() :
-      defCallSpec {CallSpecDefault},
-      module0     {nullptr},
-      scriptRegNum{ScriptRegNumDefault},
+      defCallSpec  {CallSpecDefault},
+      module0      {nullptr},
+      scriptLocRegC{ScriptLocRegCDefault},
 
       tableCallFunc{nullptr},
 

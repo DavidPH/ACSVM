@@ -45,13 +45,16 @@ namespace ACSVM
       Script    *envNext;
       Script    *envPrev;
       String    *nameStr;
-      Word       argNum;
-      Word       arrNum;
+      Word       argC;
       Word       codeIdx;
       Word       flags;
+      Word       locArrC;
+      Word       locRegC;
       Word       nameInt;
-      Word       regNum;
       ScriptType type;
+
+      bool flagClient : 1;
+      bool flagNet    : 1;
 
 
       friend class Environment;

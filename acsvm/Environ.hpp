@@ -101,12 +101,12 @@ namespace ACSVM
       Module *module0;
 
       // Default number of script variables. Default is 20.
-      Word scriptRegNum;
+      Word scriptLocRegC;
 
 
       static Word CallSpecDefault(Thread *thread, Word spec, Word const *argv, Word argc);
 
-      static constexpr Word ScriptRegNumDefault = 20;
+      static constexpr Word ScriptLocRegCDefault = 20;
 
    protected:
       virtual std::unique_ptr<Thread> allocThread();

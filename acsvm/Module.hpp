@@ -139,9 +139,12 @@ namespace ACSVM
          Byte const *data, std::size_t size, bool junk,
          void (Module::*alloc)(std::size_t));
 
+      bool chunkerACSE_FARY(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_FNAM(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_FUNC(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_JUMP(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_SARY(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_SFLG(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SNAM(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SPTR8(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SPTR12(Byte const *data, std::size_t size, Word chunkName);

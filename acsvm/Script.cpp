@@ -42,13 +42,16 @@ namespace ACSVM
       envNext{module->env->getScriptHead()},
       envPrev{envNext->envPrev},
       nameStr{nullptr},
-      argNum {0},
-      arrNum {0},
+      argC   {0},
       codeIdx{0},
       flags  {0},
+      locArrC{0},
+      locRegC{module->env->scriptLocRegC},
       nameInt{0},
-      regNum {module->env->scriptRegNum},
-      type   {ScriptType::Closed}
+      type   {ScriptType::Closed},
+
+      flagClient{false},
+      flagNet   {false}
    {
       envNext->envPrev = this;
       envPrev->envNext = this;
