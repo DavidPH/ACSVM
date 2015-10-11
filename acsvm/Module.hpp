@@ -13,7 +13,7 @@
 #ifndef ACSVM__Module_H__
 #define ACSVM__Module_H__
 
-#include "Types.hpp"
+#include "Vector.hpp"
 
 #include <memory>
 
@@ -73,26 +73,13 @@ namespace ACSVM
       Environment *env;
       ModuleName   name;
 
-      Word       *codeV;
-      std::size_t codeC;
-
-      String    **funcNameV;
-      std::size_t funcNameC;
-
-      Function  **functionV;
-      std::size_t functionC;
-
-      Jump       *jumpV;
-      std::size_t jumpC;
-
-      String    **scrNameV;
-      std::size_t scrNameC;
-
-      Script     *scriptV;
-      std::size_t scriptC;
-
-      String    **stringV;
-      std::size_t stringC;
+      Vector<Word>       codeV;
+      Vector<String *>   funcNameV;
+      Vector<Function *> functionV;
+      Vector<Jump>       jumpV;
+      Vector<String *>   scrNameV;
+      Vector<Script>     scriptV;
+      Vector<String *>   stringV;
 
       bool loaded;
 
@@ -124,20 +111,11 @@ namespace ACSVM
       ScanStringACS0(Byte const *data, std::size_t size, std::size_t iter);
 
    private:
-      void allocCodeV(std::size_t count);
-      void allocFuncNameV(std::size_t count);
-      void allocFunctionV(std::size_t count);
-      void allocJumpV(std::size_t count);
-      void allocScrNameV(std::size_t count);
-      void allocScriptV(std::size_t count);
-      void allocStringV(std::size_t count);
-
       bool chunkIterACSE(Byte const *data, std::size_t size,
          bool (Module::*chunker)(Byte const *, std::size_t, Word));
 
-      void chunkStrTabACSE(String **&strV, std::size_t &strC,
-         Byte const *data, std::size_t size, bool junk,
-         void (Module::*alloc)(std::size_t));
+      void chunkStrTabACSE(Vector<String *> &strV,
+         Byte const *data, std::size_t size, bool junk);
 
       bool chunkerACSE_FARY(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_FNAM(Byte const *data, std::size_t size, Word chunkName);
@@ -151,14 +129,6 @@ namespace ACSVM
       bool chunkerACSE_STRE(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_STRL(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SVCT(Byte const *data, std::size_t size, Word chunkName);
-
-      void freeCodeV();
-      void freeFuncNameV();
-      void freeFunctionV();
-      void freeJumpV();
-      void freeScrNameV();
-      void freeScriptV();
-      void freeStringV();
 
       void readBytecodeACS0(Byte const *data, std::size_t size);
       void readBytecodeACSE(Byte const *data, std::size_t size,

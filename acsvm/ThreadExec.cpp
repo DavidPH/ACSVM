@@ -46,7 +46,7 @@
 #define BranchTo(target) \
    do \
    { \
-      codePtr = module->codeV + (target); \
+      codePtr = &module->codeV[(target)]; \
       CountBranch(); \
    } \
    while(0)
@@ -348,7 +348,7 @@ namespace ACSVM
          {
             Function *func;
 
-            func = *codePtr < module->functionC ? module->functionV[*codePtr] : nullptr;
+            func = *codePtr < module->functionV.size() ? module->functionV[*codePtr] : nullptr;
             ++codePtr;
 
          do_call:
@@ -362,7 +362,7 @@ namespace ACSVM
             callStk.push({codePtr, module, scopeMod, localArr.size(), localReg.size()});
 
             // Apply function data.
-            codePtr      = func->module->codeV + func->codeIdx;
+            codePtr      = &func->module->codeV[func->codeIdx];
             module       = func->module;
             scopeMod     = scopeMap->getModuleScope(module);
             localArr.alloc(func->locArrC);
@@ -495,7 +495,7 @@ namespace ACSVM
 
       DeclCase(Jump_Stk):
          dataStk.drop();
-         BranchTo(dataStk[0] < module->jumpC ? module->jumpV[dataStk[0]].codeIdx : 0);
+         BranchTo(dataStk[0] < module->jumpV.size() ? module->jumpV[dataStk[0]].codeIdx : 0);
          NextCase();
 
          //================================================
@@ -503,7 +503,7 @@ namespace ACSVM
          //
 
       DeclCase(Pfun_Lit):
-         if(*codePtr < module->functionC)
+         if(*codePtr < module->functionV.size())
             dataStk.push(module->functionV[*codePtr]->idx);
          else
             dataStk.push(0);
@@ -511,7 +511,7 @@ namespace ACSVM
          NextCase();
 
       DeclCase(Pstr_Stk):
-         if(dataStk[1] < module->stringC)
+         if(dataStk[1] < module->stringV.size())
             dataStk[1] = ~module->stringV[dataStk[1]]->idx;
          NextCase();
 

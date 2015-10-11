@@ -235,12 +235,10 @@ namespace ACSVM
       {
          auto &module = moduleItr.second;
 
-         for(Function **funcItr = module->functionV,
-            **funcEnd = funcItr + module->functionC;
-            funcItr != funcEnd; ++funcItr)
+         for(Function *&funcItr : module->functionV)
          {
-            if(*funcItr == func)
-               *funcItr = nullptr;
+            if(funcItr == func)
+               funcItr = nullptr;
          }
       }
 
@@ -389,7 +387,7 @@ namespace ACSVM
    void Environment::printKill(Thread *thread, Word type, Word data)
    {
       std::cerr << "ACSVM ERROR: Kill " << type << ':' << data
-         << " at " << (thread->codePtr - thread->module->codeV - 3) << '\n';
+         << " at " << (thread->codePtr - thread->module->codeV.data() - 3) << '\n';
    }
 
    //

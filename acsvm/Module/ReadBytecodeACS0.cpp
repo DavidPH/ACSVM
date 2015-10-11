@@ -88,36 +88,36 @@ namespace ACSVM
 
       // Read script count.
       if(size - iter < 4) throw ReadError();
-      allocScriptV(ReadLE4(data + iter)); iter += 4;
+      scriptV.alloc(ReadLE4(data + iter), this); iter += 4;
 
       // Read scripts.
-      if(size - iter < scriptC * 12) throw ReadError();
-      for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
+      if(size - iter < scriptV.size() * 12) throw ReadError();
+      for(Script &scr : scriptV)
       {
-         scr->nameInt = ReadLE4(data + iter); iter += 4;
-         scr->codeIdx = ReadLE4(data + iter); iter += 4;
-         scr->argC    = ReadLE4(data + iter); iter += 4;
+         scr.nameInt = ReadLE4(data + iter); iter += 4;
+         scr.codeIdx = ReadLE4(data + iter); iter += 4;
+         scr.argC    = ReadLE4(data + iter); iter += 4;
 
-         if(scr->nameInt >= 1000)
+         if(scr.nameInt >= 1000)
          {
-            scr->nameInt -= 1000;
-            scr->type     = ScriptType::Open;
+            scr.nameInt -= 1000;
+            scr.type     = ScriptType::Open;
          }
          else
-            scr->type = ScriptType::Closed;
+            scr.type = ScriptType::Closed;
       }
 
       // Read string table.
 
       // Read string count.
       if(size - iter < 4) throw ReadError();
-      allocStringV(ReadLE4(data + iter)); iter += 4;
+      stringV.alloc(ReadLE4(data + iter)); iter += 4;
 
       // Read strings.
-      if(size - iter < stringC * 4) throw ReadError();
-      for(String **str = stringV, **end = str + stringC; str != end; ++str)
+      if(size - iter < stringV.size() * 4) throw ReadError();
+      for(String *&str : stringV)
       {
-         *str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
+         str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
       }
 
       // Read code.
@@ -136,7 +136,7 @@ namespace ACSVM
       // Trace code paths from this module.
       tracer.trace(this);
 
-      allocCodeV(tracer.codeC);
+      codeV.alloc(tracer.codeC);
 
       tracer.translate(this);
    }

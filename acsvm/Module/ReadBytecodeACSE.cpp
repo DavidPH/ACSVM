@@ -66,9 +66,8 @@ namespace ACSVM
    //
    // Module::chunkStrTabACSE
    //
-   void Module::chunkStrTabACSE(String **&strV, std::size_t &strC,
-      Byte const *data, std::size_t size, bool junk,
-      void (Module::*alloc)(std::size_t))
+   void Module::chunkStrTabACSE(Vector<String *> &strV,
+      Byte const *data, std::size_t size, bool junk)
    {
       std::size_t iter = 0;
 
@@ -76,21 +75,21 @@ namespace ACSVM
       {
          if(size < 12) throw ReadError();
 
-         /*junk       = ReadLE4(data + iter);*/ iter += 4;
-         (this->*alloc)(ReadLE4(data + iter));  iter += 4;
-         /*junk       = ReadLE4(data + iter);*/ iter += 4;
+         /*junk   = ReadLE4(data + iter);*/ iter += 4;
+         strV.alloc(ReadLE4(data + iter));  iter += 4;
+         /*junk   = ReadLE4(data + iter);*/ iter += 4;
       }
       else
       {
          if(size < 4) throw ReadError();
 
-         (this->*alloc)(ReadLE4(data + iter)); iter += 4;
+         strV.alloc(ReadLE4(data + iter)); iter += 4;
       }
 
-      if(size - iter < strC * 4) throw ReadError();
-      for(String **str = strV, **end = str + strC; str != end; ++str)
+      if(size - iter < strV.size() * 4) throw ReadError();
+      for(String *&str : strV)
       {
-         *str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
+         str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
       }
    }
 
@@ -106,7 +105,7 @@ namespace ACSVM
       Word        idx  = ReadLE2(data);
       std::size_t arrC = (size - 2) / 4;
 
-      if(idx < functionC && functionV[idx])
+      if(idx < functionV.size() && functionV[idx])
          functionV[idx]->locArrC = arrC;
 
       return false;
@@ -119,7 +118,7 @@ namespace ACSVM
    {
       if(chunkName != ChunkID("FNAM")) return false;
 
-      chunkStrTabACSE(funcNameV, funcNameC, data, size, false, &Module::allocFuncNameV);
+      chunkStrTabACSE(funcNameV, data, size, false);
 
       return true;
    }
@@ -134,10 +133,10 @@ namespace ACSVM
       if(size % 8) throw ReadError();
 
       // Read functions.
-      allocFunctionV(size / 8);
+      functionV.alloc(size / 8);
 
       std::size_t iter = 0;
-      for(Function **func = functionV, **end = func + functionC; func != end; ++func)
+      for(Function *&func : functionV)
       {
          Word idx     = iter / 8;
          Word argC    = ReadLE1(data + iter); iter += 1;
@@ -148,7 +147,7 @@ namespace ACSVM
          // Ignore undefined functions for now.
          if(!codeIdx) continue;
 
-         String   *funcName = idx < funcNameC ? funcNameV[idx] : nullptr;
+         String   *funcName = idx < funcNameV.size() ? funcNameV[idx] : nullptr;
          Function *function = env->getFunction(this, funcName);
 
          function->argC    = argC;
@@ -156,7 +155,7 @@ namespace ACSVM
          function->flagRet = flags & 0x0001;
          function->codeIdx = codeIdx;
 
-         *func = function;
+         func = function;
       }
 
       return true;
@@ -172,12 +171,12 @@ namespace ACSVM
       if(size % 4) throw ReadError();
 
       // Read jumps.
-      allocJumpV(size / 4);
+      jumpV.alloc(size / 4);
 
       std::size_t iter = 0;
-      for(Jump *jump = jumpV, *end = jump + jumpC; jump != end; ++jump)
+      for(Jump &jump : jumpV)
       {
-         jump->codeIdx = ReadLE4(data + iter); iter += 4;
+         jump.codeIdx = ReadLE4(data + iter); iter += 4;
       }
 
       return true;
@@ -197,8 +196,8 @@ namespace ACSVM
 
       if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
-      for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
-         if(scr->nameInt == nameInt) scr->locArrC = arrC;
+      for(Script &scr : scriptV)
+         if(scr.nameInt == nameInt) scr.locArrC = arrC;
 
       return false;
    }
@@ -222,12 +221,12 @@ namespace ACSVM
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
-         for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
+         for(Script &scr : scriptV)
          {
-            if(scr->nameInt == nameInt)
+            if(scr.nameInt == nameInt)
             {
-               scr->flagClient = flagClient;
-               scr->flagNet    = flagNet;
+               scr.flagClient = flagClient;
+               scr.flagNet    = flagNet;
             }
          }
       }
@@ -242,7 +241,7 @@ namespace ACSVM
    {
       if(chunkName != ChunkID("SNAM")) return false;
 
-      chunkStrTabACSE(scrNameV, scrNameC, data, size, false, &Module::allocScrNameV);
+      chunkStrTabACSE(scrNameV, data, size, false);
 
       return true;
    }
@@ -259,18 +258,18 @@ namespace ACSVM
       if(size % 8) throw ReadError();
 
       // Read scripts.
-      allocScriptV(size / 8);
+      scriptV.alloc(size / 8, this);
 
       std::size_t iter = 0;
-      for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
+      for(Script &scr : scriptV)
       {
          Word nameInt = ReadLE2(data + iter); iter += 2;
          Word type    = ReadLE1(data + iter); iter += 1;
-         scr->argC    = ReadLE1(data + iter); iter += 1;
-         scr->codeIdx = ReadLE4(data + iter); iter += 4;
+         scr.argC     = ReadLE1(data + iter); iter += 1;
+         scr.codeIdx  = ReadLE4(data + iter); iter += 4;
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
-         setScriptNameTypeACSE(scr, nameInt, type);
+         setScriptNameTypeACSE(&scr, nameInt, type);
       }
 
       return true;
@@ -288,18 +287,18 @@ namespace ACSVM
       if(size % 12) throw ReadError();
 
       // Read scripts.
-      allocScriptV(size / 12);
+      scriptV.alloc(size / 12, this);
 
       std::size_t iter = 0;
-      for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
+      for(Script &scr : scriptV)
       {
          Word nameInt = ReadLE2(data + iter); iter += 2;
          Word type    = ReadLE2(data + iter); iter += 2;
-         scr->codeIdx = ReadLE4(data + iter); iter += 4;
-         scr->argC    = ReadLE4(data + iter); iter += 4;
+         scr.codeIdx  = ReadLE4(data + iter); iter += 4;
+         scr.argC     = ReadLE4(data + iter); iter += 4;
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
-         setScriptNameTypeACSE(scr, nameInt, type);
+         setScriptNameTypeACSE(&scr, nameInt, type);
       }
 
       return true;
@@ -316,12 +315,12 @@ namespace ACSVM
 
       if(size < 12) throw ReadError();
 
-      /*junk     = ReadLE4(data + iter);*/ iter += 4;
-      allocStringV(ReadLE4(data + iter));  iter += 4;
-      /*junk     = ReadLE4(data + iter);*/ iter += 4;
+      /*junk      = ReadLE4(data + iter);*/ iter += 4;
+      stringV.alloc(ReadLE4(data + iter));  iter += 4;
+      /*junk      = ReadLE4(data + iter);*/ iter += 4;
 
-      if(size - iter < stringC * 4) throw ReadError();
-      for(String **str = stringV, **end = str + stringC; str != end; ++str)
+      if(size - iter < stringV.size() * 4) throw ReadError();
+      for(String *&str : stringV)
       {
          std::size_t offset = ReadLE4(data + iter); iter += 4;
 
@@ -335,7 +334,7 @@ namespace ACSVM
          std::tie(std::ignore, bufEnd, len) = ScanStringACS0(buf.get(), len, 0);
 
          // Parse string.
-         *str = env->getString(ParseStringACS0(buf.get(), bufEnd, len).get(), len);
+         str = env->getString(ParseStringACS0(buf.get(), bufEnd, len).get(), len);
       }
 
       return true;
@@ -348,7 +347,7 @@ namespace ACSVM
    {
       if(chunkName != ChunkID("STRL")) return false;
 
-      chunkStrTabACSE(stringV, stringC, data, size, true, &Module::allocStringV);
+      chunkStrTabACSE(stringV, data, size, true);
 
       return true;
    }
@@ -369,10 +368,10 @@ namespace ACSVM
 
          if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
-         for(Script *scr = scriptV, *end = scr + scriptC; scr != end; ++scr)
+         for(Script &scr : scriptV)
          {
-            if(scr->nameInt == nameInt)
-               scr->locRegC = regC;
+            if(scr.nameInt == nameInt)
+               scr.locRegC = regC;
          }
       }
 
@@ -503,7 +502,7 @@ namespace ACSVM
       {
          // Fetch name.
          Word nameIdx = ~scr->nameInt;
-         if(nameIdx < scrNameC)
+         if(nameIdx < scrNameV.size())
             scr->nameStr = scrNameV[nameIdx];
       }
 

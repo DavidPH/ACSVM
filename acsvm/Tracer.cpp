@@ -181,14 +181,14 @@ namespace ACSVM
 
       // Trace from entry points.
 
-      for(Function **itr = module->functionV, **end = itr + module->functionC; itr != end; ++itr)
-         if(*itr && (*itr)->module == module) trace((*itr)->codeIdx);
+      for(Function *&func : module->functionV)
+         if(func && func->module == module) trace(func->codeIdx);
 
-      for(Jump *itr = module->jumpV, *end = itr + module->jumpC; itr != end; ++itr)
-         trace(itr->codeIdx);
+      for(Jump &jump : module->jumpV)
+         trace(jump.codeIdx);
 
-      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
-         trace(itr->codeIdx);
+      for(Script &scr : module->scriptV)
+         trace(scr.codeIdx);
 
       // Add Kill to catch execution past end.
       codeC += 1 + env->getCodeData(Code::Kill)->argc;
@@ -358,7 +358,7 @@ namespace ACSVM
    {
       std::unique_ptr<Word*[]> jumps{new uint32_t *[jumpC]};
 
-      Word  *codeItr = module->codeV;
+      Word  *codeItr = module->codeV.data();
       Word **jumpItr = jumps.get();
 
       // Add Kill to catch branches to zero.
@@ -376,7 +376,7 @@ namespace ACSVM
          }
 
          // Record jump target.
-         codeIndex[iter] = codeItr - module->codeV;
+         codeIndex[iter] = codeItr - module->codeV.data();
 
          // Read op.
          Word                opCode;
@@ -569,17 +569,17 @@ namespace ACSVM
 
       // Translate entry points.
 
-      for(Function **itr = module->functionV, **end = itr + module->functionC; itr != end; ++itr)
+      for(Function *&func : module->functionV)
       {
-         if(*itr && (*itr)->module == module)
-            (*itr)->codeIdx = (*itr)->codeIdx < size ? codeIndex[(*itr)->codeIdx] : 0;
+         if(func && func->module == module)
+            func->codeIdx = func->codeIdx < size ? codeIndex[func->codeIdx] : 0;
       }
 
-      for(Jump *itr = module->jumpV, *end = itr + module->jumpC; itr != end; ++itr)
-         itr->codeIdx = itr->codeIdx < size ? codeIndex[itr->codeIdx] : 0;
+      for(Jump &jump : module->jumpV)
+         jump.codeIdx = jump.codeIdx < size ? codeIndex[jump.codeIdx] : 0;
 
-      for(Script *itr = module->scriptV, *end = itr + module->scriptC; itr != end; ++itr)
-         itr->codeIdx = itr->codeIdx < size ? codeIndex[itr->codeIdx] : 0;
+      for(Script &scr : module->scriptV)
+         scr.codeIdx = scr.codeIdx < size ? codeIndex[scr.codeIdx] : 0;
    }
 }
 

@@ -54,7 +54,7 @@ namespace ACSVM
    {
       script  = script_;
       module  = script->module;
-      codePtr = module->codeV + script->codeIdx;
+      codePtr = &module->codeV[script->codeIdx];
 
       scopeMod = map->getModuleScope(module);
       scopeMap = map;
