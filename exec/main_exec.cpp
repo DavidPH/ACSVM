@@ -16,6 +16,7 @@
 #include "acsvm/CodeData.hpp"
 #include "acsvm/Error.hpp"
 #include "acsvm/Module.hpp"
+#include "acsvm/Scope.hpp"
 #include "acsvm/Script.hpp"
 #include "acsvm/Thread.hpp"
 
@@ -86,6 +87,7 @@ int main(int argc, char *argv[])
    env.addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
    env.addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
 
+   // Load modules.
    try
    {
       for(int i = 1; i < argc; ++i)
@@ -97,10 +99,13 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
+   ACSVM::MapScope *map = env.getGlobalScope(0)->getHubScope(0)->getMapScope(0);
+
+   // Start Open scripts.
    for(ACSVM::Script *head = env.getScriptHead(), *scr = head->envNext; scr != head; scr = scr->envNext)
    {
       if(scr->type == ACSVM::ScriptType::Open)
-         env.getFreeThread()->start(scr);
+         env.getFreeThread()->start(scr, map);
    }
 
    env.exec();

@@ -17,6 +17,7 @@
 #include "CodeData.hpp"
 #include "Function.hpp"
 #include "Module.hpp"
+#include "Scope.hpp"
 #include "Script.hpp"
 #include "Thread.hpp"
 
@@ -59,6 +60,8 @@ namespace ACSVM
 
       // Reserve index 0 as no function.
       std::vector<Function *> functionVec{nullptr};
+
+      std::unordered_map<std::size_t, GlobalScope> globalScopes;
 
       std::vector<CallFunc> tableCallFunc
       {
@@ -322,6 +325,15 @@ namespace ACSVM
       }
       else
          return new Function{module, nullptr, 0};
+   }
+
+   //
+   // Environment::getGlobalScope
+   //
+   GlobalScope *Environment::getGlobalScope(std::size_t id)
+   {
+      return &pd->globalScopes.emplace(std::piecewise_construct,
+         std::make_tuple(id), std::make_tuple(this)).first->second;
    }
 
    //

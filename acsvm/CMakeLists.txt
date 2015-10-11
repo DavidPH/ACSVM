@@ -35,6 +35,7 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    Module/ReadBytecodeACS0.cpp
    Module/ReadBytecodeACSE.cpp
    PrintBuf.cpp
+   Scope.cpp
    Script.cpp
    String.cpp
    Thread.cpp

@@ -33,10 +33,11 @@ namespace ACSVM
    class CallFrame
    {
    public:
-      Word       *codePtr;
-      Module     *module;
-      std::size_t locArrC;
-      std::size_t locRegC;
+      Word        *codePtr;
+      Module      *module;
+      ModuleScope *scopeMod;
+      std::size_t  locArrC;
+      std::size_t  locRegC;
    };
 
    //
@@ -89,7 +90,7 @@ namespace ACSVM
 
       void exec();
 
-      void start(Script *script);
+      void start(Script *script, MapScope *map);
 
       Stack<CallFrame> callStk;
       Stack<Word>      dataStk;
@@ -98,11 +99,15 @@ namespace ACSVM
       PrintBuf         printBuf;
       ThreadState      state;
 
-      Word   *codePtr; // Instruction pointer.
-      Module *module;  // Current execution Module.
-      Script *script;  // Current execution Script.
-      Word    delay;   // Execution delay tics.
-      Word    result;  // Code-defined thread result.
+      Word        *codePtr; // Instruction pointer.
+      Module      *module;  // Current execution Module.
+      GlobalScope *scopeGbl;
+      HubScope    *scopeHub;
+      MapScope    *scopeMap;
+      ModuleScope *scopeMod;
+      Script      *script;  // Current execution Script.
+      Word         delay;   // Execution delay tics.
+      Word         result;  // Code-defined thread result.
 
 
       static constexpr std::size_t CallStkSize =   8;

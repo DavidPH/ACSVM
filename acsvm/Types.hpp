@@ -48,9 +48,13 @@ namespace ACSVM
    class Environment;
    class FuncDataACS0;
    class Function;
+   class GlobalScope;
+   class HubScope;
    class Jump;
+   class MapScope;
    class Module;
    class ModuleName;
+   class ModuleScope;
    class Script;
    class String;
    class Thread;

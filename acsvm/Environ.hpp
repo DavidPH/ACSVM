@@ -65,6 +65,8 @@ namespace ACSVM
 
       Function *getFunction(Module *module, String *name);
 
+      GlobalScope *getGlobalScope(std::size_t id);
+
       // Gets the named module, loading it if needed.
       Module *getModule(ModuleName const &name);
       Module *getModule(ModuleName &&name);

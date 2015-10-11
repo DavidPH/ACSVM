@@ -18,6 +18,7 @@
 #include "Function.hpp"
 #include "Jump.hpp"
 #include "Module.hpp"
+#include "Scope.hpp"
 #include "Script.hpp"
 
 
@@ -108,10 +109,16 @@
 //
 #define OpSet(op) \
    DeclCase(op##_GblArr): \
-      /* TODO */ \
+      Op_##op(scopeGbl->arrV[*codePtr++][dataStk[1]]); dataStk.drop(); \
       NextCase(); \
    DeclCase(op##_GblReg): \
-      /* TODO */ \
+      Op_##op(scopeGbl->regV[*codePtr++]); \
+      NextCase(); \
+   DeclCase(op##_HubArr): \
+      Op_##op(scopeHub->arrV[*codePtr++][dataStk[1]]); dataStk.drop(); \
+      NextCase(); \
+   DeclCase(op##_HubReg): \
+      Op_##op(scopeHub->regV[*codePtr++]); \
       NextCase(); \
    DeclCase(op##_LocArr): \
       Op_##op(localArr[*codePtr++][dataStk[1]]); dataStk.drop(); \
@@ -119,17 +126,11 @@
    DeclCase(op##_LocReg): \
       Op_##op(localReg[*codePtr++]); \
       NextCase(); \
-   DeclCase(op##_MapArr): \
-      /* TODO */ \
+   DeclCase(op##_ModArr): \
+      Op_##op((*scopeMod->arrV[*codePtr++])[dataStk[1]]); dataStk.drop(); \
       NextCase(); \
-   DeclCase(op##_MapReg): \
-      /* TODO */ \
-      NextCase(); \
-   DeclCase(op##_WldArr): \
-      /* TODO */ \
-      NextCase(); \
-   DeclCase(op##_WldReg): \
-      /* TODO */ \
+   DeclCase(op##_ModReg): \
+      Op_##op(*scopeMod->regV[*codePtr++]); \
       NextCase()
 
 
@@ -358,11 +359,12 @@ namespace ACSVM
             dataStk.reserve(DataStkSize);
 
             // Push call frame.
-            callStk.push({codePtr, module, localArr.size(), localReg.size()});
+            callStk.push({codePtr, module, scopeMod, localArr.size(), localReg.size()});
 
             // Apply function data.
             codePtr      = func->module->codeV + func->codeIdx;
             module       = func->module;
+            scopeMod     = scopeMap->getModuleScope(module);
             localArr.alloc(func->locArrC);
             localReg.alloc(func->locRegC);
 
@@ -431,6 +433,7 @@ namespace ACSVM
          // Apply call frame.
          codePtr     = callStk[1].codePtr;
          module      = callStk[1].module;
+         scopeMod    = callStk[1].scopeMod;
          localArr.free(callStk[1].locArrC);
          localReg.free(callStk[1].locRegC);
 
@@ -512,16 +515,16 @@ namespace ACSVM
             dataStk[1] = ~module->stringV[dataStk[1]]->idx;
          NextCase();
 
-      DeclCase(Push_GblArr): /* TODO */ NextCase();
-      DeclCase(Push_GblReg): /* TODO */ NextCase();
+      DeclCase(Push_GblArr): dataStk[1] = scopeGbl->arrV[*codePtr++].find(dataStk[1]); NextCase();
+      DeclCase(Push_GblReg): dataStk.push(scopeGbl->regV[*codePtr++]); NextCase();
+      DeclCase(Push_HubArr): dataStk[1] = scopeHub->arrV[*codePtr++].find(dataStk[1]); NextCase();
+      DeclCase(Push_HubReg): dataStk.push(scopeHub->regV[*codePtr++]); NextCase();
       DeclCase(Push_Lit):    dataStk.push(*codePtr++); NextCase();
-      DeclCase(Push_LitArr): /* TODO */ NextCase();
+      DeclCase(Push_LitArr): for(auto i = *codePtr++; i--;) dataStk.push(*codePtr++); NextCase();
       DeclCase(Push_LocArr): dataStk[1] = localArr[*codePtr++].find(dataStk[1]); NextCase();
       DeclCase(Push_LocReg): dataStk.push(localReg[*codePtr++]); NextCase();
-      DeclCase(Push_MapArr): /* TODO */ NextCase();
-      DeclCase(Push_MapReg): /* TODO */ NextCase();
-      DeclCase(Push_WldArr): /* TODO */ NextCase();
-      DeclCase(Push_WldReg): /* TODO */ NextCase();
+      DeclCase(Push_ModArr): dataStk[1] = scopeMod->arrV[*codePtr++]->find(dataStk[1]); NextCase();
+      DeclCase(Push_ModReg): dataStk.push(*scopeMod->regV[*codePtr++]); NextCase();
 
          //================================================
          // Script control codes.

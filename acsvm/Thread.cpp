@@ -14,7 +14,8 @@
 
 #include "Array.hpp"
 #include "Module.hpp"
-#include"Script.hpp"
+#include "Scope.hpp"
+#include "Script.hpp"
 
 
 //----------------------------------------------------------------------------|
@@ -27,11 +28,15 @@ namespace ACSVM
    // Thread constructor
    //
    Thread::Thread() :
-      codePtr{nullptr},
-      module {nullptr},
-      script {nullptr},
-      delay  {0},
-      result {0}
+      codePtr {nullptr},
+      module  {nullptr},
+      scopeGbl{nullptr},
+      scopeHub{nullptr},
+      scopeMap{nullptr},
+      scopeMod{nullptr},
+      script  {nullptr},
+      delay   {0},
+      result  {0}
    {
    }
 
@@ -45,11 +50,16 @@ namespace ACSVM
    //
    // Thread::start
    //
-   void Thread::start(Script *script_)
+   void Thread::start(Script *script_, MapScope *map)
    {
       script  = script_;
       module  = script->module;
       codePtr = module->codeV + script->codeIdx;
+
+      scopeMod = map->getModuleScope(module);
+      scopeMap = map;
+      scopeHub = scopeMap->hub;
+      scopeGbl = scopeHub->global;
 
       callStk.reserve(CallStkSize);
       dataStk.reserve(DataStkSize);
