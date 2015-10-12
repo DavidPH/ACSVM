@@ -32,8 +32,8 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    Environ.cpp
    Function.cpp
    Module.cpp
-   Module/ReadBytecodeACS0.cpp
-   Module/ReadBytecodeACSE.cpp
+   ModuleACS0.cpp
+   ModuleACSE.cpp
    PrintBuf.cpp
    Scope.cpp
    Script.cpp
