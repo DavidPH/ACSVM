@@ -50,6 +50,17 @@ namespace ACSVM
 
 
 //----------------------------------------------------------------------------|
+// Extern Objects                                                             |
+//
+
+namespace ACSVM
+{
+   constexpr std::size_t ModuleScope::ArrC;
+   constexpr std::size_t ModuleScope::RegC;
+}
+
+
+//----------------------------------------------------------------------------|
 // Extern Functions                                                           |
 //
 
@@ -132,8 +143,16 @@ namespace ACSVM
    //
    ModuleScope *MapScope::getModuleScope(Module *module)
    {
-      return &pd->moduleScopes.emplace(std::piecewise_construct,
-         std::make_tuple(module), std::make_tuple(this, module)).first->second;
+      auto itr = pd->moduleScopes.find(module);
+      if(itr == pd->moduleScopes.end())
+      {
+         itr = pd->moduleScopes.emplace(std::piecewise_construct,
+            std::make_tuple(module), std::make_tuple(this, module)).first;
+
+         itr->second.import();
+      }
+
+      return &itr->second;
    }
 
    //
@@ -162,6 +181,56 @@ namespace ACSVM
       {
          if(i < module->regInitV.size())
             selfRegV[i] = module->regInitV[i];
+      }
+   }
+
+   //
+   // ModuleScope::import
+   //
+   void ModuleScope::import()
+   {
+      for(std::size_t i = 0, e = std::min<std::size_t>(ArrC, module->arrImpV.size()); i != e; ++i)
+      {
+         String *arrName = module->arrImpV[i];
+         if(!arrName) continue;
+
+         for(auto &imp : module->importV)
+         {
+            for(auto &impName : imp->arrNameV)
+            {
+               if(impName == arrName)
+               {
+                  std::size_t impIdx = &impName - imp->arrNameV.data();
+                  if(impIdx >= ArrC) continue;
+                  arrV[i] = &map->getModuleScope(imp)->selfArrV[impIdx];
+                  goto arr_found;
+               }
+            }
+         }
+
+      arr_found:;
+      }
+
+      for(std::size_t i = 0, e = std::min<std::size_t>(RegC, module->regImpV.size()); i != e; ++i)
+      {
+         String *regName = module->regImpV[i];
+         if(!regName) continue;
+
+         for(auto &imp : module->importV)
+         {
+            for(auto &impName : imp->regNameV)
+            {
+               if(impName == regName)
+               {
+                  std::size_t impIdx = &impName - imp->regNameV.data();
+                  if(impIdx >= RegC) continue;
+                  regV[i] = &map->getModuleScope(imp)->selfRegV[impIdx];
+                  goto reg_found;
+               }
+            }
+         }
+
+      reg_found:;
       }
    }
 

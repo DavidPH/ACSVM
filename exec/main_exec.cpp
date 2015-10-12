@@ -63,9 +63,9 @@ static bool EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
 //
 void Environment::loadModule(ACSVM::Module *module)
 {
-   std::ifstream in{module->name.s.get(), std::ios_base::out | std::ios_base::binary};
+   std::ifstream in{module->name.s.get(), std::ios_base::in | std::ios_base::binary};
 
-   if(!in) throw ACSVM::ReadError();
+   if(!in) throw ACSVM::ReadError("file open failure");
 
    std::vector<ACSVM::Byte> data;
 

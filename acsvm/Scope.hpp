@@ -106,6 +106,8 @@ namespace ACSVM
       ModuleScope(MapScope *map, Module *module);
       ~ModuleScope();
 
+      void import();
+
       MapScope *const map;
       Module   *const module;
 

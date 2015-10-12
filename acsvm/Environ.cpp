@@ -132,6 +132,9 @@ namespace ACSVM
    //
    Environment::~Environment()
    {
+      while(!pd->tableModule.empty())
+         pd->tableModule.erase(pd->tableModule.begin());
+
       delete pd;
    }
 

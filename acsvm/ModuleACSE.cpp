@@ -92,6 +92,56 @@ namespace ACSVM
    }
 
    //
+   // Module::chunkerACSE_AIMP
+   //
+   bool Module::chunkerACSE_AIMP(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("AIMP")) return false;
+
+      if(size < 4) throw ReadError();
+
+      // Chunk starts with a number of entries. However, that is redundant with
+      // just checking for the end of the chunk as in MIMP, so do that.
+
+      // Determine highest index.
+      Word arrC = 0;
+      for(std::size_t iter = 4; iter != size;)
+      {
+         if(size - iter < 8) throw ReadError();
+
+         Word idx = ReadLE4(data + iter);   iter += 4;
+         /*   len = LeadLE4(data + iter);*/ iter += 4;
+
+         arrC = std::max<Word>(arrC, idx + 1);
+
+         Byte const *next;
+         std::tie(std::ignore, next, std::ignore) = ScanStringACS0(data, size, iter);
+
+         iter = next - data + 1;
+      }
+
+      // Read imports.
+      arrImpV.alloc(arrC);
+      for(std::size_t iter = 4; iter != size;)
+      {
+         Word idx = ReadLE4(data + iter);   iter += 4;
+         /*   len = LeadLE4(data + iter);*/ iter += 4;
+
+         Byte const *next;
+         std::size_t len;
+         std::tie(std::ignore, next, len) = ScanStringACS0(data, size, iter);
+
+         std::unique_ptr<char[]> str = ParseStringACS0(data + iter, next, len);
+
+         arrImpV[idx] = env->getString(str.get(), len);
+
+         iter = next - data + 1;
+      }
+
+      return true;
+   }
+
+   //
    // Module::chunkerACSE_AINI
    //
    bool Module::chunkerACSE_AINI(Byte const *data, std::size_t size, Word chunkName)
@@ -303,6 +353,36 @@ namespace ACSVM
    }
 
    //
+   // Module::chunkerACSE_LOAD
+   //
+   bool Module::chunkerACSE_LOAD(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("LOAD")) return false;
+
+      // Count imports.
+      std::size_t importC = 0;
+      for(Byte const *iter = data, *end = data + size; iter != end; ++ iter)
+         if(!*iter) ++importC;
+
+      importV.alloc(importC);
+
+      for(std::size_t iter = 0, i = 0; iter != size;)
+      {
+         Byte const *next;
+         std::size_t len;
+         std::tie(std::ignore, next, len) = ScanStringACS0(data, size, iter);
+
+         std::unique_ptr<char[]> str = ParseStringACS0(data + iter, next, len);
+
+         importV[i++] = env->getModule(env->getModuleName(str.get(), len));
+
+         iter = next - data + 1;
+      }
+
+      return true;
+   }
+
+   //
    // Module::chunkerACSE_MEXP
    //
    bool Module::chunkerACSE_MEXP(Byte const *data, std::size_t size, Word chunkName)
@@ -310,6 +390,49 @@ namespace ACSVM
       if(chunkName != ChunkID("MEXP")) return false;
 
       chunkStrTabACSE(regNameV, data, size, false);
+
+      return true;
+   }
+
+   //
+   // Module::chunkerACSE_MIMP
+   //
+   bool Module::chunkerACSE_MIMP(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("MIMP")) return false;
+
+      // Determine highest index.
+      Word regC = 0;
+      for(std::size_t iter = 0; iter != size;)
+      {
+         if(size - iter < 4) throw ReadError();
+
+         Word idx = ReadLE4(data + iter); iter += 4;
+
+         regC = std::max<Word>(regC, idx + 1);
+
+         Byte const *next;
+         std::tie(std::ignore, next, std::ignore) = ScanStringACS0(data, size, iter);
+
+         iter = next - data + 1;
+      }
+
+      // Read imports.
+      regImpV.alloc(regC);
+      for(std::size_t iter = 0; iter != size;)
+      {
+         Word idx = ReadLE4(data + iter); iter += 4;
+
+         Byte const *next;
+         std::size_t len;
+         std::tie(std::ignore, next, len) = ScanStringACS0(data, size, iter);
+
+         std::unique_ptr<char[]> str = ParseStringACS0(data + iter, next, len);
+
+         regImpV[idx] = env->getString(str.get(), len);
+
+         iter = next - data + 1;
+      }
 
       return true;
    }
@@ -642,19 +765,41 @@ namespace ACSVM
       }
 
       // LOAD - Library Loading
-      // TODO
-
-      // Process imports.
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_LOAD);
 
       // Process function imports.
-      // TODO
+      for(auto &func : functionV)
+      {
+         if(func) continue;
+
+         std::size_t idx = &func - functionV.data();
+
+         if(idx >= funcNameV.size()) continue;
+
+         auto &funcName = funcNameV[idx];
+
+         if(!funcName) continue;
+
+         for(auto &import : importV)
+         {
+            for(auto &funcImp : import->functionV)
+            {
+               if(funcImp && funcImp->name == funcName)
+               {
+                  func = funcImp;
+                  goto func_found;
+               }
+            }
+         }
+
+      func_found:;
+      }
 
       // AIMP - Module Array Import
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_AIMP);
 
       // MIMP - Module Variable Import
-      // TODO
+      chunkIterACSE(data, size, &Module::chunkerACSE_MIMP);
 
       // ASTR - Module Array Strings
       chunkIterACSE(data, size, &Module::chunkerACSE_ASTR);

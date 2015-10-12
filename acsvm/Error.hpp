@@ -30,7 +30,11 @@ namespace ACSVM
    class ReadError : public std::exception
    {
    public:
-      virtual char const *what() const noexcept {return "ACSVM::ReadError";}
+      ReadError(char const *msg_ = "ACSVM::ReadError") : msg{msg_} {}
+
+      virtual char const *what() const noexcept {return msg;}
+
+      char const *const msg;
    };
 }
 
