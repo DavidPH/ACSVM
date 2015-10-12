@@ -121,6 +121,15 @@ namespace ACSVM
    //
 
    //
+   // int GetChar(str s, int i)
+   //
+   bool CallFunc_Func_GetChar(Thread *thread, Word const *argv, Word)
+   {
+      thread->dataStk.push(thread->module->env->getString(argv[0])->get(argv[1]));
+      return false;
+   }
+
+   //
    // int StrLen(str s)
    //
    bool CallFunc_Func_StrLen(Thread *thread, Word const *argv, Word)

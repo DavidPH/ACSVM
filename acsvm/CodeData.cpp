@@ -14,6 +14,7 @@
 
 #include "Code.hpp"
 
+#include <algorithm>
 #include <cstring>
 
 
@@ -52,6 +53,18 @@ namespace ACSVM
    }
 
    //
+   // FuncDataACS0 copy constructor
+   //
+   FuncDataACS0::FuncDataACS0(FuncDataACS0 const &data) :
+      transFunc{data.transFunc},
+
+      transCodeV{new std::pair<Word, Code>[data.transCodeC]},
+      transCodeC{data.transCodeC}
+   {
+      std::copy(data.transCodeV, data.transCodeV + transCodeC, transCodeV);
+   }
+
+   //
    // FuncDataACS0 move constructor
    //
    FuncDataACS0::FuncDataACS0(FuncDataACS0 &&data) :
@@ -67,7 +80,24 @@ namespace ACSVM
    //
    // FuncDataACS0 constructor
    //
+   FuncDataACS0::FuncDataACS0(FuncACS0 func_, Func transFunc_,
+      std::initializer_list<std::pair<Word, Code>> transCodes) :
+      func{func_},
+
+      transFunc{transFunc_ != Func::None ? static_cast<Word>(transFunc_) : 0},
+
+      transCodeV{new std::pair<Word, Code>[transCodes.size()]},
+      transCodeC{transCodes.size()}
+   {
+      std::copy(transCodes.begin(), transCodes.end(), transCodeV);
+   }
+
+   //
+   // FuncDataACS0 constructor
+   //
    FuncDataACS0::FuncDataACS0(Word transFunc_) :
+      func{FuncACS0::None},
+
       transFunc{transFunc_},
 
       transCodeV{nullptr},
@@ -80,14 +110,14 @@ namespace ACSVM
    //
    FuncDataACS0::FuncDataACS0(Word transFunc_,
       std::initializer_list<std::pair<Word, Code>> transCodes) :
+      func{FuncACS0::None},
+
       transFunc{transFunc_},
 
       transCodeV{new std::pair<Word, Code>[transCodes.size()]},
       transCodeC{transCodes.size()}
    {
-      std::pair<Word, Code> *itr = transCodeV;
-      for(auto const &trans : transCodes)
-         *itr = trans;
+      std::copy(transCodes.begin(), transCodes.end(), transCodeV);
    }
 
    //

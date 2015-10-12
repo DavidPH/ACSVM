@@ -65,6 +65,8 @@ namespace ACSVM
       Word const idx;  // Index into table.
       Word const len0; // Null-terminated length.
 
+      char get(std::size_t i) const {return i < len ? str[i] : '\0';}
+
 
       static void Delete(String *str);
 

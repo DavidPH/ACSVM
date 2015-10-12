@@ -92,6 +92,7 @@ ACSVM_CodeList(Push_LocArr,  1)
 ACSVM_CodeList(Push_LocReg,  1)
 ACSVM_CodeList(Push_ModArr,  1)
 ACSVM_CodeList(Push_ModReg,  1)
+ACSVM_CodeList(Push_StrArs,  0)
 
 // Script control codes.
 ACSVM_CodeList(ScrDelay,     0)
@@ -350,9 +351,18 @@ ACSVM_FuncList(PrintPush)
 ACSVM_FuncList(PrintString)
 
 // String functions.
+ACSVM_FuncList(GetChar)
 ACSVM_FuncList(StrLen)
 
 #undef ACSVM_FuncList
+#endif
+
+
+#ifdef ACSVM_FuncListACS0
+
+ACSVM_FuncListACS0(GetChar, 15, GetChar, {{2, Code::Push_StrArs}})
+
+#undef ACSVM_FuncListACS0
 #endif
 
 // EOF

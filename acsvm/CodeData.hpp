@@ -25,10 +25,6 @@
 
 namespace ACSVM
 {
-   enum class Code;
-   enum class CodeACS0;
-   enum class Func;
-
    //
    // CodeData
    //
@@ -87,16 +83,22 @@ namespace ACSVM
    class FuncDataACS0
    {
    public:
-      FuncDataACS0(FuncDataACS0 const &) = delete;
+      FuncDataACS0(FuncDataACS0 const &);
       FuncDataACS0(FuncDataACS0 &&data);
+      FuncDataACS0(FuncACS0 func, Func transFunc,
+         std::initializer_list<std::pair<Word, Code>> transCodes);
       FuncDataACS0(Word transFunc);
       FuncDataACS0(Word transFunc, std::initializer_list<std::pair<Word, Code>> transCodes);
       ~FuncDataACS0();
 
+      FuncDataACS0 &operator = (FuncDataACS0 const &) = delete;
       FuncDataACS0 &operator = (FuncDataACS0 &&data);
 
       // Internal code to translate to.
       Code getTransCode(Word argc) const;
+
+      // CallFunc index. If not internally recognized, is set to None.
+      FuncACS0 func;
 
       // CallFunc index to translate to.
       Word transFunc;

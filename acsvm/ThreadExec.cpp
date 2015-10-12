@@ -526,6 +526,11 @@ namespace ACSVM
       DeclCase(Push_ModArr): dataStk[1] = scopeMod->arrV[*codePtr++]->find(dataStk[1]); NextCase();
       DeclCase(Push_ModReg): dataStk.push(*scopeMod->regV[*codePtr++]); NextCase();
 
+      DeclCase(Push_StrArs):
+         dataStk.drop();
+         dataStk[1] = module->env->getString(dataStk[1])->get(dataStk[0]);
+         NextCase();
+
          //================================================
          // Script control codes.
          //

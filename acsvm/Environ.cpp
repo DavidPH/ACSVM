@@ -81,7 +81,12 @@ namespace ACSVM
          #include "CodeList.hpp"
       };
 
-      std::unordered_map<Word, FuncDataACS0> tableFuncDataACS0;
+      std::unordered_map<Word, FuncDataACS0> tableFuncDataACS0
+      {
+         #define ACSVM_FuncListACS0(name, func, transFunc, ...) \
+            {func, {FuncACS0::name, Func::transFunc, __VA_ARGS__}},
+         #include "CodeList.hpp"
+      };
 
       std::unordered_map<ModuleName const *, std::unique_ptr<Module>,
          NameHash, NameEqual> tableModule;

@@ -60,6 +60,19 @@ namespace ACSVM
 
       None
    };
+
+   //
+   // FuncACS0
+   //
+   // ACS0 CallFunc indexes.
+   //
+   enum class FuncACS0
+   {
+      #define ACSVM_FuncListACS0(name, idx, ...) name = idx,
+      #include "CodeList.hpp"
+
+      None
+   };
 }
 
 #endif//ACSVM__Code_H__

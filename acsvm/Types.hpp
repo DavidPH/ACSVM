@@ -41,7 +41,9 @@ namespace ACSVM
    using Word = std::uint32_t;
 
    enum class Code;
+   enum class CodeACS0;
    enum class Func;
+   enum class FuncACS0;
    class Array;
    class ArrayInit;
    class CodeData;
