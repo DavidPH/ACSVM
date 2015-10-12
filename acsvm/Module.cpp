@@ -12,6 +12,7 @@
 
 #include "Module.hpp"
 
+#include "Array.hpp"
 #include "Environ.hpp"
 #include "Function.hpp"
 #include "Jump.hpp"

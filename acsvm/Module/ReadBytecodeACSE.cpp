@@ -12,15 +12,13 @@
 
 #include "Module.hpp"
 
+#include "Array.hpp"
 #include "BinaryIO.hpp"
 #include "Environ.hpp"
 #include "Error.hpp"
 #include "Function.hpp"
 #include "Jump.hpp"
 #include "Script.hpp"
-
-#include <algorithm>
-#include <vector>
 
 
 //----------------------------------------------------------------------------|
@@ -91,6 +89,128 @@ namespace ACSVM
       {
          str = readStringACS0(data, size, ReadLE4(data + iter)); iter += 4;
       }
+   }
+
+   //
+   // Module::chunkerACSE_AINI
+   //
+   bool Module::chunkerACSE_AINI(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("AINI")) return false;
+
+      if(size < 4 || size % 4) throw ReadError();
+
+      Word idx = ReadLE4(data);
+
+      // Silently ignore out of bounds initializers.
+      if(idx >= arrInitV.size()) return false;
+
+      auto &init = arrInitV[idx];
+      for(std::size_t iter = 4; iter != size; iter += 4)
+         init.set(iter / 4 - 1, ReadLE4(data + iter));
+
+      return false;
+   }
+
+   //
+   // Module::chunkerACSE_ARAY
+   //
+   bool Module::chunkerACSE_ARAY(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("ARAY")) return false;
+
+      if(size % 8) throw ReadError();
+
+      Word arrC = 0;
+
+      // Determine highest index.
+      for(std::size_t iter = 0; iter != size; iter += 8)
+         arrC = std::max<Word>(arrC, ReadLE4(data + iter) + 1);
+
+      arrNameV.alloc(arrC);
+      arrInitV.alloc(arrC);
+      arrSizeV.alloc(arrC);
+
+      for(std::size_t iter = 0; iter != size;)
+      {
+         Word idx = ReadLE4(data + iter); iter += 4;
+         Word len = ReadLE4(data + iter); iter += 4;
+
+         arrInitV[idx].reserve(len);
+         arrSizeV[idx] = len;
+
+         // Use names from MEXP.
+         if(idx < regNameV.size())
+         {
+            arrNameV[idx] = regNameV[idx];
+            regNameV[idx] = nullptr;
+         }
+      }
+
+      return true;
+   }
+
+   //
+   // Module::chunkerACSE_ASTR
+   //
+   bool Module::chunkerACSE_ASTR(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("ASTR")) return false;
+
+      if(size % 4) throw ReadError();
+
+      for(std::size_t iter = 0; iter != size;)
+      {
+         Word idx = ReadLE4(data + iter); iter += 4;
+
+         // Silently ignore out of bounds initializers.
+         if(idx >= arrInitV.size()) continue;
+
+         auto &init = arrInitV[idx];
+         for(Word i = 0, e = arrSizeV[idx]; i != e; ++i)
+         {
+            Word initVal = init.get(i);
+            if(initVal < stringV.size())
+               init.set(i, ~stringV[initVal]->idx);
+         }
+      }
+
+      return false;
+   }
+
+   //
+   // Module::chunkerACSE_ATAG
+   //
+   bool Module::chunkerACSE_ATAG(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("ATAG")) return false;
+
+      if(size < 5 || data[0]) throw ReadError();
+
+      Word idx = ReadLE4(data + 1);
+
+      // Silently ignore out of bounds initializers.
+      if(idx >= arrInitV.size()) return false;
+
+      auto &init = arrInitV[idx];
+      for(std::size_t iter = 5; iter != size; ++iter)
+      {
+         Word initVal = init.get(iter - 5);
+         switch(data[iter])
+         {
+         case 1: // string
+            if(initVal < stringV.size())
+               init.set(iter - 5, ~stringV[initVal]->idx);
+            break;
+
+         case 2: // function
+            if(initVal < functionV.size() && functionV[initVal])
+               init.set(iter - 5, functionV[initVal]->idx);
+            break;
+         }
+      }
+
+      return false;
    }
 
    //
@@ -180,6 +300,63 @@ namespace ACSVM
       }
 
       return true;
+   }
+
+   //
+   // Module::chunkerACSE_MEXP
+   //
+   bool Module::chunkerACSE_MEXP(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("MEXP")) return false;
+
+      chunkStrTabACSE(regNameV, data, size, false);
+
+      return true;
+   }
+
+   //
+   // Module::chunkerACSE_MINI
+   //
+   bool Module::chunkerACSE_MINI(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("MINI")) return false;
+
+      Word regC = 0;
+
+      // Determine highest index.
+      for(std::size_t iter = 0; iter != size; iter += 8)
+         regC = std::max<Word>(regC, ReadLE4(data + iter) + 1);
+
+      regInitV.alloc(regC);
+
+      for(std::size_t iter = 0; iter != size; iter += 8)
+         regInitV[ReadLE4(data + iter)] = ReadLE4(data + iter + 4);
+
+      return true;
+   }
+
+   //
+   // Module::chunkerACSE_MSTR
+   //
+   bool Module::chunkerACSE_MSTR(Byte const *data, std::size_t size, Word chunkName)
+   {
+      if(chunkName != ChunkID("MSTR")) return false;
+
+      if(size % 4) throw ReadError();
+
+      for(std::size_t iter = 0; iter != size;)
+      {
+         Word idx = ReadLE4(data + iter); iter += 4;
+
+         // Silently ignore out of bounds initializers.
+         if(idx >= regInitV.size()) continue;
+
+         auto &initVal = regInitV[idx];
+         if(initVal < stringV.size())
+            initVal = ~stringV[initVal]->idx;
+      }
+
+      return false;
    }
 
    //
@@ -415,14 +592,14 @@ namespace ACSVM
    //
    void Module::readChunksACSE(Byte const *data, std::size_t size, bool fakeACS0)
    {
-      // AINI - Map Array Init
-      // TODO
+      // MEXP - Module Variable/Array Export
+      chunkIterACSE(data, size, &Module::chunkerACSE_MEXP);
 
-      // ARAY - Map Arrays
-      // TODO
+      // ARAY - Module Arrays
+      chunkIterACSE(data, size, &Module::chunkerACSE_ARAY);
 
-      // ASTR - Map Array Strings
-      // TODO
+      // AINI - Module Array Init
+      chunkIterACSE(data, size, &Module::chunkerACSE_AINI);
 
       // FNAM - Function Names
       chunkIterACSE(data, size, &Module::chunkerACSE_FNAM);
@@ -436,14 +613,8 @@ namespace ACSVM
       // JUMP - Dynamic Jump Targets
       chunkIterACSE(data, size, &Module::chunkerACSE_JUMP);
 
-      // MEXP - Map Variable/Array Export
-      // TODO
-
-      // MINI - Map Variable Init
-      // TODO
-
-      // MSTR - Map Variable Strings
-      // TODO
+      // MINI - Module Variable Init
+      chunkIterACSE(data, size, &Module::chunkerACSE_MINI);
 
       // SNAM - Script Names
       chunkIterACSE(data, size, &Module::chunkerACSE_SNAM);
@@ -470,9 +641,6 @@ namespace ACSVM
          chunkIterACSE(data, size, &Module::chunkerACSE_STRL);
       }
 
-      // Process exports.
-      // TODO
-
       // LOAD - Library Loading
       // TODO
 
@@ -482,14 +650,23 @@ namespace ACSVM
       // Process function imports.
       // TODO
 
-      // AIMP - Map Array Import
+      // AIMP - Module Array Import
       // TODO
 
-      // MIMP - Map Variable Import
+      // MIMP - Module Variable Import
       // TODO
 
-      // ATAG - Map Array Tagging
-      // TODO
+      // ASTR - Module Array Strings
+      chunkIterACSE(data, size, &Module::chunkerACSE_ASTR);
+
+      // ATAG - Module Array Tagging
+      chunkIterACSE(data, size, &Module::chunkerACSE_ATAG);
+
+      // MSTR - Module Variable Strings
+      chunkIterACSE(data, size, &Module::chunkerACSE_MSTR);
+
+      for(auto &init : arrInitV)
+         init.finish();
    }
 
    //

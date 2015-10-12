@@ -74,9 +74,14 @@ namespace ACSVM
       ModuleName   name;
 
       Vector<Word>       codeV;
+      Vector<ArrayInit>  arrInitV;
+      Vector<String *>   arrNameV;
+      Vector<Word>       arrSizeV;
       Vector<String *>   funcNameV;
       Vector<Function *> functionV;
       Vector<Jump>       jumpV;
+      Vector<Word>       regInitV;
+      Vector<String *>   regNameV;
       Vector<String *>   scrNameV;
       Vector<Script>     scriptV;
       Vector<String *>   stringV;
@@ -117,10 +122,17 @@ namespace ACSVM
       void chunkStrTabACSE(Vector<String *> &strV,
          Byte const *data, std::size_t size, bool junk);
 
+      bool chunkerACSE_AINI(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_ARAY(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_ASTR(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_ATAG(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_FARY(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_FNAM(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_FUNC(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_JUMP(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_MEXP(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_MINI(Byte const *data, std::size_t size, Word chunkName);
+      bool chunkerACSE_MSTR(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SARY(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SFLG(Byte const *data, std::size_t size, Word chunkName);
       bool chunkerACSE_SNAM(Byte const *data, std::size_t size, Word chunkName);

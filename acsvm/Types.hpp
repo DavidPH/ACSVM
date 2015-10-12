@@ -43,6 +43,7 @@ namespace ACSVM
    enum class Code;
    enum class Func;
    class Array;
+   class ArrayInit;
    class CodeData;
    class CodeDataACS0;
    class Environment;

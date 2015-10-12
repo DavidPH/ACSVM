@@ -12,6 +12,8 @@
 
 #include "Scope.hpp"
 
+#include "Module.hpp"
+
 #include <unordered_map>
 
 
@@ -147,6 +149,20 @@ namespace ACSVM
       // Set arrays and registers to refer to this scope's by default.
       for(std::size_t i = 0; i != ArrC; ++i) arrV[i] = &selfArrV[i];
       for(std::size_t i = 0; i != RegC; ++i) regV[i] = &selfRegV[i];
+
+      // Apply initialization data from module.
+
+      for(std::size_t i = 0; i != ArrC; ++i)
+      {
+         if(i < module->arrInitV.size())
+            module->arrInitV[i].apply(selfArrV[i]);
+      }
+
+      for(std::size_t i = 0; i != RegC; ++i)
+      {
+         if(i < module->regInitV.size())
+            selfRegV[i] = module->regInitV[i];
+      }
    }
 
    //
