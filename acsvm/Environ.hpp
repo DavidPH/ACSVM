@@ -90,6 +90,10 @@ namespace ACSVM
       String *getString(char const *str, std::size_t len)
          {return &stringTable[{str, len}];}
 
+      // Prints an array to a print buffer. Default behavior is to convert the
+      // sequence as UTF-32 to UTF-8.
+      virtual void printArray(PrintBuf &buf, Array const &array, Word index, Word limit);
+
       // Function to print Kill instructions. Default behavior is to print
       // message to stderr.
       virtual void printKill(Thread *thread, Word type, Word data);

@@ -14,9 +14,48 @@
 
 #include "Environ.hpp"
 #include "Module.hpp"
+#include "Scope.hpp"
 #include "Thread.hpp"
 
 #include <cinttypes>
+
+
+//----------------------------------------------------------------------------|
+// Static Functions                                                           |
+//
+
+namespace ACSVM
+{
+   //
+   // PrintArray
+   //
+   static void PrintArray(Thread *thread, Word const *argv, Word argc, Array const &arr)
+   {
+      Word idx = argv[1] + (argc > 2 ? argv[2] : 0);
+      Word len = argc > 3 ? argv[3] : -1;
+
+      thread->env->printArray(thread->printBuf, arr, idx, len);
+   }
+
+   //
+   // StrCpyArray
+   //
+   static bool StrCpyArray(Thread *thread, Word const *argv, Array &dst)
+   {
+      Word    dstOff = argv[1] + argv[2];
+      Word    dstLen = argv[3];
+      String *src = thread->env->getString(argv[4]);
+      Word    srcIdx = argv[5];
+
+      if(srcIdx > src->len) return false;
+
+      for(Word dstIdx = dstOff;;)
+      {
+         if(dstIdx - dstOff == dstLen) return false;
+         if(!(dst[dstIdx++] = src->str[srcIdx++])) return true;
+      }
+   }
+}
 
 
 //----------------------------------------------------------------------------|
@@ -48,6 +87,19 @@ namespace ACSVM
    }
 
    //
+   // str PrintEndStr()
+   //
+   bool CallFunc_Func_PrintEndStr(Thread *thread, Word const *, Word)
+   {
+      char const *data = thread->printBuf.data();
+      std::size_t size = thread->printBuf.size();
+      String     *str  = thread->env->getString(data, size);
+      thread->printBuf.drop();
+      thread->dataStk.push(~str->idx);
+      return false;
+   }
+
+   //
    // void PrintFixD(fixed d)
    //
    bool CallFunc_Func_PrintFixD(Thread *thread, Word const *argv, Word)
@@ -58,6 +110,24 @@ namespace ACSVM
       // %G should be maximally P+6 + extra exponent digits.
       thread->printBuf.reserve(12);
       thread->printBuf.format("%G", static_cast<std::int32_t>(argv[0]) / 65536.0);
+      return false;
+   }
+
+   //
+   // void PrintGblArr(int arr, int idx, int off = 0, int len = -1)
+   //
+   bool CallFunc_Func_PrintGblArr(Thread *thread, Word const *argv, Word argc)
+   {
+      PrintArray(thread, argv, argc, thread->scopeGbl->arrV[argv[0]]);
+      return false;
+   }
+
+   //
+   // void PrintHubArr(int arr, int idx, int off = 0, int len = -1)
+   //
+   bool CallFunc_Func_PrintHubArr(Thread *thread, Word const *argv, Word argc)
+   {
+      PrintArray(thread, argv, argc, thread->scopeHub->arrV[argv[0]]);
       return false;
    }
 
@@ -97,6 +167,24 @@ namespace ACSVM
    }
 
    //
+   // void PrintLocArr(int arr, int idx, int off = 0, int len = -1)
+   //
+   bool CallFunc_Func_PrintLocArr(Thread *thread, Word const *argv, Word argc)
+   {
+      PrintArray(thread, argv, argc, thread->localArr[argv[0]]);
+      return false;
+   }
+
+   //
+   // void PrintModArr(int arr, int idx, int off = 0, int len = -1)
+   //
+   bool CallFunc_Func_PrintModArr(Thread *thread, Word const *argv, Word argc)
+   {
+      PrintArray(thread, argv, argc, *thread->scopeMod->arrV[argv[0]]);
+      return false;
+   }
+
+   //
    // void PrintPush()
    //
    bool CallFunc_Func_PrintPush(Thread *thread, Word const *, Word)
@@ -110,7 +198,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_PrintString(Thread *thread, Word const *argv, Word)
    {
-      String *s = thread->module->env->getString(argv[0]);
+      String *s = thread->env->getString(argv[0]);
       thread->printBuf.reserve(s->len0);
       thread->printBuf.put(s->str, s->len0);
       return false;
@@ -126,6 +214,42 @@ namespace ACSVM
    bool CallFunc_Func_GetChar(Thread *thread, Word const *argv, Word)
    {
       thread->dataStk.push(thread->module->env->getString(argv[0])->get(argv[1]));
+      return false;
+   }
+
+   //
+   // int StrCpyGblArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   //
+   bool CallFunc_Func_StrCpyGblArr(Thread *thread, Word const *argv, Word)
+   {
+      thread->dataStk.push(StrCpyArray(thread, argv, thread->scopeGbl->arrV[argv[0]]));
+      return false;
+   }
+
+   //
+   // int StrCpyHubArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   //
+   bool CallFunc_Func_StrCpyHubArr(Thread *thread, Word const *argv, Word)
+   {
+      thread->dataStk.push(StrCpyArray(thread, argv, thread->scopeHub->arrV[argv[0]]));
+      return false;
+   }
+
+   //
+   // int StrCpyLocArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   //
+   bool CallFunc_Func_StrCpyLocArr(Thread *thread, Word const *argv, Word)
+   {
+      thread->dataStk.push(StrCpyArray(thread, argv, thread->localArr[argv[0]]));
+      return false;
+   }
+
+   //
+   // int StrCpyModArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   //
+   bool CallFunc_Func_StrCpyModArr(Thread *thread, Word const *argv, Word)
+   {
+      thread->dataStk.push(StrCpyArray(thread, argv, *thread->scopeMod->arrV[argv[0]]));
       return false;
    }
 

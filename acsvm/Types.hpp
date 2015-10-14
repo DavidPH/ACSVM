@@ -58,6 +58,7 @@ namespace ACSVM
    class Module;
    class ModuleName;
    class ModuleScope;
+   class PrintBuf;
    class Script;
    class String;
    class Thread;

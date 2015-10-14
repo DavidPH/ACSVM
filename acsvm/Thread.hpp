@@ -100,6 +100,7 @@ namespace ACSVM
       ThreadState      state;
 
       Word        *codePtr; // Instruction pointer.
+      Environment *env;     // Execution environment.
       Module      *module;  // Current execution Module.
       GlobalScope *scopeGbl;
       HubScope    *scopeHub;

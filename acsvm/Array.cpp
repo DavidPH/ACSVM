@@ -58,18 +58,18 @@ namespace ACSVM
    //
    // Array::find
    //
-   Word &Array::find(Word idx)
+   Word Array::find(Word idx) const
    {
-      if(!data) return none = 0;
+      if(!data) return 0;
       Bank *&bank = (*data)[idx / (BankSize * SegmSize * PageSize)];
 
-      if(!bank) return none = 0;
+      if(!bank) return 0;
       Segm *&segm = (*bank)[idx / (SegmSize * PageSize) % BankSize];
 
-      if(!segm) return none = 0;
+      if(!segm) return 0;
       Page *&page = (*segm)[idx / PageSize % SegmSize];
 
-      if(!page) return none = 0;
+      if(!page) return 0;
       return (*page)[idx % PageSize];
    }
 

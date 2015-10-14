@@ -39,21 +39,23 @@ namespace ACSVM
 
       void drop();
 
-      // Formats using sprintf. Must already have enough space reserved.
+      // Formats using sprintf. Does not reserve space.
       void format(char const *fmt, ...);
       void formatv(char const *fmt, std::va_list arg);
 
-      // Returns a pointer to count chars to write into. A null is added to one
-      // past the end of the buffer, and the entire buffer must be written to
-      // by the caller.
-      char *getBuf(std::size_t count);
+      // Returns a pointer to count chars to write into. The caller must write
+      // to the entire returned buffer. Does not reserve space.
+      char *getBuf(std::size_t count)
+         {char *s = bufPtr; bufPtr += count; return s;}
 
       void push();
 
+      // Writes literal characters. Does not reserve space.
       void put(char c) {*bufPtr++ = c;}
       void put(char const *s) {while(*s) *bufPtr++ = *s++;}
       void put(char const *s, std::size_t n) {while(n--) *bufPtr++ = *s++;}
 
+      // Ensures at least count chars are available for writing into.
       void reserve(std::size_t count);
 
       std::size_t size() const {return bufPtr - bufBeg;}

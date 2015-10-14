@@ -25,6 +25,8 @@ namespace ACSVM
    //
    // Array
    //
+   // Sparse-allocation array of 2**32 Words.
+   //
    class Array
    {
    public:
@@ -37,11 +39,8 @@ namespace ACSVM
 
       void clear();
 
-      // If idx is allocated, returns that Word. Otherwise, returns a reference
-      // to none set to 0.
-      Word &find(Word idx);
-
-      Word none;
+      // If idx is allocated, returns that Word. Otherwise, returns 0.
+      Word find(Word idx) const;
 
    private:
       static constexpr std::size_t PageSize = 256;

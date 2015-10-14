@@ -29,6 +29,7 @@ namespace ACSVM
    //
    Thread::Thread() :
       codePtr {nullptr},
+      env     {nullptr},
       module  {nullptr},
       scopeGbl{nullptr},
       scopeHub{nullptr},
@@ -55,6 +56,7 @@ namespace ACSVM
       script  = script_;
       module  = script->module;
       codePtr = &module->codeV[script->codeIdx];
+      env     = module->env;
 
       scopeMod = map->getModuleScope(module);
       scopeMap = map;
@@ -86,6 +88,7 @@ namespace ACSVM
       printBuf.clear();
 
       codePtr = nullptr;
+      env     = nullptr;
       delay   = 0;
       module  = nullptr;
       result  = 0;
