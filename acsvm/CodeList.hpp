@@ -382,11 +382,16 @@ ACSVM_FuncList(PrintString)
 
 // String functions.
 ACSVM_FuncList(GetChar)
+ACSVM_FuncList(StrCaseCmp)
+ACSVM_FuncList(StrCmp)
 ACSVM_FuncList(StrCpyGblArr)
 ACSVM_FuncList(StrCpyHubArr)
 ACSVM_FuncList(StrCpyLocArr)
 ACSVM_FuncList(StrCpyModArr)
+ACSVM_FuncList(StrLeft)
 ACSVM_FuncList(StrLen)
+ACSVM_FuncList(StrMid)
+ACSVM_FuncList(StrRight)
 
 #undef ACSVM_FuncList
 #endif
@@ -395,6 +400,12 @@ ACSVM_FuncList(StrLen)
 #ifdef ACSVM_FuncListACS0
 
 ACSVM_FuncListACS0(GetChar, 15, GetChar, {{2, Code::Push_StrArs}})
+
+ACSVM_FuncListACS0(StrCmp,     63, StrCmp,     {})
+ACSVM_FuncListACS0(StrCaseCmp, 64, StrCaseCmp, {})
+ACSVM_FuncListACS0(StrLeft,    65, StrLeft,    {})
+ACSVM_FuncListACS0(StrRight,   66, StrRight,   {})
+ACSVM_FuncListACS0(StrMid,     67, StrMid,     {})
 
 #undef ACSVM_FuncListACS0
 #endif

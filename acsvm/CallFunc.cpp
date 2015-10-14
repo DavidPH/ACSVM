@@ -38,6 +38,32 @@ namespace ACSVM
    }
 
    //
+   // StrCaseCmp
+   //
+   static int StrCaseCmp(String *l, String *r, Word n)
+   {
+      for(char const *ls = l->str, *rs = r->str;; ++ls, ++rs)
+      {
+         char lc = std::toupper(*ls), rc = std::toupper(*rs);
+         if(lc != rc) return lc < rc ? -1 : 1;
+         if(!lc || !n--) return 0;
+      }
+   }
+
+   //
+   // StrCmp
+   //
+   static int StrCmp(String *l, String *r, Word n)
+   {
+      for(char const *ls = l->str, *rs = r->str;; ++ls, ++rs)
+      {
+         char lc = *ls, rc = *rs;
+         if(lc != rc) return lc < rc ? -1 : 1;
+         if(!lc || !n--) return 0;
+      }
+   }
+
+   //
    // StrCpyArray
    //
    static bool StrCpyArray(Thread *thread, Word const *argv, Array &dst)
@@ -213,7 +239,33 @@ namespace ACSVM
    //
    bool CallFunc_Func_GetChar(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(thread->module->env->getString(argv[0])->get(argv[1]));
+      thread->dataStk.push(thread->env->getString(argv[0])->get(argv[1]));
+      return false;
+   }
+
+   //
+   // int StrCaseCmp(str l, str r, int n = -1)
+   //
+   bool CallFunc_Func_StrCaseCmp(Thread *thread, Word const *argv, Word argc)
+   {
+      String *l = thread->env->getString(argv[0]);
+      String *r = thread->env->getString(argv[1]);
+      Word    n = argc > 2 ? argv[2] : -1;
+
+      thread->dataStk.push(StrCaseCmp(l, r, n));
+      return false;
+   }
+
+   //
+   // int StrCmp(str l, str r, int n = -1)
+   //
+   bool CallFunc_Func_StrCmp(Thread *thread, Word const *argv, Word argc)
+   {
+      String *l = thread->env->getString(argv[0]);
+      String *r = thread->env->getString(argv[1]);
+      Word    n = argc > 2 ? argv[2] : -1;
+
+      thread->dataStk.push(StrCmp(l, r, n));
       return false;
    }
 
@@ -254,11 +306,64 @@ namespace ACSVM
    }
 
    //
+   // str StrLeft(str s, int len)
+   //
+   bool CallFunc_Func_StrLeft(Thread *thread, Word const *argv, Word)
+   {
+      String *str = thread->env->getString(argv[0]);
+      Word    len = argv[1];
+
+      if(len < str->len)
+         str = thread->env->getString(str->str, len);
+
+      thread->dataStk.push(~str->idx);
+      return false;
+   }
+
+   //
    // int StrLen(str s)
    //
    bool CallFunc_Func_StrLen(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(thread->module->env->getString(argv[0])->len0);
+      thread->dataStk.push(thread->env->getString(argv[0])->len0);
+      return false;
+   }
+
+   //
+   // str StrMid(str s, int idx, int len)
+   //
+   bool CallFunc_Func_StrMid(Thread *thread, Word const *argv, Word)
+   {
+      String *str = thread->env->getString(argv[0]);
+      Word    idx = argv[1];
+      Word    len = argv[2];
+
+      if(idx < str->len)
+      {
+         if(len < str->len - idx)
+            str = thread->env->getString(str->str + idx, len);
+         else
+            str = thread->env->getString(str->str + idx, str->len - idx);
+      }
+      else
+         str = thread->env->getString("", static_cast<std::size_t>(0));
+
+      thread->dataStk.push(~str->idx);
+      return false;
+   }
+
+   //
+   // str StrRight(str s, int len)
+   //
+   bool CallFunc_Func_StrRight(Thread *thread, Word const *argv, Word)
+   {
+      String *str = thread->env->getString(argv[0]);
+      Word    len = argv[1];
+
+      if(len < str->len)
+         str = thread->env->getString(str->str + str->len - len, len);
+
+      thread->dataStk.push(~str->idx);
       return false;
    }
 }
