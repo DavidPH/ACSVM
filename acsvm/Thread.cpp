@@ -13,6 +13,7 @@
 #include "Thread.hpp"
 
 #include "Array.hpp"
+#include "Environ.hpp"
 #include "Module.hpp"
 #include "Scope.hpp"
 #include "Script.hpp"
@@ -28,6 +29,8 @@ namespace ACSVM
    // Thread constructor
    //
    Thread::Thread() :
+      threadLink{this},
+
       codePtr {nullptr},
       env     {nullptr},
       module  {nullptr},
@@ -53,6 +56,8 @@ namespace ACSVM
    //
    void Thread::start(Script *script_, MapScope *map)
    {
+      threadLink.insert(&map->threadActive);
+
       script  = script_;
       module  = script->module;
       codePtr = &module->codeV[script->codeIdx];

@@ -14,6 +14,7 @@
 #define ACSVM__Scope_H__
 
 #include "Array.hpp"
+#include "List.hpp"
 
 
 //----------------------------------------------------------------------------|
@@ -35,12 +36,16 @@ namespace ACSVM
       explicit GlobalScope(Environment *env);
       ~GlobalScope();
 
+      void exec();
+
       HubScope *getHubScope(std::size_t id);
 
       Environment *const env;
 
       Array arrV[ArrC];
       Word  regV[RegC];
+
+      bool active;
 
    private:
       struct PrivData;
@@ -61,12 +66,16 @@ namespace ACSVM
       explicit HubScope(GlobalScope *global);
       ~HubScope();
 
+      void exec();
+
       MapScope *getMapScope(std::size_t id);
 
       GlobalScope *const global;
 
       Array arrV[ArrC];
       Word  regV[RegC];
+
+      bool active;
 
    private:
       struct PrivData;
@@ -83,9 +92,15 @@ namespace ACSVM
       explicit MapScope(HubScope *hub);
       ~MapScope();
 
+      void exec();
+
       ModuleScope *getModuleScope(Module *module);
 
       HubScope *const hub;
+
+      ListLink<Thread> threadActive;
+
+      bool active;
 
    private:
       struct PrivData;

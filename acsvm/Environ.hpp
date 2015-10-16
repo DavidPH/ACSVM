@@ -13,6 +13,7 @@
 #ifndef ACSVM__Environ_H__
 #define ACSVM__Environ_H__
 
+#include "List.hpp"
 #include "String.hpp"
 
 
@@ -53,6 +54,8 @@ namespace ACSVM
 
       // Used by Module when unloading.
       void freeFunction(Function *func);
+
+      void freeThread(Thread *thread);
 
       CallFunc getCallFunc(Word func) {return tableCallFunc[func];}
       CallSpec getCallSpec(Word spec);
@@ -115,9 +118,11 @@ namespace ACSVM
       static constexpr Word ScriptLocRegCDefault = 20;
 
    protected:
-      virtual std::unique_ptr<Thread> allocThread();
+      virtual Thread *allocThread();
 
       virtual void loadModule(Module *module) = 0;
+
+      ListLink<Thread> threadFree;
 
       CallFunc *tableCallFunc;
 

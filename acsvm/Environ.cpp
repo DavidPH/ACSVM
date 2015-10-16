@@ -92,10 +92,6 @@ namespace ACSVM
       std::unordered_map<ModuleName const *, std::unique_ptr<Module>,
          NameHash, NameEqual> tableModule;
 
-      std::list<Thread *> threadActive;
-      std::list<Thread *> threadFree;
-      std::vector<std::unique_ptr<Thread>> threadStore;
-
       Script scriptHead;
    };
 }
@@ -137,6 +133,10 @@ namespace ACSVM
          pd->tableModule.erase(pd->tableModule.begin());
 
       delete pd;
+
+      // Deallocate threads. Do this after scopes have been destructed.
+      while(threadFree.next->obj)
+         delete threadFree.next->obj;
    }
 
    //
@@ -184,9 +184,9 @@ namespace ACSVM
    //
    // Environment::allocThread
    //
-   std::unique_ptr<Thread> Environment::allocThread()
+   Thread *Environment::allocThread()
    {
-      return std::unique_ptr<Thread>(new Thread);
+      return new Thread;
    }
 
    //
@@ -202,16 +202,10 @@ namespace ACSVM
    //
    void Environment::exec()
    {
-      for(auto itr = pd->threadActive.begin(), end = pd->threadActive.end(); itr != end;)
+      for(auto &itr : pd->globalScopes)
       {
-         (*itr)->exec();
-         if((*itr)->state.state == ThreadState::Inactive)
-         {
-            pd->threadFree.push_back(*itr);
-            pd->threadActive.erase(itr++);
-         }
-         else
-            ++itr;
+         if(itr.second.active)
+            itr.second.exec();
       }
    }
 
@@ -256,6 +250,14 @@ namespace ACSVM
    }
 
    //
+   // Environment::freeThread
+   //
+   void Environment::freeThread(Thread *thread)
+   {
+      thread->threadLink.relink(&threadFree);
+   }
+
+   //
    // Environment::getCallSpec
    //
    CallSpec Environment::getCallSpec(Word spec)
@@ -287,23 +289,14 @@ namespace ACSVM
    //
    Thread *Environment::getFreeThread()
    {
-      Thread *thread;
-      if(pd->threadFree.empty())
+      if(threadFree.next->obj)
       {
-         pd->threadStore.push_back(allocThread());
-         thread = pd->threadStore.back().get();
+         Thread *thread = threadFree.next->obj;
+         thread->threadLink.unlink();
+         return thread;
       }
       else
-      {
-         thread = pd->threadFree.front();
-         pd->threadFree.pop_front();
-      }
-
-      // Put thread in active list. If it ends up unused, it will be sent back
-      // to the free list later.
-      pd->threadActive.emplace_back(thread);
-
-      return thread;
+         return allocThread();
    }
 
    //

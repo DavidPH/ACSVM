@@ -13,10 +13,10 @@
 #ifndef ACSVM__Thread_H__
 #define ACSVM__Thread_H__
 
+#include "List.hpp"
 #include "PrintBuf.hpp"
 #include "Stack.hpp"
 #include "Store.hpp"
-#include "Types.hpp"
 
 
 //----------------------------------------------------------------------------|
@@ -92,6 +92,10 @@ namespace ACSVM
 
       void start(Script *script, MapScope *map);
 
+      void stop();
+
+      ListLink<Thread> threadLink;
+
       Stack<CallFrame> callStk;
       Stack<Word>      dataStk;
       Store<Array>     localArr;
@@ -113,9 +117,6 @@ namespace ACSVM
 
       static constexpr std::size_t CallStkSize =   8;
       static constexpr std::size_t DataStkSize = 256;
-
-   private:
-      void stop();
    };
 }
 

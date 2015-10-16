@@ -99,7 +99,9 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   ACSVM::MapScope *map = env.getGlobalScope(0)->getHubScope(0)->getMapScope(0);
+   ACSVM::GlobalScope *global = env.getGlobalScope(0);  global->active = true;
+   ACSVM::HubScope    *hub    = global->getHubScope(0); hub   ->active = true;
+   ACSVM::MapScope    *map    = hub->getMapScope(0);    map   ->active = true;
 
    // Start Open scripts.
    for(ACSVM::Script *head = env.getScriptHead(), *scr = head->envNext; scr != head; scr = scr->envNext)

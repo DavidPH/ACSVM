@@ -12,7 +12,9 @@
 
 #include "Scope.hpp"
 
+#include "Environ.hpp"
 #include "Module.hpp"
+#include "Thread.hpp"
 
 #include <unordered_map>
 
@@ -85,6 +87,18 @@ namespace ACSVM
    }
 
    //
+   // GlobalScope::exec
+   //
+   void GlobalScope::exec()
+   {
+      for(auto &itr : pd->hubScopes)
+      {
+         if(itr.second.active)
+            itr.second.exec();
+      }
+   }
+
+   //
    // GlobalScope::getHubScope
    //
    HubScope *GlobalScope::getHubScope(std::size_t id)
@@ -112,6 +126,18 @@ namespace ACSVM
    }
 
    //
+   // HubScope::exec
+   //
+   void HubScope::exec()
+   {
+      for(auto &itr : pd->mapScopes)
+      {
+         if(itr.second.active)
+            itr.second.exec();
+      }
+   }
+
+   //
    // HubScope::getMapScope
    //
    MapScope *HubScope::getMapScope(std::size_t id)
@@ -135,7 +161,28 @@ namespace ACSVM
    //
    MapScope::~MapScope()
    {
+      // Stop any remaining threads and return them to free list.
+      while(threadActive.next->obj)
+      {
+         threadActive.next->obj->stop();
+         hub->global->env->freeThread(threadActive.next->obj);
+      }
+
       delete pd;
+   }
+
+   //
+   // MapScope::exec
+   //
+   void MapScope::exec()
+   {
+      for(ListLink<Thread> *itr = threadActive.next; itr->obj;)
+      {
+         itr->obj->exec();
+         itr = itr->next;
+         if(itr->prev->obj->state.state == ThreadState::Inactive)
+            hub->global->env->freeThread(itr->prev->obj);
+      }
    }
 
    //
