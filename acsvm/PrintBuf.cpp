@@ -112,9 +112,11 @@ namespace ACSVM
 
       idxEnd += count;
 
-      if(!(buffer = static_cast<char *>(std::realloc(buffer, idxEnd))))
+      char *bufNew;
+      if(!(bufNew = static_cast<char *>(std::realloc(buffer, idxEnd))))
          throw std::bad_alloc();
 
+      buffer = bufNew;
       bufEnd = buffer + idxEnd;
       bufBeg = buffer + idxBeg;
       bufPtr = buffer + idxPtr;
