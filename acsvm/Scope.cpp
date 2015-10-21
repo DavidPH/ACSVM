@@ -14,6 +14,7 @@
 
 #include "Action.hpp"
 #include "Environ.hpp"
+#include "HashMapFixed.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
 #include "Thread.hpp"
@@ -49,14 +50,14 @@ namespace ACSVM
    //
    struct MapScope::PrivData
    {
-      std::unordered_map<Module *, ModuleScope> moduleScopes;
+      HashMapFixed<Module *, ModuleScope> moduleScopes;
 
       std::unordered_set<Module *> modules;
 
-      std::unordered_map<Word,     Script *> scriptInt;
-      std::unordered_map<String *, Script *> scriptStr;
+      HashMapFixed<Word,     Script *> scriptInt;
+      HashMapFixed<String *, Script *> scriptStr;
 
-      std::unordered_map<Script *, Thread *> scriptThread;
+      HashMapFixed<Script *, Thread *> scriptThread;
    };
 }
 
@@ -239,14 +240,70 @@ namespace ACSVM
 
       for(auto &import : module->importV)
          addModule(import);
+   }
 
-      for(auto &script : module->scriptV)
+   //
+   // MapScope::addModuleFinish
+   //
+   void MapScope::addModuleFinish()
+   {
+      std::size_t scriptThrC = 0;
+      std::size_t scriptIntC = 0;
+      std::size_t scriptStrC = 0;
+
+      // Count scripts.
+      for(auto &module : pd->modules)
       {
-         if(script.name.s)
-            pd->scriptStr[script.name.s] = &script;
-         else
-            pd->scriptInt[script.name.i] = &script;
+         for(auto &script : module->scriptV)
+         {
+            ++scriptThrC;
+            if(script.name.s)
+               ++scriptStrC;
+            else
+               ++scriptIntC;
+         }
       }
+
+      // Create lookup tables.
+
+      pd->moduleScopes.alloc(pd->modules.size());
+      pd->scriptInt.alloc(scriptIntC);
+      pd->scriptStr.alloc(scriptStrC);
+      pd->scriptThread.alloc(scriptThrC);
+
+      auto moduleItr    = pd->moduleScopes.begin();
+      auto scriptIntItr = pd->scriptInt.begin();
+      auto scriptStrItr = pd->scriptStr.begin();
+      auto scriptThrItr = pd->scriptThread.begin();
+
+      for(auto &module : pd->modules)
+      {
+         using ElemMod = HashMapFixed<Module *, ModuleScope>::Elem;
+
+         new(moduleItr++) ElemMod{module, {this, module}, nullptr};
+
+         for(auto &script : module->scriptV)
+         {
+            using ElemInt = HashMapFixed<Word,     Script *>::Elem;
+            using ElemStr = HashMapFixed<String *, Script *>::Elem;
+            using ElemThr = HashMapFixed<Script *, Thread *>::Elem;
+
+            new(scriptThrItr++) ElemThr{&script, nullptr, nullptr};
+
+            if(script.name.s)
+               new(scriptStrItr++) ElemStr{script.name.s, &script, nullptr};
+            else
+               new(scriptIntItr++) ElemInt{script.name.i, &script, nullptr};
+         }
+      }
+
+      pd->moduleScopes.build();
+      pd->scriptInt.build();
+      pd->scriptStr.build();
+      pd->scriptThread.build();
+
+      for(auto &moduleScope : pd->moduleScopes)
+         moduleScope.val.import();
    }
 
    //
@@ -305,8 +362,10 @@ namespace ACSVM
    //
    Script *MapScope::findScript(String *name)
    {
-      auto itr = pd->scriptStr.find(name);
-      return itr != pd->scriptStr.end() ? itr->second : nullptr;
+      if(Script **script = pd->scriptStr.find(name))
+         return *script;
+      else
+         return nullptr;
    }
 
    //
@@ -314,8 +373,10 @@ namespace ACSVM
    //
    Script *MapScope::findScript(Word name)
    {
-      auto itr = pd->scriptInt.find(name);
-      return itr != pd->scriptInt.end() ? itr->second : nullptr;
+      if(Script **script = pd->scriptInt.find(name))
+         return *script;
+      else
+         return nullptr;
    }
 
    //
@@ -324,8 +385,8 @@ namespace ACSVM
    void MapScope::freeThread(Thread *thread)
    {
       auto itr = pd->scriptThread.find(thread->script);
-      if(itr != pd->scriptThread.end() && itr->second == thread)
-         itr->second = nullptr;
+      if(itr  && *itr == thread)
+         *itr = nullptr;
 
       hub->global->env->freeThread(thread);
    }
@@ -335,16 +396,7 @@ namespace ACSVM
    //
    ModuleScope *MapScope::getModuleScope(Module *module)
    {
-      auto itr = pd->moduleScopes.find(module);
-      if(itr == pd->moduleScopes.end())
-      {
-         itr = pd->moduleScopes.emplace(std::piecewise_construct,
-            std::make_tuple(module), std::make_tuple(this, module)).first;
-
-         itr->second.import();
-      }
-
-      return &itr->second;
+      return pd->moduleScopes.find(module);
    }
 
    //
@@ -367,8 +419,7 @@ namespace ACSVM
    bool MapScope::isScriptActive(Script *script)
    {
       auto itr = pd->scriptThread.find(script);
-      return itr != pd->scriptThread.end() && itr->second &&
-         itr->second->state.state != ThreadState::Inactive;
+      return itr && *itr && (*itr)->state.state != ThreadState::Inactive;
    }
 
    //
@@ -377,8 +428,8 @@ namespace ACSVM
    void MapScope::scriptPause(Script *script)
    {
       auto itr = pd->scriptThread.find(script);
-      if(itr != pd->scriptThread.end() && itr->second)
-         itr->second->state = ThreadState::Paused;
+      if(itr && *itr)
+         (*itr)->state = ThreadState::Paused;
    }
 
    //
@@ -386,9 +437,10 @@ namespace ACSVM
    //
    void MapScope::scriptStart(Script *script, Word const *argV, Word argC)
    {
-      Thread *&thread = pd->scriptThread[script];
+      auto itr = pd->scriptThread.find(script);
+      if(!itr) return;
 
-      if(thread)
+      if(Thread *&thread = *itr)
       {
          thread->state = ThreadState::Running;
       }
@@ -434,10 +486,10 @@ namespace ACSVM
    void MapScope::scriptStop(Script *script)
    {
       auto itr = pd->scriptThread.find(script);
-      if(itr != pd->scriptThread.end() && itr->second)
+      if(itr && *itr)
       {
-         itr->second->state = ThreadState::Stopped;
-         itr->second        = nullptr;
+         (*itr)->state = ThreadState::Stopped;
+         (*itr)        = nullptr;
       }
    }
 

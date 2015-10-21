@@ -33,6 +33,7 @@ namespace ACSVM
       static constexpr std::size_t RegC = 256;
 
 
+      GlobalScope(GlobalScope const &) = delete;
       GlobalScope(Environment *env, Word id);
       ~GlobalScope();
 
@@ -68,6 +69,7 @@ namespace ACSVM
       static constexpr std::size_t RegC = 256;
 
 
+      HubScope(HubScope const &) = delete;
       HubScope(GlobalScope *global, Word id);
       ~HubScope();
 
@@ -99,10 +101,14 @@ namespace ACSVM
    class MapScope
    {
    public:
+      MapScope(MapScope const &) = delete;
       MapScope(HubScope *hub, Word id);
       ~MapScope();
 
       void addModule(Module *module);
+
+      //This must be called after all modules have been added.
+      void addModuleFinish();
 
       void exec();
 
@@ -149,6 +155,7 @@ namespace ACSVM
       static constexpr std::size_t RegC = 256;
 
 
+      ModuleScope(ModuleScope const &) = delete;
       ModuleScope(MapScope *map, Module *module);
       ~ModuleScope();
 

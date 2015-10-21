@@ -109,6 +109,7 @@ int main(int argc, char *argv[])
    // Register modules with map scope.
    for(auto &module : modules)
       map->addModule(module);
+   map->addModuleFinish();
 
    // Start Open scripts.
    for(ACSVM::Script *head = env.getScriptHead(), *scr = head->envNext; scr != head; scr = scr->envNext)
