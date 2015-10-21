@@ -26,6 +26,7 @@ include_directories(.)
 ## acsvm
 ##
 add_library(acsvm ${ACSVM_SHARED_DECL}
+   Action.cpp
    Array.cpp
    CallFunc.cpp
    CodeData.cpp

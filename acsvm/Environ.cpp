@@ -12,6 +12,7 @@
 
 #include "Environ.hpp"
 
+#include "Action.hpp"
 #include "CallFunc.hpp"
 #include "Code.hpp"
 #include "CodeData.hpp"
@@ -190,6 +191,14 @@ namespace ACSVM
    }
 
    //
+   // Environment::checkLock
+   //
+   bool Environment::checkLock(Thread *, Word, bool)
+   {
+      return false;
+   }
+
+   //
    // Environment::checkTag
    //
    bool Environment::checkTag(Word, Word)
@@ -198,10 +207,26 @@ namespace ACSVM
    }
 
    //
+   // Environment::deferAction
+   //
+   void Environment::deferAction(ScriptAction &&action)
+   {
+      (new ScriptAction(std::move(action)))->link.insert(&scriptAction);
+   }
+
+   //
    // Environment::exec
    //
    void Environment::exec()
    {
+      // Delegate deferred script actions.
+      for(auto itr = scriptAction.next, next = itr->next; itr->obj; itr = next, next = itr->next)
+      {
+         auto lookup = pd->globalScopes.find(itr->obj->id.global);
+         if(lookup != pd->globalScopes.end() && lookup->second.active)
+            itr->relink(&lookup->second.scriptAction);
+      }
+
       for(auto &itr : pd->globalScopes)
       {
          if(itr.second.active)
@@ -330,10 +355,10 @@ namespace ACSVM
    //
    // Environment::getGlobalScope
    //
-   GlobalScope *Environment::getGlobalScope(std::size_t id)
+   GlobalScope *Environment::getGlobalScope(Word id)
    {
       return &pd->globalScopes.emplace(std::piecewise_construct,
-         std::make_tuple(id), std::make_tuple(this)).first->second;
+         std::make_tuple(id), std::make_tuple(this, id)).first->second;
    }
 
    //
@@ -381,6 +406,20 @@ namespace ACSVM
    Script *Environment::getScriptHead()
    {
       return &pd->scriptHead;
+   }
+
+   //
+   // Environment::hasActiveThread
+   //
+   bool Environment::hasActiveThread()
+   {
+      for(auto &itr : pd->globalScopes)
+      {
+         if(itr.second.active && itr.second.hasActiveThread())
+            return true;
+      }
+
+      return false;
    }
 
    //

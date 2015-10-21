@@ -94,14 +94,14 @@ namespace ACSVM
       if(size - iter < scriptV.size() * 12) throw ReadError();
       for(Script &scr : scriptV)
       {
-         scr.nameInt = ReadLE4(data + iter); iter += 4;
+         scr.name.i  = ReadLE4(data + iter); iter += 4;
          scr.codeIdx = ReadLE4(data + iter); iter += 4;
          scr.argC    = ReadLE4(data + iter); iter += 4;
 
-         if(scr.nameInt >= 1000)
+         if(scr.name.i >= 1000)
          {
-            scr.nameInt -= 1000;
-            scr.type     = ScriptType::Open;
+            scr.name.i -= 1000;
+            scr.type    = ScriptType::Open;
          }
          else
             scr.type = ScriptType::Closed;

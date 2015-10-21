@@ -33,17 +33,22 @@ namespace ACSVM
       static constexpr std::size_t RegC = 256;
 
 
-      explicit GlobalScope(Environment *env);
+      GlobalScope(Environment *env, Word id);
       ~GlobalScope();
 
       void exec();
 
-      HubScope *getHubScope(std::size_t id);
+      HubScope *getHubScope(Word id);
+
+      bool hasActiveThread();
 
       Environment *const env;
+      Word         const id;
 
       Array arrV[ArrC];
       Word  regV[RegC];
+
+      ListLink<ScriptAction> scriptAction;
 
       bool active;
 
@@ -63,17 +68,22 @@ namespace ACSVM
       static constexpr std::size_t RegC = 256;
 
 
-      explicit HubScope(GlobalScope *global);
+      HubScope(GlobalScope *global, Word id);
       ~HubScope();
 
       void exec();
 
-      MapScope *getMapScope(std::size_t id);
+      MapScope *getMapScope(Word id);
+
+      bool hasActiveThread();
 
       GlobalScope *const global;
+      Word         const id;
 
       Array arrV[ArrC];
       Word  regV[RegC];
+
+      ListLink<ScriptAction> scriptAction;
 
       bool active;
 
@@ -89,18 +99,39 @@ namespace ACSVM
    class MapScope
    {
    public:
-      explicit MapScope(HubScope *hub);
+      MapScope(HubScope *hub, Word id);
       ~MapScope();
+
+      void addModule(Module *module);
 
       void exec();
 
+      Script *findScript(ScriptName name);
+      Script *findScript(String *name);
+      Script *findScript(Word name);
+
       ModuleScope *getModuleScope(Module *module);
 
-      HubScope *const hub;
+      bool hasActiveThread();
 
-      ListLink<Thread> threadActive;
+      bool isScriptActive(Script *script);
+
+      void scriptPause(Script *script);
+      void scriptStart(Script *script, Word const *argV, Word argC);
+      void scriptStartForced(Script *script, Word const *argV, Word argC);
+      Word scriptStartResult(Script *script, Word const *argV, Word argC);
+      void scriptStop(Script *script);
+
+      HubScope *const hub;
+      Word      const id;
+
+      ListLink<ScriptAction> scriptAction;
+      ListLink<Thread>       threadActive;
 
       bool active;
+
+   protected:
+      void freeThread(Thread *thread);
 
    private:
       struct PrivData;

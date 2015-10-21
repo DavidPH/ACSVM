@@ -60,8 +60,11 @@ namespace ACSVM
    class ModuleScope;
    class PrintBuf;
    class Script;
+   class ScriptAction;
+   class ScriptName;
    class String;
    class Thread;
+   class ThreadState;
 }
 
 #endif//ACSVM__Types_H__

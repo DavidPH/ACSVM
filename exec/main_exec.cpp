@@ -20,8 +20,10 @@
 #include "acsvm/Script.hpp"
 #include "acsvm/Thread.hpp"
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <vector>
 
 
@@ -88,10 +90,11 @@ int main(int argc, char *argv[])
    env.addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
 
    // Load modules.
+   std::vector<ACSVM::Module *> modules;
    try
    {
       for(int i = 1; i < argc; ++i)
-         env.getModule(env.getModuleName(argv[i]));
+         modules.push_back(env.getModule(env.getModuleName(argv[i])));
    }
    catch(ACSVM::ReadError &e)
    {
@@ -103,14 +106,26 @@ int main(int argc, char *argv[])
    ACSVM::HubScope    *hub    = global->getHubScope(0); hub   ->active = true;
    ACSVM::MapScope    *map    = hub->getMapScope(0);    map   ->active = true;
 
+   // Register modules with map scope.
+   for(auto &module : modules)
+      map->addModule(module);
+
    // Start Open scripts.
    for(ACSVM::Script *head = env.getScriptHead(), *scr = head->envNext; scr != head; scr = scr->envNext)
    {
       if(scr->type == ACSVM::ScriptType::Open)
-         env.getFreeThread()->start(scr, map);
+         map->scriptStartForced(scr, nullptr, 0);
    }
 
-   env.exec();
+   while(env.hasActiveThread())
+   {
+      std::chrono::duration<double> rate{1.0 / 35};
+      auto time = std::chrono::steady_clock::now() + rate;
+
+      env.exec();
+
+      std::this_thread::sleep_until(time);
+   }
 }
 
 // EOF

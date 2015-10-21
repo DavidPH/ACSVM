@@ -267,8 +267,16 @@ namespace ACSVM
       case ThreadState::Running:  break;
       case ThreadState::Stopped:  stop(); return;
       case ThreadState::Paused:   return;
-      case ThreadState::WaitScrI: return;
-      case ThreadState::WaitScrS: return;
+
+      case ThreadState::WaitScrI:
+         if(scopeMap->isScriptActive(scopeMap->findScript(state.data)))
+            return;
+         break;
+
+      case ThreadState::WaitScrS:
+         if(scopeMap->isScriptActive(scopeMap->findScript(env->getString(state.data))))
+            return;
+         break;
 
       case ThreadState::WaitTag:
          if(!module->env->checkTag(state.type, state.data))
@@ -565,12 +573,13 @@ namespace ACSVM
          goto exec_stop;
 
       DeclCase(ScrWaitS):
-         // TODO
-         NextCase();
+         dataStk.drop();
+         state = {ThreadState::WaitScrS, dataStk[0]};
+         goto exec_stop;
 
       DeclCase(ScrWaitS_Lit):
-         // TODO
-         NextCase();
+         state = {ThreadState::WaitScrS, *codePtr++};
+         goto exec_stop;
 
          //================================================
          // Stack control codes.

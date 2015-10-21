@@ -39,15 +39,15 @@ namespace ACSVM
    Script::Script(Module *module_) :
       module{module_},
 
+      name{},
+
       envNext{module->env->getScriptHead()},
       envPrev{envNext->envPrev},
-      nameStr{nullptr},
       argC   {0},
       codeIdx{0},
       flags  {0},
       locArrC{0},
       locRegC{module->env->scriptLocRegC},
-      nameInt{0},
       type   {ScriptType::Closed},
 
       flagClient{false},

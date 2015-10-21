@@ -32,6 +32,21 @@ namespace ACSVM
    };
 
    //
+   // ScriptName
+   //
+   class ScriptName
+   {
+   public:
+      ScriptName() : s{nullptr}, i{0} {}
+      ScriptName(String *s_) : s{s_}, i{0} {}
+      ScriptName(String *s_, Word i_) : s{s_}, i{i_} {}
+      ScriptName(Word i_) : s{nullptr}, i{i_} {}
+
+      String *s;
+      Word    i;
+   };
+
+   //
    // Script
    //
    class Script
@@ -42,15 +57,15 @@ namespace ACSVM
 
       Module *const module;
 
+      ScriptName name;
+
       Script    *envNext;
       Script    *envPrev;
-      String    *nameStr;
       Word       argC;
       Word       codeIdx;
       Word       flags;
       Word       locArrC;
       Word       locRegC;
-      Word       nameInt;
       ScriptType type;
 
       bool flagClient : 1;

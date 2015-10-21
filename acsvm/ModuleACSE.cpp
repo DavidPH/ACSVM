@@ -497,7 +497,7 @@ namespace ACSVM
       if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
       for(Script &scr : scriptV)
-         if(scr.nameInt == nameInt) scr.locArrC = arrC;
+         if(scr.name.i == nameInt) scr.locArrC = arrC;
 
       return false;
    }
@@ -523,7 +523,7 @@ namespace ACSVM
 
          for(Script &scr : scriptV)
          {
-            if(scr.nameInt == nameInt)
+            if(scr.name.i == nameInt)
             {
                scr.flagClient = flagClient;
                scr.flagNet    = flagNet;
@@ -670,7 +670,7 @@ namespace ACSVM
 
          for(Script &scr : scriptV)
          {
-            if(scr.nameInt == nameInt)
+            if(scr.name.i == nameInt)
                scr.locRegC = regC;
          }
       }
@@ -820,12 +820,12 @@ namespace ACSVM
    void Module::setScriptNameTypeACSE(Script *scr, Word nameInt, Word type)
    {
       // If high bit is set, script is named.
-      if((scr->nameInt = nameInt) & 0x80000000)
+      if((scr->name.i = nameInt) & 0x80000000)
       {
          // Fetch name.
-         Word nameIdx = ~scr->nameInt;
+         Word nameIdx = ~scr->name.i;
          if(nameIdx < scrNameV.size())
-            scr->nameStr = scrNameV[nameIdx];
+            scr->name.s = scrNameV[nameIdx];
       }
 
       switch(type)

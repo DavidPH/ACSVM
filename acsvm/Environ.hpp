@@ -43,9 +43,15 @@ namespace ACSVM
       void addCodeDataACS0(Word code, CodeDataACS0 &&data);
       void addFuncDataACS0(Word func, FuncDataACS0 &&data);
 
+      // Function to check if a lock can be opened. Default behavior is to
+      // always return false.
+      virtual bool checkLock(Thread *thread, Word lock, bool door);
+
       // Function to check tags. Must return true to indicate script should
       // continue. Default behavior is to always return false.
       virtual bool checkTag(Word type, Word tag);
+
+      void deferAction(ScriptAction &&action);
 
       void exec();
 
@@ -68,7 +74,7 @@ namespace ACSVM
 
       Function *getFunction(Module *module, String *name);
 
-      GlobalScope *getGlobalScope(std::size_t id);
+      GlobalScope *getGlobalScope(Word id);
 
       // Gets the named module, loading it if needed.
       Module *getModule(ModuleName const &name);
@@ -92,6 +98,9 @@ namespace ACSVM
 
       String *getString(char const *str, std::size_t len)
          {return &stringTable[{str, len}];}
+
+      // Returns true if any contained scope is active and has an active thread.
+      bool hasActiveThread();
 
       // Prints an array to a print buffer. Default behavior is to convert the
       // sequence as UTF-32 to UTF-8.
@@ -122,7 +131,8 @@ namespace ACSVM
 
       virtual void loadModule(Module *module) = 0;
 
-      ListLink<Thread> threadFree;
+      ListLink<ScriptAction> scriptAction;
+      ListLink<Thread>       threadFree;
 
       CallFunc *tableCallFunc;
 

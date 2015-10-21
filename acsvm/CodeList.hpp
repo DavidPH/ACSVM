@@ -380,6 +380,15 @@ ACSVM_FuncList(PrintModArr)
 ACSVM_FuncList(PrintPush)
 ACSVM_FuncList(PrintString)
 
+// Script functions.
+ACSVM_FuncList(ScrPauseS)
+ACSVM_FuncList(ScrStartS)
+ACSVM_FuncList(ScrStartSD) // Locked Door
+ACSVM_FuncList(ScrStartSF) // Forced
+ACSVM_FuncList(ScrStartSL) // Locked
+ACSVM_FuncList(ScrStartSR) // Result
+ACSVM_FuncList(ScrStopS)
+
 // String functions.
 ACSVM_FuncList(GetChar)
 ACSVM_FuncList(StrCaseCmp)
@@ -400,6 +409,14 @@ ACSVM_FuncList(StrRight)
 #ifdef ACSVM_FuncListACS0
 
 ACSVM_FuncListACS0(GetChar, 15, GetChar, {{2, Code::Push_StrArs}})
+
+ACSVM_FuncListACS0(ScrStartS,  39, ScrStartS,  {})
+ACSVM_FuncListACS0(ScrPauseS,  40, ScrPauseS,  {})
+ACSVM_FuncListACS0(ScrStopS,   41, ScrStopS,   {})
+ACSVM_FuncListACS0(ScrStartSL, 42, ScrStartSL, {})
+ACSVM_FuncListACS0(ScrStartSD, 43, ScrStartSD, {})
+ACSVM_FuncListACS0(ScrStartSR, 44, ScrStartSR, {})
+ACSVM_FuncListACS0(ScrStartSF, 45, ScrStartSF, {})
 
 ACSVM_FuncListACS0(StrCmp,     63, StrCmp,     {})
 ACSVM_FuncListACS0(StrCaseCmp, 64, StrCaseCmp, {})

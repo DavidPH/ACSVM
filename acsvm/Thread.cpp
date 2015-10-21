@@ -73,7 +73,9 @@ namespace ACSVM
       localArr.alloc(script->locArrC);
       localReg.alloc(script->locRegC);
 
-      state = ThreadState::Running;
+      delay  = 0;
+      result = 0;
+      state  = ThreadState::Running;
    }
 
    //
@@ -81,24 +83,15 @@ namespace ACSVM
    //
    void Thread::stop()
    {
-      // TODO: Resume threads waiting on this thread's completion.
-
-      // TODO: Notify external environment of script termination.
-
-      // Clear execution state.
+      // Release execution resources.
       callStk.clear();
       dataStk.clear();
       localArr.clear();
       localReg.clear();
       printBuf.clear();
 
-      codePtr = nullptr;
-      env     = nullptr;
-      delay   = 0;
-      module  = nullptr;
-      result  = 0;
-      script  = nullptr;
-      state   = ThreadState::Inactive;
+      // Set state.
+      state = ThreadState::Inactive;
    }
 }
 

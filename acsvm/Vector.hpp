@@ -16,6 +16,7 @@
 #include "Types.hpp"
 
 #include <new>
+#include <utility>
 
 
 //----------------------------------------------------------------------------|
@@ -38,9 +39,24 @@ namespace ACSVM
 
 
       Vector() : dataV{nullptr}, dataC{0} {}
+      Vector(Vector<T> const &) = delete;
+      Vector(Vector<T> &&v) : dataV{v.dataV}, dataC{v.dataC}
+         {v.dataV = nullptr; v.dataC = 0;}
+
+      Vector(T const *v, size_type c)
+      {
+         dataC = c;
+         dataV = static_cast<T *>(::operator new(sizeof(T) * dataC));
+
+         for(T *itr = dataV, *end = itr + dataC; itr != end; ++itr)
+            new(itr) T{*v++};
+      }
+
       ~Vector() {free();}
 
       T &operator [] (size_type i) {return dataV[i];}
+
+      Vector<T> &operator = (Vector<T> &&v) {swap(v); return *this;}
 
       //
       // alloc
@@ -57,10 +73,13 @@ namespace ACSVM
             new(itr) T{args...};
       }
 
+      // begin
       iterator begin() {return dataV;}
 
+      // data
       T *data() {return dataV;}
 
+      // end
       iterator end() {return dataV + dataC;}
 
       //
@@ -78,7 +97,12 @@ namespace ACSVM
          dataC = 0;
       }
 
+      // size
       size_type size() const {return dataC;}
+
+      // swap
+      void swap(Vector<T> &v)
+         {std::swap(dataV, v.dataV); std::swap(dataC, v.dataC);}
 
    private:
       T        *dataV;
