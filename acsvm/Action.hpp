@@ -30,6 +30,7 @@ namespace ACSVM
    class ScopeID
    {
    public:
+      ScopeID() = default;
       ScopeID(Word global_, Word hub_, Word map_) :
          global{global_}, hub{hub_}, map{map_} {}
 

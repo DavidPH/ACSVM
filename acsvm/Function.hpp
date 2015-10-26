@@ -31,9 +31,9 @@ namespace ACSVM
       Function(Module *module, String *name, Word idx);
       ~Function();
 
-      Module *const module;
-      String *const name;
-      Word    const idx;
+      Module *module;
+      String *name;
+      Word    idx;
 
       Word    argC;
       Word    codeIdx;

@@ -78,6 +78,27 @@ namespace ACSVM
    }
 
    //
+   // PrintBuf::getLoadBuf
+   //
+   char *PrintBuf::getLoadBuf(std::size_t countFull, std::size_t count)
+   {
+      if(static_cast<std::size_t>(bufEnd - bufPtr) <= countFull)
+      {
+         char *bufNew;
+         if(!(bufNew = static_cast<char *>(std::realloc(buffer, countFull + 1))))
+            throw std::bad_alloc();
+
+         buffer = bufNew;
+         bufEnd = buffer + countFull + 1;
+      }
+
+      bufBeg = bufEnd - count;
+      bufPtr = buffer + countFull;
+
+      return buffer;
+   }
+
+   //
    // PrintBuf::push
    //
    void PrintBuf::push()

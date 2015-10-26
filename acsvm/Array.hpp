@@ -15,6 +15,9 @@
 
 #include "Types.hpp"
 
+#include <istream>
+#include <ostream>
+
 
 //----------------------------------------------------------------------------|
 // Types                                                                      |
@@ -33,7 +36,7 @@ namespace ACSVM
       Array() : data{nullptr} {}
       Array(Array const &) = delete;
       Array(Array &&array) : data{array.data} {array.data = nullptr;}
-      ~Array() {FreeData(data);}
+      ~Array() {clear();}
 
       Word &operator [] (Word idx);
 
@@ -41,6 +44,10 @@ namespace ACSVM
 
       // If idx is allocated, returns that Word. Otherwise, returns 0.
       Word find(Word idx) const;
+
+      void loadState(std::istream &in);
+
+      void saveState(std::ostream &out) const;
 
    private:
       static constexpr std::size_t PageSize = 256;
@@ -54,12 +61,6 @@ namespace ACSVM
       using Data = Bank*[DataSize];
 
       Data *data;
-
-
-      static void FreePage(Page *&data);
-      static void FreeSegm(Segm *&data);
-      static void FreeBank(Bank *&data);
-      static void FreeData(Data *&data);
    };
 
    //

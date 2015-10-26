@@ -13,6 +13,7 @@
 #include "Thread.hpp"
 
 #include "Array.hpp"
+#include "BinaryIO.hpp"
 #include "Environ.hpp"
 #include "Module.hpp"
 #include "Scope.hpp"
@@ -28,11 +29,12 @@ namespace ACSVM
    //
    // Thread constructor
    //
-   Thread::Thread() :
-      threadLink{this},
+   Thread::Thread(Environment *env_) :
+      env{env_},
+
+      link{this},
 
       codePtr {nullptr},
-      env     {nullptr},
       module  {nullptr},
       scopeGbl{nullptr},
       scopeHub{nullptr},
@@ -52,16 +54,120 @@ namespace ACSVM
    }
 
    //
+   // Thread::loadState
+   //
+   void Thread::loadState(std::istream &in)
+   {
+      std::size_t count, countFull;
+
+      module   = env->getModule(env->readModuleName(in));
+      codePtr  = &module->codeV[ReadVLN<std::size_t>(in)];
+      scopeGbl = env->getGlobalScope(ReadVLN<Word>(in));
+      scopeHub = scopeGbl->getHubScope(ReadVLN<Word>(in));
+      scopeMap = scopeHub->getMapScope(ReadVLN<Word>(in));
+      scopeMod = scopeMap->getModuleScope(module);
+      script   = env->readScript(in);
+      delay    = ReadVLN<Word>(in);
+      result   = ReadVLN<Word>(in);
+
+      count = ReadVLN<std::size_t>(in);
+      callStk.clear(); callStk.reserve(count + CallStkSize);
+      while(count--)
+         callStk.push(readCallFrame(in));
+
+      count = ReadVLN<std::size_t>(in);
+      dataStk.clear(); dataStk.reserve(count + DataStkSize);
+      while(count--)
+         dataStk.push(ReadVLN<Word>(in));
+
+      countFull = ReadVLN<std::size_t>(in);
+      count     = ReadVLN<std::size_t>(in);
+      localArr.allocLoad(countFull, count);
+      for(auto itr = localArr.beginFull(), end = localArr.end(); itr != end; ++itr)
+         itr->loadState(in);
+
+      countFull = ReadVLN<std::size_t>(in);
+      count     = ReadVLN<std::size_t>(in);
+      localReg.allocLoad(countFull, count);
+      for(auto itr = localReg.beginFull(), end = localReg.end(); itr != end; ++itr)
+         *itr = ReadVLN<Word>(in);
+
+      countFull = ReadVLN<std::size_t>(in);
+      count     = ReadVLN<std::size_t>(in);
+      in.read(printBuf.getLoadBuf(countFull, count), countFull);
+
+      state.state = static_cast<ThreadState::State>(ReadVLN<int>(in));
+      state.data = ReadVLN<Word>(in);
+      state.type = ReadVLN<Word>(in);
+   }
+
+   //
+   // Thread::readCallFrame
+   //
+   CallFrame Thread::readCallFrame(std::istream &in) const
+   {
+      CallFrame out;
+
+      out.module   = env->getModule(env->readModuleName(in));
+      out.scopeMod = scopeMap->getModuleScope(out.module);
+      out.codePtr  = &out.module->codeV[ReadVLN<std::size_t>(in)];
+      out.locArrC  = ReadVLN<std::size_t>(in);
+      out.locRegC  = ReadVLN<std::size_t>(in);
+
+      return out;
+   }
+
+   //
+   // Thread::saveState
+   //
+   void Thread::saveState(std::ostream &out) const
+   {
+      env->writeModuleName(out, module->name);
+      WriteVLN(out, codePtr - module->codeV.data());
+      WriteVLN(out, scopeGbl->id);
+      WriteVLN(out, scopeHub->id);
+      WriteVLN(out, scopeMap->id);
+      env->writeScript(out, script);
+      WriteVLN(out, delay);
+      WriteVLN(out, result);
+
+      WriteVLN(out, callStk.size());
+      for(auto &call : callStk)
+         writeCallFrame(out, call);
+
+      WriteVLN(out, dataStk.size());
+      for(auto &data : dataStk)
+         WriteVLN(out, data);
+
+      WriteVLN(out, localArr.sizeFull());
+      WriteVLN(out, localArr.size());
+      for(auto itr = localArr.beginFull(), end = localArr.end(); itr != end; ++itr)
+         itr->saveState(out);
+
+      WriteVLN(out, localReg.sizeFull());
+      WriteVLN(out, localReg.size());
+      for(auto itr = localReg.beginFull(), end = localReg.end(); itr != end; ++itr)
+         WriteVLN(out, *itr);
+
+      WriteVLN(out, printBuf.sizeFull());
+      WriteVLN(out, printBuf.size());
+      out.write(printBuf.dataFull(), printBuf.sizeFull());
+
+      WriteVLN<int>(out, state.state);
+      WriteVLN(out, state.data);
+      WriteVLN(out, state.type);
+   }
+
+   //
    // Thread::start
    //
    void Thread::start(Script *script_, MapScope *map)
    {
-      threadLink.insert(&map->threadActive);
+      link.insert(&map->threadActive);
 
       script  = script_;
       module  = script->module;
       codePtr = &module->codeV[script->codeIdx];
-      env     = module->env;
 
       scopeMod = map->getModuleScope(module);
       scopeMap = map;
@@ -92,6 +198,17 @@ namespace ACSVM
 
       // Set state.
       state = ThreadState::Inactive;
+   }
+
+   //
+   // Thread::writeCallFrame
+   //
+   void Thread::writeCallFrame(std::ostream &out, CallFrame const &in) const
+   {
+      env->writeModuleName(out, in.module->name);
+      WriteVLN(out, in.codePtr - in.module->codeV.data());
+      WriteVLN(out, in.locArrC);
+      WriteVLN(out, in.locRegC);
    }
 }
 

@@ -125,6 +125,9 @@ namespace ACSVM
          elemC = 0;
       }
 
+      // size
+      size_type size() const {return elemC;}
+
    private:
       Hash hasher;
 

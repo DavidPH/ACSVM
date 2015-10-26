@@ -82,6 +82,24 @@ namespace ACSVM
       }
 
       //
+      // allocLoad
+      //
+      // Allocates storage for loading from saved state. countFull elements are
+      // value-initialized and count elements are made available. That is, they
+      // should correspond to a prior call to sizeFull and size, respectively.
+      //
+      void allocLoad(std::size_t countFull, std::size_t count)
+      {
+         clear();
+         alloc(countFull);
+         active = activeEnd - count;
+      }
+
+      // beginFull
+      T       *beginFull()       {return store;}
+      T const *beginFull() const {return store;}
+
+      //
       // clear
       //
       void clear()
@@ -91,6 +109,13 @@ namespace ACSVM
 
          active = store;
       }
+
+      // dataFull
+      T const *dataFull() const {return store;}
+
+      // end
+      T       *end()       {return activeEnd;}
+      T const *end() const {return activeEnd;}
 
       //
       // free
@@ -107,6 +132,9 @@ namespace ACSVM
 
       // size
       std::size_t size() const {return activeEnd - active;}
+
+      // sizeFull
+      std::size_t sizeFull() const {return activeEnd - store;}
 
    private:
       T *store,  *storeEnd;

@@ -34,8 +34,9 @@ namespace ACSVM
    class Vector
    {
    public:
-      using iterator  = T *;
-      using size_type = std::size_t;
+      using const_iterator = T const *;
+      using iterator       = T *;
+      using size_type      = std::size_t;
 
 
       Vector() : dataV{nullptr}, dataC{0} {}
@@ -74,13 +75,15 @@ namespace ACSVM
       }
 
       // begin
-      iterator begin() {return dataV;}
+            iterator begin()       {return dataV;}
+      const_iterator begin() const {return dataV;}
 
       // data
       T *data() {return dataV;}
 
       // end
-      iterator end() {return dataV + dataC;}
+            iterator end()       {return dataV + dataC;}
+      const_iterator end() const {return dataV + dataC;}
 
       //
       // free

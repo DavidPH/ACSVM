@@ -13,6 +13,7 @@
 #include "Scope.hpp"
 
 #include "Action.hpp"
+#include "BinaryIO.hpp"
 #include "Environ.hpp"
 #include "HashMapFixed.hpp"
 #include "Module.hpp"
@@ -21,6 +22,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 
 //----------------------------------------------------------------------------|
@@ -34,7 +36,7 @@ namespace ACSVM
    //
    struct GlobalScope::PrivData
    {
-      std::unordered_map<std::size_t, HubScope> hubScopes;
+      std::unordered_map<Word, HubScope> hubScopes;
    };
 
    //
@@ -42,7 +44,7 @@ namespace ACSVM
    //
    struct HubScope::PrivData
    {
-      std::unordered_map<std::size_t, MapScope> mapScopes;
+      std::unordered_map<Word, MapScope> mapScopes;
    };
 
    //
@@ -85,6 +87,11 @@ namespace ACSVM
    GlobalScope::GlobalScope(Environment *env_, Word id_) :
       env{env_},
       id {id_},
+
+      arrV{},
+      regV{},
+
+      active{false},
 
       pd{new PrivData}
    {
@@ -142,11 +149,71 @@ namespace ACSVM
    }
 
    //
+   // GlobalScope::loadState
+   //
+   void GlobalScope::loadState(std::istream &in)
+   {
+      reset();
+
+      for(auto &arr : arrV)
+         arr.loadState(in);
+
+      for(auto &reg : regV)
+         reg = ReadVLN<Word>(in);
+
+      env->readScriptActions(in, scriptAction);
+
+      active = in.get();
+
+      for(auto n = ReadVLN<std::size_t>(in); n--;)
+         getHubScope(ReadVLN<Word>(in))->loadState(in);
+   }
+
+   //
+   // GlobalScope::reset
+   //
+   void GlobalScope::reset()
+   {
+      while(scriptAction.next->obj)
+         delete scriptAction.next->obj;
+
+      pd->hubScopes.clear();
+   }
+
+   //
+   // GlobalScope::saveState
+   //
+   void GlobalScope::saveState(std::ostream &out) const
+   {
+      for(auto &arr : arrV)
+         arr.saveState(out);
+
+      for(auto &reg : regV)
+         WriteVLN(out, reg);
+
+      env->writeScriptActions(out, scriptAction);
+
+      out.put(active ? '\1' : '\0');
+
+      WriteVLN(out, pd->hubScopes.size());
+      for(auto &itr : pd->hubScopes)
+      {
+         WriteVLN(out, itr.first);
+         itr.second.saveState(out);
+      }
+   }
+
+   //
    // HubScope constructor
    //
    HubScope::HubScope(GlobalScope *global_, Word id_) :
       global{global_},
       id    {id_},
+
+      arrV{},
+      regV{},
+
+      active{false},
 
       pd{new PrivData}
    {
@@ -204,11 +271,69 @@ namespace ACSVM
    }
 
    //
+   // HubScope::loadState
+   //
+   void HubScope::loadState(std::istream &in)
+   {
+      reset();
+
+      for(auto &arr : arrV)
+         arr.loadState(in);
+
+      for(auto &reg : regV)
+         reg = ReadVLN<Word>(in);
+
+      global->env->readScriptActions(in, scriptAction);
+
+      active = in.get();
+
+      for(auto n = ReadVLN<std::size_t>(in); n--;)
+         getMapScope(ReadVLN<Word>(in))->loadState(in);
+   }
+
+   //
+   // HubScope::reset
+   //
+   void HubScope::reset()
+   {
+      while(scriptAction.next->obj)
+         delete scriptAction.next->obj;
+
+      pd->mapScopes.clear();
+   }
+
+   //
+   // HubScope::saveState
+   //
+   void HubScope::saveState(std::ostream &out) const
+   {
+      for(auto &arr : arrV)
+         arr.saveState(out);
+
+      for(auto &reg : regV)
+         WriteVLN(out, reg);
+
+      global->env->writeScriptActions(out, scriptAction);
+
+      out.put(active ? '\1' : '\0');
+
+      WriteVLN(out, pd->mapScopes.size());
+      for(auto &itr : pd->mapScopes)
+      {
+         WriteVLN(out, itr.first);
+         itr.second.saveState(out);
+      }
+   }
+
+   //
    // MapScope constructor
    //
    MapScope::MapScope(HubScope *hub_, Word id_) :
+      env{hub_->global->env},
       hub{hub_},
       id {id_},
+
+      active{false},
 
       pd{new PrivData}
    {
@@ -219,13 +344,7 @@ namespace ACSVM
    //
    MapScope::~MapScope()
    {
-      // Stop any remaining threads and return them to free list.
-      while(threadActive.next->obj)
-      {
-         threadActive.next->obj->stop();
-         hub->global->env->freeThread(threadActive.next->obj);
-      }
-
+      reset();
       delete pd;
    }
 
@@ -388,7 +507,7 @@ namespace ACSVM
       if(itr  && *itr == thread)
          *itr = nullptr;
 
-      hub->global->env->freeThread(thread);
+      env->freeThread(thread);
    }
 
    //
@@ -423,6 +542,129 @@ namespace ACSVM
    }
 
    //
+   // MapScope::loadModules
+   //
+   void MapScope::loadModules(std::istream &in)
+   {
+      auto count = ReadVLN<std::size_t>(in);
+      std::vector<Module *> modules;
+      modules.reserve(count);
+
+      for(auto n = count; n--;)
+         modules.emplace_back(env->getModule(env->readModuleName(in)));
+
+      for(auto &module : modules)
+         addModule(module);
+      addModuleFinish();
+
+      for(auto &module : modules)
+         pd->moduleScopes.find(module)->loadState(in);
+   }
+
+   //
+   // MapScope::loadState
+   //
+   void MapScope::loadState(std::istream &in)
+   {
+      reset();
+
+      env->readScriptActions(in, scriptAction);
+      active = in.get();
+      loadModules(in);
+      loadThreads(in);
+   }
+
+   //
+   // MapScope::loadThreads
+   //
+   void MapScope::loadThreads(std::istream &in)
+   {
+      for(auto n = ReadVLN<std::size_t>(in); n--;)
+      {
+         Thread *thread = env->getFreeThread();
+         thread->link.insert(&threadActive);
+         thread->loadState(in);
+
+         if(in.get())
+         {
+            auto scrThread = pd->scriptThread.find(thread->script);
+            if(scrThread)
+               *scrThread = thread;
+         }
+      }
+   }
+
+   //
+   // MapScope::reset
+   //
+   void MapScope::reset()
+   {
+      // Stop any remaining threads and return them to free list.
+      while(threadActive.next->obj)
+      {
+         threadActive.next->obj->stop();
+         env->freeThread(threadActive.next->obj);
+      }
+
+      while(scriptAction.next->obj)
+         delete scriptAction.next->obj;
+
+      active = false;
+
+      pd->moduleScopes.free();
+
+      pd->modules.clear();
+
+      pd->scriptInt.free();
+      pd->scriptStr.free();
+      pd->scriptThread.free();
+   }
+
+   //
+   // MapScope::saveModules
+   //
+   void MapScope::saveModules(std::ostream &out) const
+   {
+      WriteVLN(out, pd->moduleScopes.size());
+
+      for(auto &scope : pd->moduleScopes)
+         env->writeModuleName(out, scope.key->name);
+
+      for(auto &scope : pd->moduleScopes)
+         scope.val.saveState(out);
+   }
+
+   //
+   // MapScope::saveState
+   //
+   void MapScope::saveState(std::ostream &out) const
+   {
+      env->writeScriptActions(out, scriptAction);
+      out.put(active ? '\1' : '\0');
+      saveModules(out);
+      saveThreads(out);
+   }
+
+   //
+   // MapScope::saveThreads
+   //
+   void MapScope::saveThreads(std::ostream &out) const
+   {
+      std::size_t count = 0;
+      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
+         ++count;
+
+      WriteVLN(out, count);
+      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
+      {
+         thread->obj->saveState(out);
+
+         auto scrThread = pd->scriptThread.find(thread->obj->script);
+         out.put(scrThread && *scrThread == thread->obj ? '\1' : '\0');
+      }
+   }
+
+   //
    // MapScope::scriptPause
    //
    void MapScope::scriptPause(Script *script)
@@ -446,7 +688,7 @@ namespace ACSVM
       }
       else
       {
-         thread = hub->global->env->getFreeThread();
+         thread = env->getFreeThread();
 
          thread->start(script, this);
          std::copy(argV, argV + std::min<Word>(argC, script->argC), &thread->localReg[0]);
@@ -458,7 +700,7 @@ namespace ACSVM
    //
    void MapScope::scriptStartForced(Script *script, Word const *argV, Word argC)
    {
-      Thread *thread = hub->global->env->getFreeThread();
+      Thread *thread = env->getFreeThread();
 
       thread->start(script, this);
       std::copy(argV, argV + std::min<Word>(argC, script->argC), &thread->localReg[0]);
@@ -469,7 +711,7 @@ namespace ACSVM
    //
    Word MapScope::scriptStartResult(Script *script, Word const *argV, Word argC)
    {
-      Thread *thread = hub->global->env->getFreeThread();
+      Thread *thread = env->getFreeThread();
 
       thread->start(script, this);
       std::copy(argV, argV + std::min<Word>(argC, script->argC), &thread->localReg[0]);
@@ -523,6 +765,13 @@ namespace ACSVM
    }
 
    //
+   // ModuleScope destructor
+   //
+   ModuleScope::~ModuleScope()
+   {
+   }
+
+   //
    // ModuleScope::import
    //
    void ModuleScope::import()
@@ -573,10 +822,27 @@ namespace ACSVM
    }
 
    //
-   // ModuleScope destructor
+   // ModuleScope::loadState
    //
-   ModuleScope::~ModuleScope()
+   void ModuleScope::loadState(std::istream &in)
    {
+      for(auto &arr : selfArrV)
+         arr.loadState(in);
+
+      for(auto &reg : selfRegV)
+         reg = ReadVLN<Word>(in);
+   }
+
+   //
+   // ModuleScope::saveState
+   //
+   void ModuleScope::saveState(std::ostream &out) const
+   {
+      for(auto &arr : selfArrV)
+         arr.saveState(out);
+
+      for(auto &reg : selfRegV)
+         WriteVLN(out, reg);
    }
 }
 

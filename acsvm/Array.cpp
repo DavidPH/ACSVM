@@ -12,6 +12,8 @@
 
 #include "Array.hpp"
 
+#include "BinaryIO.hpp"
+
 #include <vector>
 
 
@@ -28,6 +30,86 @@ namespace ACSVM
    {
       std::vector<Word> dataV;
    };
+}
+
+
+//----------------------------------------------------------------------------|
+// Static Functions                                                           |
+//
+
+namespace ACSVM
+{
+   //
+   // FreeData (Word)
+   //
+   static void FreeData(Word &)
+   {
+   }
+
+   //
+   // FreeData
+   //
+   template<typename T>
+   static void FreeData(T *&data)
+   {
+      if(!data) return;
+
+      for(auto &itr : *data)
+         FreeData(itr);
+
+      delete[] data;
+      data = nullptr;
+   }
+
+   //
+   // ReadData (Word)
+   //
+   static void ReadData(std::istream &in, Word &out)
+   {
+      out = ReadVLN<Word>(in);
+   }
+
+   //
+   // ReadData
+   //
+   template<typename T>
+   static void ReadData(std::istream &in, T *&out)
+   {
+      if(in.get())
+      {
+         if(!out) out = new T[1]{};
+
+         for(auto &itr : *out)
+            ReadData(in, itr);
+      }
+      else
+         FreeData(out);
+   }
+
+   //
+   // WriteData (Word)
+   //
+   static void WriteData(std::ostream &out, Word const &in)
+   {
+      WriteVLN(out, in);
+   }
+
+   //
+   // WriteData
+   //
+   template<typename T>
+   static void WriteData(std::ostream &out, T *const &in)
+   {
+      if(in)
+      {
+         out.put('\1');
+
+         for(auto &itr : *in)
+            WriteData(out, itr);
+      }
+      else
+         out.put('\0');
+   }
 }
 
 
@@ -74,56 +156,27 @@ namespace ACSVM
    }
 
    //
-   // Array::FreePage
+   // Array::clear
    //
-   void Array::FreePage(Page *&page)
+   void Array::clear()
    {
-      if(!page) return;
-
-      delete[] page;
-      page = nullptr;
+      FreeData(data);
    }
 
    //
-   // Array::FreeSegm
+   // Array::loadState
    //
-   void Array::FreeSegm(Segm *&segm)
+   void Array::loadState(std::istream &in)
    {
-      if(!segm) return;
-
-      for(Page *&page : *segm)
-         FreePage(page);
-
-      delete[] segm;
-      segm = nullptr;
+      ReadData(in, data);
    }
 
    //
-   // Array::FreeBank
+   // Array::saveState
    //
-   void Array::FreeBank(Bank *&bank)
+   void Array::saveState(std::ostream &out) const
    {
-      if(!bank) return;
-
-      for(Segm *&segm : *bank)
-         FreeSegm(segm);
-
-      delete[] bank;
-      bank = nullptr;
-   }
-
-   //
-   // Array::FreeData
-   //
-   void Array::FreeData(Data *&data)
-   {
-      if(!data) return;
-
-      for(Bank *&bank : *data)
-         FreeBank(bank);
-
-      delete[] data;
-      data = nullptr;
+      WriteData(out, data);
    }
 
    //

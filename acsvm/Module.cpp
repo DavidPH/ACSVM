@@ -87,15 +87,36 @@ namespace ACSVM
             env->freeFunction(func);
       }
 
+      arrImpV.free();
+      arrNameV.free();
       codeV.free();
       funcNameV.free();
       functionV.free();
       jumpV.free();
+      regImpV.free();
+      regNameV.free();
       scrNameV.free();
       scriptV.free();
       stringV.free();
 
       loaded = false;
+   }
+
+   //
+   // Module::resetStrings
+   //
+   void Module::resetStrings()
+   {
+      for(auto &s : arrImpV)   s = env->getString(s);
+      for(auto &s : arrNameV)  s = env->getString(s);
+      for(auto &s : funcNameV) s = env->getString(s);
+      for(auto &s : regImpV)   s = env->getString(s);
+      for(auto &s : regNameV)  s = env->getString(s);
+      for(auto &s : scrNameV)  s = env->getString(s);
+      for(auto &s : stringV)   s = env->getString(s);
+
+      for(auto &func : functionV) func->name = env->getString(func->name);
+      for(auto &scr  : scriptV)   scr.name.s = env->getString(scr.name.s);
    }
 }
 

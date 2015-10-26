@@ -23,6 +23,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -42,6 +43,13 @@ protected:
 
 
 //----------------------------------------------------------------------------|
+// Static Objects                                                             |
+//
+
+static bool NeedTestSaveEnv = false;
+
+
+//----------------------------------------------------------------------------|
 // Static Functions                                                           |
 //
 
@@ -52,6 +60,15 @@ static bool EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
 {
    std::cout << thread->printBuf.data() << '\n';
    thread->printBuf.drop();
+   return false;
+}
+
+//
+// TestSave
+//
+static bool TestSave(ACSVM::Thread *, ACSVM::Word const *, ACSVM::Word)
+{
+   NeedTestSaveEnv = true;
    return false;
 }
 
@@ -85,9 +102,12 @@ int main(int argc, char *argv[])
    Environment env;
 
    ACSVM::Word funcEndPrint = env.addCallFunc(EndPrint);
+   ACSVM::Word funcTestSave = env.addCallFunc(TestSave);
 
    env.addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
    env.addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
+
+   env.addFuncDataACS0(0x10000, funcTestSave);
 
    // Load modules.
    std::vector<ACSVM::Module *> modules;
@@ -124,6 +144,15 @@ int main(int argc, char *argv[])
       auto time = std::chrono::steady_clock::now() + rate;
 
       env.exec();
+
+      if(NeedTestSaveEnv)
+      {
+         std::stringstream buf;
+         env.saveState(buf);
+         env.loadState(buf);
+
+         NeedTestSaveEnv = false;
+      }
 
       std::this_thread::sleep_until(time);
    }

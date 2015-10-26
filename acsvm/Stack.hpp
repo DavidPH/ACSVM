@@ -39,6 +39,10 @@ namespace ACSVM
       // operator []
       T &operator [] (std::size_t idx) {return *(stkPtr - idx);}
 
+      // begin
+      T       *begin()       {return stack;}
+      T const *begin() const {return stack;}
+
       // clear
       void clear() {while(stkPtr != stack) (--stkPtr)->~T();}
 
@@ -48,6 +52,10 @@ namespace ACSVM
 
       // empty
       bool empty() const {return stkPtr == stack;}
+
+      // end
+      T       *end()       {return stkPtr;}
+      T const *end() const {return stkPtr;}
 
       // push
       void push(T const &value) {new(stkPtr++) T(          value );}
@@ -87,6 +95,9 @@ namespace ACSVM
          stkPtr = stack + idxPtr;
          stkEnd = stack + idxEnd;
       }
+
+      // size
+      std::size_t size() const {return stkPtr - stack;}
 
    private:
       T *stack;

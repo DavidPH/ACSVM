@@ -68,13 +68,20 @@ namespace ACSVM
       char get(std::size_t i) const {return i < len ? str[i] : '\0';}
 
 
-      static void Delete(String *str);
-
-      static String *New(StringData const &data, Word idx);
+      friend class StringTable;
 
    private:
       String(StringData const &data, Word idx);
       ~String();
+
+
+      static void Delete(String *str);
+
+      static String *New(StringData const &data, Word idx);
+
+      static String *Read(std::istream &in, Word idx);
+
+      static void Write(std::ostream &out, String *in);
    };
 
    //
@@ -84,10 +91,16 @@ namespace ACSVM
    {
    public:
       StringTable();
+      StringTable(StringTable &&table);
       ~StringTable();
 
-      String &operator [] (Word idx) {return idx < strC ? *strV[idx] : *strNone;}
+      String &operator [] (Word idx) const
+         {return idx < strC ? *strV[idx] : *strNone;}
       String &operator [] (StringData const &data);
+
+      void loadState(std::istream &in);
+
+      void saveState(std::ostream &out) const;
 
    private:
       struct PrivData;

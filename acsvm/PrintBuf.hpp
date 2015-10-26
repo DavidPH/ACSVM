@@ -36,6 +36,7 @@ namespace ACSVM
       void clear() {bufBeg = bufPtr = buffer;}
 
       char const *data() const {return *bufPtr = '\0', bufBeg;}
+      char const *dataFull() const {return buffer;}
 
       void drop();
 
@@ -48,6 +49,9 @@ namespace ACSVM
       char *getBuf(std::size_t count)
          {char *s = bufPtr; bufPtr += count; return s;}
 
+      // Prepares the buffer to be deserialized.
+      char *getLoadBuf(std::size_t countFull, std::size_t count);
+
       void push();
 
       // Writes literal characters. Does not reserve space.
@@ -59,6 +63,7 @@ namespace ACSVM
       void reserve(std::size_t count);
 
       std::size_t size() const {return bufPtr - bufBeg;}
+      std::size_t sizeFull() const {return bufPtr - buffer;}
 
    private:
       char *buffer, *bufEnd, *bufBeg, *bufPtr;

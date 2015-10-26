@@ -18,6 +18,9 @@
 #include "Stack.hpp"
 #include "Store.hpp"
 
+#include <istream>
+#include <ostream>
+
 
 //----------------------------------------------------------------------------|
 // Types                                                                      |
@@ -85,16 +88,22 @@ namespace ACSVM
    class Thread
    {
    public:
-      Thread();
+      Thread(Environment *env);
       virtual ~Thread();
 
       void exec();
+
+      virtual void loadState(std::istream &in);
+
+      virtual void saveState(std::ostream &out) const;
 
       void start(Script *script, MapScope *map);
 
       void stop();
 
-      ListLink<Thread> threadLink;
+      Environment *const env;
+
+      ListLink<Thread> link;
 
       Stack<CallFrame> callStk;
       Stack<Word>      dataStk;
@@ -104,7 +113,6 @@ namespace ACSVM
       ThreadState      state;
 
       Word        *codePtr; // Instruction pointer.
-      Environment *env;     // Execution environment.
       Module      *module;  // Current execution Module.
       GlobalScope *scopeGbl;
       HubScope    *scopeHub;
@@ -117,6 +125,11 @@ namespace ACSVM
 
       static constexpr std::size_t CallStkSize =   8;
       static constexpr std::size_t DataStkSize = 256;
+
+   private:
+      CallFrame readCallFrame(std::istream &in) const;
+
+      void writeCallFrame(std::ostream &out, CallFrame const &in) const;
    };
 }
 

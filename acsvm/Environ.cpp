@@ -13,6 +13,7 @@
 #include "Environ.hpp"
 
 #include "Action.hpp"
+#include "BinaryIO.hpp"
 #include "CallFunc.hpp"
 #include "Code.hpp"
 #include "CodeData.hpp"
@@ -133,6 +134,9 @@ namespace ACSVM
       while(!pd->tableModule.empty())
          pd->tableModule.erase(pd->tableModule.begin());
 
+      while(scriptAction.next->obj)
+         delete scriptAction.next->obj;
+
       delete pd;
 
       // Deallocate threads. Do this after scopes have been destructed.
@@ -187,7 +191,7 @@ namespace ACSVM
    //
    Thread *Environment::allocThread()
    {
-      return new Thread;
+      return new Thread(this);
    }
 
    //
@@ -253,6 +257,15 @@ namespace ACSVM
    }
 
    //
+   // Environment::findModule
+   //
+   Module *Environment::findModule(ModuleName const &name) const
+   {
+      auto itr = pd->tableModule.find(&name);
+      return itr == pd->tableModule.end() ? nullptr : itr->second.get();
+   }
+
+   //
    // Environment::freeFunction
    //
    void Environment::freeFunction(Function *func)
@@ -279,7 +292,7 @@ namespace ACSVM
    //
    void Environment::freeThread(Thread *thread)
    {
-      thread->threadLink.relink(&threadFree);
+      thread->link.relink(&threadFree);
    }
 
    //
@@ -317,7 +330,7 @@ namespace ACSVM
       if(threadFree.next->obj)
       {
          Thread *thread = threadFree.next->obj;
-         thread->threadLink.unlink();
+         thread->link.unlink();
          return thread;
       }
       else
@@ -335,6 +348,11 @@ namespace ACSVM
 
          if(!idx)
          {
+            #if SIZE_MAX > UINT32_MAX
+            if(pd->functionVec.size() > UINT32_MAX)
+               throw std::bad_alloc();
+            #endif
+
             idx = pd->functionVec.size();
             pd->functionVec.emplace_back();
             funcV = pd->functionVec.data();
@@ -423,6 +441,82 @@ namespace ACSVM
    }
 
    //
+   // Environment::loadFunctions
+   //
+   void Environment::loadFunctions(std::istream &in)
+   {
+      // Function index map.
+      pd->functionTab.clear();
+      for(std::size_t n = ReadVLN<std::size_t>(in); n--;)
+      {
+         ModuleName name = readModuleName(in);
+         String    *str  = &stringTable[ReadVLN<Word>(in)];
+         Word       idx  = ReadVLN<Word>(in);
+
+         pd->functionTab[{name, str}] = idx;
+      }
+
+      // Function vector.
+      auto oldTable = pd->functionVec;
+
+      pd->functionVec.clear();
+      pd->functionVec.resize(ReadVLN<std::size_t>(in), nullptr);
+      funcV = pd->functionVec.data();
+      funcC = pd->functionVec.size();
+
+      // Reset function indexes.
+      for(Function *&func : oldTable)
+      {
+         if(func)
+         {
+            func->idx = pd->functionTab[{func->module->name, func->name}];
+            pd->functionVec[func->idx] = func;
+         }
+      }
+   }
+
+   //
+   // Environment::loadGlobalScopes
+   //
+   void Environment::loadGlobalScopes(std::istream &in)
+   {
+      // Clear existing scopes.
+      pd->globalScopes.clear();
+
+      for(auto n = ReadVLN<std::size_t>(in); n--;)
+         getGlobalScope(ReadVLN<Word>(in))->loadState(in);
+   }
+
+   //
+   // Environment::loadScriptActions
+   //
+   void Environment::loadScriptActions(std::istream &in)
+   {
+      readScriptActions(in, scriptAction);
+   }
+
+   //
+   // Environment::loadState
+   //
+   void Environment::loadState(std::istream &in)
+   {
+      loadStringTable(in);
+      loadFunctions(in);
+      loadGlobalScopes(in);
+      loadScriptActions(in);
+   }
+
+   //
+   // Environment::loadStringTable
+   //
+   void Environment::loadStringTable(std::istream &in)
+   {
+      StringTable oldTable{std::move(stringTable)};
+      stringTable.loadState(in);
+      resetStrings();
+   }
+
+   //
    // Environment::printArray
    //
    void Environment::printArray(PrintBuf &buf, Array const &array, Word index, Word limit)
@@ -471,6 +565,234 @@ namespace ACSVM
    {
       std::cerr << "ACSVM ERROR: Kill " << type << ':' << data
          << " at " << (thread->codePtr - thread->module->codeV.data() - 3) << '\n';
+   }
+
+   //
+   // Environment::readModuleName
+   //
+   ModuleName Environment::readModuleName(std::istream &in) const
+   {
+      std::unique_ptr<char[]> s;
+
+      if(in.get())
+      {
+         auto len = ReadVLN<std::size_t>(in);
+         s.reset(new char[len + 1]);
+         in.read(s.get(), len);
+         s[len] = '\0';
+      }
+
+      auto i = ReadVLN<std::size_t>(in);
+
+      return {std::move(s), nullptr, i};
+   }
+
+   //
+   // Environment::readScript
+   //
+   Script *Environment::readScript(std::istream &in) const
+   {
+      auto idx = ReadVLN<std::size_t>(in);
+      return &findModule(readModuleName(in))->scriptV[idx];
+   }
+
+   //
+   // Environment::readScriptAction
+   //
+   ScriptAction *Environment::readScriptAction(std::istream &in) const
+   {
+      auto action = static_cast<ScriptAction::Action>(ReadVLN<int>(in));
+
+      Vector<Word> argV;
+      argV.alloc(ReadVLN<std::size_t>(in));
+      for(auto &arg : argV)
+         arg = ReadVLN<Word>(in);
+
+      ScopeID id;
+      id.global = ReadVLN<Word>(in);
+      id.hub    = ReadVLN<Word>(in);
+      id.map    = ReadVLN<Word>(in);
+
+      ScriptName name = readScriptName(in);
+
+      return new ScriptAction{id, name, action, std::move(argV)};
+   }
+
+   //
+   // Environment::readScriptActions
+   //
+   void Environment::readScriptActions(std::istream &in, ListLink<ScriptAction> &out) const
+   {
+      // Clear existing actions.
+      while(out.next->obj)
+         delete out.next->obj;
+
+      for(auto n = ReadVLN<std::size_t>(in); n--;)
+         readScriptAction(in)->link.insert(&out);
+   }
+
+   //
+   // Environment::readScriptName
+   //
+   ScriptName Environment::readScriptName(std::istream &in) const
+   {
+      String *s = in.get() ? &stringTable[ReadVLN<Word>(in)] : nullptr;
+      Word    i = ReadVLN<Word>(in);
+      return {s, i};
+   }
+
+   //
+   // Environment::resetStrings
+   //
+   void Environment::resetStrings()
+   {
+      {
+         auto oldTable = std::move(pd->functionTab);
+         pd->functionTab.clear();
+
+         for(auto &itr : oldTable)
+         {
+            pd->functionTab.insert(
+               {{itr.first.first, getString(itr.first.second)}, itr.second});
+         }
+      }
+
+      for(auto &module : pd->tableModule)
+         module.second->resetStrings();
+   }
+
+   //
+   // Environment::saveFunctions
+   //
+   void Environment::saveFunctions(std::ostream &out) const
+   {
+      WriteVLN(out, pd->functionTab.size());
+      for(auto &itr : pd->functionTab)
+      {
+         writeModuleName(out, itr.first.first);
+         WriteVLN(out, itr.first.second->idx);
+         WriteVLN(out, itr.second);
+      }
+
+      WriteVLN(out, pd->functionVec.size());
+   }
+
+   //
+   // Environment::saveGlobalScopes
+   //
+   void Environment::saveGlobalScopes(std::ostream &out) const
+   {
+      WriteVLN(out, pd->globalScopes.size());
+      for(auto &itr : pd->globalScopes)
+      {
+         WriteVLN(out, itr.first);
+         itr.second.saveState(out);
+      }
+   }
+
+   //
+   // Environment::saveScriptActions
+   //
+   void Environment::saveScriptActions(std::ostream &out) const
+   {
+      writeScriptActions(out, scriptAction);
+   }
+
+   //
+   // Environment::saveState
+   //
+   void Environment::saveState(std::ostream &out) const
+   {
+      saveStringTable(out);
+      saveFunctions(out);
+      saveGlobalScopes(out);
+      saveScriptActions(out);
+   }
+
+   //
+   // Environment::saveStringTable
+   //
+   void Environment::saveStringTable(std::ostream &out) const
+   {
+      stringTable.saveState(out);
+   }
+
+   //
+   // Environment::writeModuleName
+   //
+   void Environment::writeModuleName(std::ostream &out, ModuleName const &in) const
+   {
+      if(in.s)
+      {
+         out.put('\1');
+
+         std::size_t len = std::strlen(in.s.get());
+         WriteVLN(out, len);
+         out.write(in.s.get(), len);
+      }
+      else
+         out.put('\0');
+
+      WriteVLN(out, in.i);
+   }
+
+   //
+   // Environment::writeScript
+   //
+   void Environment::writeScript(std::ostream &out, Script *in) const
+   {
+      WriteVLN(out, in - in->module->scriptV.data());
+      writeModuleName(out, in->module->name);
+   }
+
+   //
+   // Environment::writeScriptAction
+   //
+   void Environment::writeScriptAction(std::ostream &out, ScriptAction const *in) const
+   {
+      WriteVLN<int>(out, in->action);
+
+      WriteVLN(out, in->argV.size());
+      for(auto &arg : in->argV)
+         WriteVLN(out, arg);
+
+      WriteVLN(out, in->id.global);
+      WriteVLN(out, in->id.hub);
+      WriteVLN(out, in->id.map);
+
+      writeScriptName(out, in->name);
+   }
+
+   //
+   // Environment::writeScriptActions
+   //
+   void Environment::writeScriptActions(std::ostream &out,
+      ListLink<ScriptAction> const &in) const
+   {
+      std::size_t count = 0;
+      for(auto action = in.next; action->obj; action = action->next)
+         ++count;
+
+      WriteVLN(out, count);
+
+      for(auto action = in.next; action->obj; action = action->next)
+         writeScriptAction(out, action->obj);
+   }
+
+   //
+   // Environment::writeScriptName
+   //
+   void Environment::writeScriptName(std::ostream &out, ScriptName const &in) const
+   {
+      if(in.s)
+      {
+         out.put('\1');
+         WriteVLN(out, in.s->idx);
+      }
+      else
+         out.put('\0');
+
+      WriteVLN(out, in.i);
    }
 
    //

@@ -43,6 +43,12 @@ namespace ACSVM
 
       bool hasActiveThread();
 
+      void loadState(std::istream &in);
+
+      void reset();
+
+      void saveState(std::ostream &out) const;
+
       Environment *const env;
       Word         const id;
 
@@ -78,6 +84,12 @@ namespace ACSVM
       MapScope *getMapScope(Word id);
 
       bool hasActiveThread();
+
+      void loadState(std::istream &in);
+
+      void reset();
+
+      void saveState(std::ostream &out) const;
 
       GlobalScope *const global;
       Word         const id;
@@ -122,14 +134,21 @@ namespace ACSVM
 
       bool isScriptActive(Script *script);
 
+      void loadState(std::istream &in);
+
+      void reset();
+
+      void saveState(std::ostream &out) const;
+
       void scriptPause(Script *script);
       void scriptStart(Script *script, Word const *argV, Word argC);
       void scriptStartForced(Script *script, Word const *argV, Word argC);
       Word scriptStartResult(Script *script, Word const *argV, Word argC);
       void scriptStop(Script *script);
 
-      HubScope *const hub;
-      Word      const id;
+      Environment *const env;
+      HubScope    *const hub;
+      Word         const id;
 
       ListLink<ScriptAction> scriptAction;
       ListLink<Thread>       threadActive;
@@ -141,6 +160,12 @@ namespace ACSVM
 
    private:
       struct PrivData;
+
+      void loadModules(std::istream &in);
+      void loadThreads(std::istream &in);
+
+      void saveModules(std::ostream &out) const;
+      void saveThreads(std::ostream &out) const;
 
       PrivData *pd;
    };
@@ -160,6 +185,10 @@ namespace ACSVM
       ~ModuleScope();
 
       void import();
+
+      void loadState(std::istream &in);
+
+      void saveState(std::ostream &out) const;
 
       MapScope *const map;
       Module   *const module;

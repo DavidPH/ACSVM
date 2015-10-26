@@ -70,6 +70,8 @@ namespace ACSVM
 
       void reset();
 
+      void resetStrings();
+
       Environment *env;
       ModuleName   name;
 

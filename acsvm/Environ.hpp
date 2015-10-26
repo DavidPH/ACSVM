@@ -58,6 +58,8 @@ namespace ACSVM
       CodeDataACS0 const *findCodeDataACS0(Word code);
       FuncDataACS0 const *findFuncDataACS0(Word func);
 
+      Module *findModule(ModuleName const &name) const;
+
       // Used by Module when unloading.
       void freeFunction(Function *func);
 
@@ -99,8 +101,13 @@ namespace ACSVM
       String *getString(char const *str, std::size_t len)
          {return &stringTable[{str, len}];}
 
+      String *getString(StringData const *data)
+         {return data ? &stringTable[*data] : nullptr;}
+
       // Returns true if any contained scope is active and has an active thread.
       bool hasActiveThread();
+
+      virtual void loadState(std::istream &in);
 
       // Prints an array to a print buffer. Default behavior is to convert the
       // sequence as UTF-32 to UTF-8.
@@ -109,6 +116,26 @@ namespace ACSVM
       // Function to print Kill instructions. Default behavior is to print
       // message to stderr.
       virtual void printKill(Thread *thread, Word type, Word data);
+
+      // Deserializes a ModuleName. Default behavior is to load s and i.
+      virtual ModuleName readModuleName(std::istream &in) const;
+
+      Script *readScript(std::istream &in) const;
+      ScriptAction *readScriptAction(std::istream &in) const;
+      void readScriptActions(std::istream &in, ListLink<ScriptAction> &out) const;
+      ScriptName readScriptName(std::istream &in) const;
+
+      void resetStrings();
+
+      virtual void saveState(std::ostream &out) const;
+
+      // Serializes a ModuleName. Default behavior is to save s and i.
+      virtual void writeModuleName(std::ostream &out, ModuleName const &name) const;
+
+      void writeScript(std::ostream &out, Script *in) const;
+      void writeScriptAction(std::ostream &out, ScriptAction const *in) const;
+      void writeScriptActions(std::ostream &out, ListLink<ScriptAction> const &in) const;
+      void writeScriptName(std::ostream &out, ScriptName const &in) const;
 
       StringTable stringTable;
 
@@ -141,6 +168,16 @@ namespace ACSVM
 
    private:
       struct PrivData;
+
+      void loadFunctions(std::istream &in);
+      void loadGlobalScopes(std::istream &in);
+      void loadScriptActions(std::istream &in);
+      void loadStringTable(std::istream &in);
+
+      void saveFunctions(std::ostream &out) const;
+      void saveGlobalScopes(std::ostream &out) const;
+      void saveScriptActions(std::ostream &out) const;
+      void saveStringTable(std::ostream &out) const;
 
       PrivData *pd;
    };
