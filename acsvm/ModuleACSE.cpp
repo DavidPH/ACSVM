@@ -374,7 +374,11 @@ namespace ACSVM
 
          std::unique_ptr<char[]> str = ParseStringACS0(data + iter, next, len);
 
-         importV[i++] = env->getModule(env->getModuleName(str.get(), len));
+         auto loadName = env->getModuleName(str.get(), len);
+         if(loadName != name)
+            importV[i++] = env->getModule(std::move(loadName));
+         else
+            importV[i++] = this;
 
          iter = next - data + 1;
       }

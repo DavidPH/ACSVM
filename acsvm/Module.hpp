@@ -42,6 +42,7 @@ namespace ACSVM
          s{std::move(s_)}, p{p_}, i{i_} {}
 
       bool operator == (ModuleName const &name) const;
+      bool operator != (ModuleName const &name) const {return !(*this == name);}
 
       std::size_t hash() const;
 
