@@ -487,7 +487,11 @@ namespace ACSVM
          NextCase();
 
       DeclCase(Jcnd_Tab):
-         // TODO
+         if(auto jump = module->jumpMapV[*codePtr++].table.find(dataStk[1]))
+         {
+            dataStk.drop();
+            BranchTo(*jump);
+         }
          NextCase();
 
       DeclCase(Jcnd_Tru):

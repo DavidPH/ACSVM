@@ -15,6 +15,7 @@
 #include "BinaryIO.hpp"
 #include "Environ.hpp"
 #include "Error.hpp"
+#include "Jump.hpp"
 #include "Script.hpp"
 #include "Tracer.hpp"
 
@@ -137,6 +138,7 @@ namespace ACSVM
       tracer.trace(this);
 
       codeV.alloc(tracer.codeC);
+      jumpMapV.alloc(tracer.jumpMapC);
 
       tracer.translate(this);
    }

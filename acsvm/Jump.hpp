@@ -13,7 +13,7 @@
 #ifndef ACSVM__Jump_H__
 #define ACSVM__Jump_H__
 
-#include "Types.hpp"
+#include "HashMapFixed.hpp"
 
 
 //----------------------------------------------------------------------------|
@@ -31,6 +31,17 @@ namespace ACSVM
    {
    public:
       Word codeIdx;
+   };
+
+   //
+   // JumpMap
+   //
+   class JumpMap
+   {
+   public:
+      void loadJumps(Byte const *data, std::size_t count);
+
+      HashMapFixed<Word, Word> table;
    };
 }
 

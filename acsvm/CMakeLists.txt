@@ -33,6 +33,7 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    Environ.cpp
    Function.cpp
    Init.cpp
+   Jump.cpp
    Module.cpp
    ModuleACS0.cpp
    ModuleACSE.cpp

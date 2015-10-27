@@ -39,6 +39,7 @@ namespace ACSVM
       codeIndex {new Word[size_]{}},
       codeC     {0},
       jumpC     {0},
+      jumpMapC  {0},
       data      {data_},
       size      {size_},
       compressed{compressed_}
@@ -73,7 +74,7 @@ namespace ACSVM
 
          // Read the number of cases.
          if(size - iter - argBytes < 4) throw ReadError();
-         argBytes += ReadLE4(data + iter + argBytes) + 4;
+         argBytes += ReadLE4(data + iter + argBytes) * 8 + 4;
 
          return argBytes;
 
@@ -319,7 +320,7 @@ namespace ACSVM
                jumpIter = (iter + opSize + 3) & ~static_cast<std::size_t>(3);
                count = ReadLE4(data + jumpIter); jumpIter += 4;
 
-               jumpC += count;
+               ++jumpMapC;
 
                // Trace all of the jump targets.
                for(; count--; jumpIter += 8)
@@ -355,8 +356,9 @@ namespace ACSVM
    {
       std::unique_ptr<Word*[]> jumps{new uint32_t *[jumpC]};
 
-      Word  *codeItr = module->codeV.data();
-      Word **jumpItr = jumps.get();
+      Word  *codeItr    = module->codeV.data();
+      Word **jumpItr    = jumps.get();
+      auto   jumpMapItr = module->jumpMapV.data();
 
       // Add Kill to catch branches to zero.
       *codeItr++ = static_cast<Word>(Code::Kill);
@@ -434,7 +436,17 @@ namespace ACSVM
             goto trans_args;
 
          case CodeACS0::Jcnd_Tab:
-            // TODO
+            {
+               std::size_t count, jumpIter;
+
+               jumpIter = (iter + opSize + 3) & ~static_cast<std::size_t>(3);
+               count = ReadLE4(data + jumpIter); jumpIter += 4;
+
+               *codeItr++ = static_cast<Word>(opData->transCode);
+               *codeItr++ = jumpMapItr - module->jumpMapV.data();
+
+               (jumpMapItr++)->loadJumps(data + jumpIter, count);
+            }
             break;
 
          case CodeACS0::Push_LitArrB:
@@ -574,6 +586,12 @@ namespace ACSVM
 
       for(Jump &jump : module->jumpV)
          jump.codeIdx = jump.codeIdx < size ? codeIndex[jump.codeIdx] : 0;
+
+      for(JumpMap &jumpMap : module->jumpMapV)
+      {
+         for(auto &jump : jumpMap.table)
+            jump.val = jump.val < size ? codeIndex[jump.val] : 0;
+      }
 
       for(Script &scr : module->scriptV)
          scr.codeIdx = scr.codeIdx < size ? codeIndex[scr.codeIdx] : 0;

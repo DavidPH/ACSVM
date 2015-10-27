@@ -85,6 +85,7 @@ namespace ACSVM
       Vector<Function *> functionV;
       Vector<Module *>   importV;
       Vector<Jump>       jumpV;
+      Vector<JumpMap>    jumpMapV;
       Vector<String *>   regImpV;
       Vector<WordInit>   regInitV;
       Vector<String *>   regNameV;

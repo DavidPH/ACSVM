@@ -97,6 +97,7 @@ namespace ACSVM
       functionV.free();
       importV.free();
       jumpV.free();
+      jumpMapV.free();
       regImpV.free();
       regInitV.free();
       regNameV.free();

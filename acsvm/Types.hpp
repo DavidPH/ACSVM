@@ -55,6 +55,7 @@ namespace ACSVM
    class GlobalScope;
    class HubScope;
    class Jump;
+   class JumpMap;
    class MapScope;
    class Module;
    class ModuleName;

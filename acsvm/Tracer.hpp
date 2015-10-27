@@ -48,6 +48,8 @@ namespace ACSVM
 
       std::size_t jumpC;
 
+      std::size_t jumpMapC;
+
    private:
       std::size_t getArgBytes(CodeDataACS0 const *opData, std::size_t iter);
 
