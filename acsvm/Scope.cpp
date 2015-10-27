@@ -718,7 +718,8 @@ namespace ACSVM
       thread->exec();
 
       Word result = thread->result;
-      freeThread(thread);
+      if(thread->state.state == ThreadState::Inactive)
+         freeThread(thread);
       return result;
    }
 
