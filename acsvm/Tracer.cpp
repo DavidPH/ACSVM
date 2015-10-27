@@ -199,9 +199,6 @@ namespace ACSVM
    //
    void TracerACS0::trace(std::size_t iter)
    {
-      // If iter is zero, this must be an imported address, so do not trace.
-      if(!iter) return;
-
       for(std::size_t next;; iter = next)
       {
          // If at the end of the file, terminate tracer. Reaching here will
