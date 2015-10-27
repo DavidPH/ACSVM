@@ -62,31 +62,6 @@ namespace ACSVM
 
       Data *data;
    };
-
-   //
-   // ArrayInit
-   //
-   class ArrayInit
-   {
-   public:
-      ArrayInit();
-      ~ArrayInit();
-
-      void apply(Array &arr);
-
-      void finish();
-
-      Word get(Word idx);
-
-      void reserve(Word count);
-
-      void set(Word idx, Word value);
-
-   private:
-      struct PrivData;
-
-      PrivData *pd;
-   };
 }
 
 #endif//ACSVM__Array_H__

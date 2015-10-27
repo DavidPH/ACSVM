@@ -76,17 +76,17 @@ namespace ACSVM
       Environment *env;
       ModuleName   name;
 
-      Vector<Word>       codeV;
       Vector<String *>   arrImpV;
       Vector<ArrayInit>  arrInitV;
       Vector<String *>   arrNameV;
       Vector<Word>       arrSizeV;
+      Vector<Word>       codeV;
       Vector<String *>   funcNameV;
       Vector<Function *> functionV;
       Vector<Module *>   importV;
       Vector<Jump>       jumpV;
       Vector<String *>   regImpV;
-      Vector<Word>       regInitV;
+      Vector<WordInit>   regInitV;
       Vector<String *>   regNameV;
       Vector<String *>   scrNameV;
       Vector<Script>     scriptV;

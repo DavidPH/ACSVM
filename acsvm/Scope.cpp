@@ -16,6 +16,7 @@
 #include "BinaryIO.hpp"
 #include "Environ.hpp"
 #include "HashMapFixed.hpp"
+#include "Init.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
 #include "Thread.hpp"
@@ -755,13 +756,13 @@ namespace ACSVM
       for(std::size_t i = 0; i != ArrC; ++i)
       {
          if(i < module->arrInitV.size())
-            module->arrInitV[i].apply(selfArrV[i]);
+            module->arrInitV[i].apply(selfArrV[i], module);
       }
 
       for(std::size_t i = 0; i != RegC; ++i)
       {
          if(i < module->regInitV.size())
-            selfRegV[i] = module->regInitV[i];
+            selfRegV[i] = module->regInitV[i].getValue(module);
       }
    }
 

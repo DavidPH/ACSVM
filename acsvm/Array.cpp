@@ -14,24 +14,6 @@
 
 #include "BinaryIO.hpp"
 
-#include <vector>
-
-
-//----------------------------------------------------------------------------|
-// Types                                                                      |
-//
-
-namespace ACSVM
-{
-   //
-   // ArrayInit::PrivData
-   //
-   struct ArrayInit::PrivData
-   {
-      std::vector<Word> dataV;
-   };
-}
-
 
 //----------------------------------------------------------------------------|
 // Static Functions                                                           |
@@ -177,77 +159,6 @@ namespace ACSVM
    void Array::saveState(std::ostream &out) const
    {
       WriteData(out, data);
-   }
-
-   //
-   // ArrayInit constructor
-   //
-   ArrayInit::ArrayInit() :
-      pd{new PrivData}
-   {
-   }
-
-   //
-   // ArrayInit destructor
-   //
-   ArrayInit::~ArrayInit()
-   {
-      delete pd;
-   }
-
-   //
-   // ArrayInit::apply
-   //
-   void ArrayInit::apply(Array &arr)
-   {
-      Word idx = 0;
-      for(Word value : pd->dataV)
-      {
-         if(value) arr[idx] = value;
-         ++idx;
-      }
-   }
-
-   //
-   // ArrayInit::finish
-   //
-   void ArrayInit::finish()
-   {
-      // Clear out trailing zeroes.
-      while(!pd->dataV.empty() && ! pd->dataV.back())
-         pd->dataV.pop_back();
-
-      // Shrink vector.
-      pd->dataV.shrink_to_fit();
-
-      // TODO: Break up initialization data into nonzero ranges.
-   }
-
-   //
-   // ArrayInit::get
-   //
-   Word ArrayInit::get(Word idx)
-   {
-      return idx < pd->dataV.size() ? pd->dataV[idx] : 0;
-   }
-
-   //
-   // ArrayInit::reserve
-   //
-   void ArrayInit::reserve(Word count)
-   {
-      pd->dataV.resize(count, 0);
-   }
-
-   //
-   // ArrayInit::set
-   //
-   void ArrayInit::set(Word idx, Word value)
-   {
-      if(idx <= pd->dataV.size())
-         pd->dataV.resize(idx + 1, 0);
-
-      pd->dataV[idx] = value;
    }
 }
 

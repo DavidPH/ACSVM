@@ -32,6 +32,7 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    CodeData.cpp
    Environ.cpp
    Function.cpp
+   Init.cpp
    Module.cpp
    ModuleACS0.cpp
    ModuleACSE.cpp

@@ -17,6 +17,7 @@
 #include "Environ.hpp"
 #include "Error.hpp"
 #include "Function.hpp"
+#include "Init.hpp"
 #include "Jump.hpp"
 #include "Script.hpp"
 
@@ -157,7 +158,7 @@ namespace ACSVM
 
       auto &init = arrInitV[idx];
       for(std::size_t iter = 4; iter != size; iter += 4)
-         init.set(iter / 4 - 1, ReadLE4(data + iter));
+         init.setVal(iter / 4 - 1, ReadLE4(data + iter));
 
       return false;
    }
@@ -218,11 +219,7 @@ namespace ACSVM
 
          auto &init = arrInitV[idx];
          for(Word i = 0, e = arrSizeV[idx]; i != e; ++i)
-         {
-            Word initVal = init.get(i);
-            if(initVal < stringV.size())
-               init.set(i, ~stringV[initVal]->idx);
-         }
+            init.setTag(i, InitTag::String);
       }
 
       return false;
@@ -245,18 +242,11 @@ namespace ACSVM
       auto &init = arrInitV[idx];
       for(std::size_t iter = 5; iter != size; ++iter)
       {
-         Word initVal = init.get(iter - 5);
          switch(data[iter])
          {
-         case 1: // string
-            if(initVal < stringV.size())
-               init.set(iter - 5, ~stringV[initVal]->idx);
-            break;
-
-         case 2: // function
-            if(initVal < functionV.size() && functionV[initVal])
-               init.set(iter - 5, functionV[initVal]->idx);
-            break;
+         case 0: init.setTag(iter - 5, InitTag::Integer);  break;
+         case 1: init.setTag(iter - 5, InitTag::String);   break;
+         case 2: init.setTag(iter - 5, InitTag::Function); break;
          }
       }
 
@@ -476,11 +466,8 @@ namespace ACSVM
          Word idx = ReadLE4(data + iter); iter += 4;
 
          // Silently ignore out of bounds initializers.
-         if(idx >= regInitV.size()) continue;
-
-         auto &initVal = regInitV[idx];
-         if(initVal < stringV.size())
-            initVal = ~stringV[initVal]->idx;
+         if(idx < regInitV.size())
+            regInitV[idx].tag = InitTag::String;
       }
 
       return false;

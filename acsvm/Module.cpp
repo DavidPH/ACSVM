@@ -15,6 +15,7 @@
 #include "Array.hpp"
 #include "Environ.hpp"
 #include "Function.hpp"
+#include "Init.hpp"
 #include "Jump.hpp"
 #include "Script.hpp"
 
@@ -88,12 +89,16 @@ namespace ACSVM
       }
 
       arrImpV.free();
+      arrInitV.free();
       arrNameV.free();
+      arrSizeV.free();
       codeV.free();
       funcNameV.free();
       functionV.free();
+      importV.free();
       jumpV.free();
       regImpV.free();
+      regInitV.free();
       regNameV.free();
       scrNameV.free();
       scriptV.free();

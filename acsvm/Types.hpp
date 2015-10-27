@@ -44,6 +44,7 @@ namespace ACSVM
    enum class CodeACS0;
    enum class Func;
    enum class FuncACS0;
+   enum class InitTag;
    class Array;
    class ArrayInit;
    class CodeData;
@@ -65,6 +66,7 @@ namespace ACSVM
    class String;
    class Thread;
    class ThreadState;
+   class WordInit;
 }
 
 #endif//ACSVM__Types_H__
