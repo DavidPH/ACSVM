@@ -13,9 +13,9 @@
 #include "String.hpp"
 
 #include "BinaryIO.hpp"
+#include "HashMap.hpp"
 
 #include <new>
-#include <unordered_map>
 #include <vector>
 
 
@@ -30,22 +30,10 @@ namespace ACSVM
    //
    struct StringTable::PrivData
    {
-      struct Equal
-      {
-         bool operator () (StringData const *l, StringData const *r) const
-            {return *l == *r;}
-      };
+      std::vector<Word> freeIdx;
 
-      struct Hash
-      {
-         std::size_t operator () (StringData const *s) const {return s->hash;}
-      };
-
-      std::vector<String *> tableString;
-
-      std::vector<Word> tableStringIdx;
-
-      std::unordered_map<StringData const *, String *, Hash, Equal> tableStringData;
+      HashMap<StringData, String, &String::link> stringByData{64, 64};
+      std::vector<String *>                      stringByIdx;
    };
 }
 
@@ -60,7 +48,7 @@ namespace ACSVM
    // String constructor
    //
    String::String(StringData const &data, Word idx_) :
-      StringData{data}, lckCount{0}, idx{idx_}, len0(std::strlen(str))
+      StringData{data}, lckCount{0}, idx{idx_}, len0(std::strlen(str)), link{this}
    {
    }
 
@@ -158,11 +146,7 @@ namespace ACSVM
    {
       if(!pd) return;
 
-      for(auto &str : pd->tableString)
-      {
-         if(str != strNone)
-            String::Delete(str);
-      }
+      clear();
 
       delete pd;
 
@@ -174,36 +158,53 @@ namespace ACSVM
    //
    String &StringTable::operator [] (StringData const &data)
    {
-      auto itr = pd->tableStringData.find(&data);
-      if(itr != pd->tableStringData.end())
-         return *itr->second;
+      if(auto str = pd->stringByData.find(data)) return *str;
 
       Word idx;
-      if(pd->tableStringIdx.empty())
+      if(pd->freeIdx.empty())
       {
          // Index has to fit within Word size.
          // If size_t has an equal or lesser max, then the check is redundant,
          // and some compilers warn about that kind of tautological comparison.
          #if SIZE_MAX > UINT32_MAX
-         if(pd->tableString.size() > UINT32_MAX)
+         if(pd->stringByIdx.size() > UINT32_MAX)
             throw std::bad_alloc();
          #endif
 
-         idx = pd->tableString.size();
-         pd->tableString.emplace_back(strNone);
-         strV = pd->tableString.data();
-         strC = pd->tableString.size();
+         idx = pd->stringByIdx.size();
+         pd->stringByIdx.emplace_back(strNone);
+         strV = pd->stringByIdx.data();
+         strC = pd->stringByIdx.size();
       }
       else
       {
-         idx = pd->tableStringIdx.back();
-         pd->tableStringIdx.pop_back();
+         idx = pd->freeIdx.back();
+         pd->freeIdx.pop_back();
       }
 
       String *str = String::New(data, idx);
-      pd->tableString[idx] = str;
-      pd->tableStringData.emplace(str, str);
+      pd->stringByIdx[idx] = str;
+      pd->stringByData.insert(str);
       return *str;
+   }
+
+   //
+   // StringTable::clear
+   //
+   void StringTable::clear()
+   {
+      for(auto &str : pd->stringByIdx)
+      {
+         if(str != strNone)
+            String::Delete(str);
+      }
+
+      pd->freeIdx.clear();
+      pd->stringByData.clear();
+      pd->stringByIdx.clear();
+
+      strV = nullptr;
+      strC = 0;
    }
 
    //
@@ -213,9 +214,7 @@ namespace ACSVM
    {
       if(pd)
       {
-         pd->tableString.clear();
-         pd->tableStringIdx.clear();
-         pd->tableStringData.clear();
+         clear();
       }
       else
       {
@@ -225,23 +224,23 @@ namespace ACSVM
 
       auto count = ReadVLN<std::size_t>(in);
 
-      pd->tableString.resize(count);
-      strV = pd->tableString.data();
-      strC = pd->tableString.size();
+      pd->stringByIdx.resize(count);
+      strV = pd->stringByIdx.data();
+      strC = pd->stringByIdx.size();
 
       for(std::size_t idx = 0; idx != count; ++idx)
       {
          if(in.get())
          {
-            String *string = String::Read(in, idx);
-            string->lckCount = ReadVLN<std::size_t>(in);
-            pd->tableString[idx] = string;
-            pd->tableStringData.emplace(string, string);
+            String *str = String::Read(in, idx);
+            str->lckCount = ReadVLN<std::size_t>(in);
+            pd->stringByIdx[idx] = str;
+            pd->stringByData.insert(str);
          }
          else
          {
-            pd->tableString[idx] = strNone;
-            pd->tableStringIdx.emplace_back(idx);
+            pd->stringByIdx[idx] = strNone;
+            pd->freeIdx.emplace_back(idx);
          }
       }
    }
@@ -251,9 +250,9 @@ namespace ACSVM
    //
    void StringTable::saveState(std::ostream &out) const
    {
-      WriteVLN(out, pd->tableString.size());
+      WriteVLN(out, pd->stringByIdx.size());
 
-      for(String *&str : pd->tableString)
+      for(String *&str : pd->stringByIdx)
       {
          if(str != strNone)
          {

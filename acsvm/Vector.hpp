@@ -43,6 +43,7 @@ namespace ACSVM
       Vector(Vector<T> const &) = delete;
       Vector(Vector<T> &&v) : dataV{v.dataV}, dataC{v.dataC}
          {v.dataV = nullptr; v.dataC = 0;}
+      Vector(size_type count) : dataV{nullptr}, dataC{0} {alloc(count);}
 
       Vector(T const *v, size_type c)
       {

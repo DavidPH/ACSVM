@@ -13,9 +13,11 @@
 #ifndef ACSVM__String_H__
 #define ACSVM__String_H__
 
+#include "List.hpp"
 #include "Types.hpp"
 
 #include <cstring>
+#include <functional>
 #include <memory>
 
 
@@ -74,6 +76,8 @@ namespace ACSVM
       String(StringData const &data, Word idx);
       ~String();
 
+      ListLink<String> link;
+
 
       static void Delete(String *str);
 
@@ -98,6 +102,8 @@ namespace ACSVM
          {return idx < strC ? *strV[idx] : *strNone;}
       String &operator [] (StringData const &data);
 
+      void clear();
+
       void loadState(std::istream &in);
 
       void saveState(std::ostream &out) const;
@@ -111,6 +117,19 @@ namespace ACSVM
       String *strNone;
 
       PrivData *pd;
+   };
+}
+
+namespace std
+{
+   //
+   // hash<::ACSVM::StringData>
+   //
+   template<>
+   struct hash<::ACSVM::StringData>
+   {
+      size_t operator () (::ACSVM::StringData const &data) const
+         {return data.hash;}
    };
 }
 
