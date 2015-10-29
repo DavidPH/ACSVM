@@ -82,8 +82,6 @@ namespace ACSVM
          CallFunc_Func_Nop
       };
 
-      std::unordered_map<Word, CallSpec> tableCallSpec;
-
       std::unordered_map<Word, CodeDataACS0> tableCodeDataACS0
       {
          #define ACSVM_CodeListACS0(name, code, args, transCode, stackArgC, transFunc) \
@@ -111,18 +109,13 @@ namespace ACSVM
    // Environment constructor
    //
    Environment::Environment() :
-      defCallSpec  {CallSpecDefault},
       scriptLocRegC{ScriptLocRegCDefault},
-
-      tableCallFunc{nullptr},
 
       funcV{nullptr},
       funcC{0},
 
       pd{new PrivData}
    {
-      tableCallFunc = pd->tableCallFunc.data();
-
       funcV = pd->functionByIdx.data();
       funcC = pd->functionByIdx.size();
    }
@@ -152,16 +145,7 @@ namespace ACSVM
    Word Environment::addCallFunc(CallFunc func)
    {
       pd->tableCallFunc.push_back(func);
-      tableCallFunc = pd->tableCallFunc.data();
       return pd->tableCallFunc.size() - 1;
-   }
-
-   //
-   // Environment::addCallSpec
-   //
-   void Environment::addCallSpec(Word idx, CallSpec spec)
-   {
-      pd->tableCallSpec[idx] = spec;
    }
 
    //
@@ -194,6 +178,37 @@ namespace ACSVM
    Thread *Environment::allocThread()
    {
       return new Thread(this);
+   }
+
+   //
+   // Environment::callFunc
+   //
+   bool Environment::callFunc(Thread *thread, Word func, Word const *argV, Word argC)
+   {
+      return pd->tableCallFunc[func](thread, argV, argC);
+   }
+
+   //
+   // Environment::callSpec
+   //
+   Word Environment::callSpec(Thread *thread, Word spec, Word const *argV, Word argC)
+   {
+      if(thread->scopeMap->clampCallSpec && thread->module->isACS0)
+      {
+         Vector<Word> argTmp{argV, argC};
+         for(auto &arg : argTmp) arg &= 0xFF;
+         return callSpecImpl(thread, spec, argTmp.data(), argTmp.size());
+      }
+      else
+         return callSpecImpl(thread, spec, argV, argC);
+   }
+
+   //
+   // Environment::callSpecImpl
+   //
+   Word Environment::callSpecImpl(Thread *, Word, Word const *, Word)
+   {
+      return 0;
    }
 
    //
@@ -292,15 +307,6 @@ namespace ACSVM
    void Environment::freeThread(Thread *thread)
    {
       thread->link.relink(&threadFree);
-   }
-
-   //
-   // Environment::getCallSpec
-   //
-   CallSpec Environment::getCallSpec(Word spec)
-   {
-      auto itr = pd->tableCallSpec.find(spec);
-      return itr == pd->tableCallSpec.end() ? defCallSpec : itr->second;
    }
 
    //
@@ -785,14 +791,6 @@ namespace ACSVM
          WriteVLN<std::size_t>(out, in->idx + 1);
       else
          WriteVLN<std::size_t>(out, 0);
-   }
-
-   //
-   // Environment::CallSpecDefault
-   //
-   Word Environment::CallSpecDefault(Thread *, Word, Word const *, Word)
-   {
-      return 0;
    }
 }
 

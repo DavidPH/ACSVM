@@ -336,7 +336,8 @@ namespace ACSVM
 
       module0{nullptr},
 
-      active{false},
+      active       {false},
+      clampCallSpec{false},
 
       pd{new PrivData}
    {

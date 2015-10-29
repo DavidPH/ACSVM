@@ -43,6 +43,7 @@ namespace ACSVM
 
       hashLink{this},
 
+      isACS0{false},
       loaded{false}
    {
    }
@@ -84,6 +85,7 @@ namespace ACSVM
       scriptV.free();
       stringV.free();
 
+      isACS0 = false;
       loaded = false;
    }
 

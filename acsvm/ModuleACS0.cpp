@@ -85,6 +85,9 @@ namespace ACSVM
          }
       }
 
+      // Mark as ACS0.
+      isACS0 = true;
+
       // Read script table.
 
       // Read script count.

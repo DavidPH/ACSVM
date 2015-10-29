@@ -24,7 +24,6 @@
 namespace ACSVM
 {
    using CallFunc = bool (*)(Thread *thread, Word const *argv, Word argc);
-   using CallSpec = Word (*)(Thread *thread, Word spec, Word const *argv, Word argc);
 
    //
    // Environment
@@ -38,10 +37,12 @@ namespace ACSVM
       virtual ~Environment();
 
       Word addCallFunc(CallFunc func);
-      void addCallSpec(Word idx, CallSpec spec);
 
       void addCodeDataACS0(Word code, CodeDataACS0 &&data);
       void addFuncDataACS0(Word func, FuncDataACS0 &&data);
+
+      bool callFunc(Thread *thread, Word func, Word const *argV, Word argC);
+      Word callSpec(Thread *thread, Word spec, Word const *argV, Word argC);
 
       // Function to check if a lock can be opened. Default behavior is to
       // always return false.
@@ -64,9 +65,6 @@ namespace ACSVM
       void freeFunction(Function *func);
 
       void freeThread(Thread *thread);
-
-      CallFunc getCallFunc(Word func) {return tableCallFunc[func];}
-      CallSpec getCallSpec(Word spec);
 
       CodeData const *getCodeData(Code code);
 
@@ -131,26 +129,23 @@ namespace ACSVM
 
       StringTable stringTable;
 
-      // Function to return from getCallSpec for unknown specials.
-      CallSpec defCallSpec;
-
       // Default number of script variables. Default is 20.
       Word scriptLocRegC;
 
-
-      static Word CallSpecDefault(Thread *thread, Word spec, Word const *argv, Word argc);
 
       static constexpr Word ScriptLocRegCDefault = 20;
 
    protected:
       virtual Thread *allocThread();
 
+      // Called by callSpec after processing arguments. Default behavior is to
+      // do nothing and return 0.
+      virtual Word callSpecImpl(Thread *thread, Word spec, Word const *argV, Word argC);
+
       virtual void loadModule(Module *module) = 0;
 
       ListLink<ScriptAction> scriptAction;
       ListLink<Thread>       threadFree;
-
-      CallFunc *tableCallFunc;
 
       Function  **funcV;
       std::size_t funcC;

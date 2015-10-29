@@ -96,6 +96,7 @@ namespace ACSVM
 
       ListLink<Module> hashLink;
 
+      bool isACS0;
       bool loaded;
 
 

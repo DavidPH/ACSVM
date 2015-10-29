@@ -160,6 +160,7 @@ namespace ACSVM
       Module *module0;
 
       bool active;
+      bool clampCallSpec;
 
    protected:
       void freeThread(Thread *thread);

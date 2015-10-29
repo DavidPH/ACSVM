@@ -384,7 +384,7 @@ namespace ACSVM
 
       DeclCase(Call_Stk):
             dataStk.drop();
-            func = module->env->getFunction(dataStk[0]);
+            func = env->getFunction(dataStk[0]);
             goto do_call;
          }
 
@@ -393,7 +393,7 @@ namespace ACSVM
             Word argc = *codePtr++;
             Word func = *codePtr++;
             dataStk.drop(argc);
-            if(module->env->getCallFunc(func)(this, &dataStk[0], argc))
+            if(env->callFunc(this, func, &dataStk[0], argc))
                goto exec_intr;
          }
          NextCase();
@@ -404,7 +404,7 @@ namespace ACSVM
             Word        func = *codePtr++;
             Word const *argv =  codePtr;
             codePtr += argc;
-            if(module->env->getCallFunc(func)(this, argv, argc))
+            if(env->callFunc(this, func, argv, argc))
                goto exec_intr;
          }
          NextCase();
@@ -414,7 +414,7 @@ namespace ACSVM
             Word argc = *codePtr++;
             Word spec = *codePtr++;
             dataStk.drop(argc);
-            module->env->getCallSpec(spec)(this, spec, &dataStk[0], argc);
+            env->callSpec(this, spec, &dataStk[0], argc);
          }
          NextCase();
 
@@ -424,7 +424,7 @@ namespace ACSVM
             Word        spec = *codePtr++;
             Word const *argv =  codePtr;
             codePtr += argc;
-            module->env->getCallSpec(spec)(this, spec, argv, argc);
+            env->callSpec(this, spec, argv, argc);
          }
          NextCase();
 
@@ -433,7 +433,7 @@ namespace ACSVM
             Word argc = *codePtr++;
             Word spec = *codePtr++;
             dataStk.drop(argc);
-            dataStk.push(module->env->getCallSpec(spec)(this, spec, &dataStk[0], argc));
+            dataStk.push(env->callSpec(this, spec, &dataStk[0], argc));
          }
          NextCase();
 
