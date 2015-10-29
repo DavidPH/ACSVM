@@ -743,6 +743,18 @@ namespace ACSVM
    }
 
    //
+   // MapScope::scriptStartType
+   //
+   void MapScope::scriptStartType(ScriptType type, Word const *argV, Word argC)
+   {
+      for(auto &script : pd->scriptThread)
+      {
+         if(script.key->type == type)
+            scriptStartForced(script.key, argV, argC);
+      }
+   }
+
+   //
    // MapScope::scriptStop
    //
    void MapScope::scriptStop(Script *script)

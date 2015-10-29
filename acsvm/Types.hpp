@@ -45,6 +45,7 @@ namespace ACSVM
    enum class Func;
    enum class FuncACS0;
    enum class InitTag;
+   enum class ScriptType;
    class Array;
    class ArrayInit;
    class CodeData;

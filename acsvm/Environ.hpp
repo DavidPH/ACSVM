@@ -85,8 +85,6 @@ namespace ACSVM
       ModuleName getModuleName(char const *str);
       virtual ModuleName getModuleName(char const *str, std::size_t len);
 
-      Script *getScriptHead();
-
       String *getString(char const *first, char const *last)
          {return &stringTable[{first, last}];}
 

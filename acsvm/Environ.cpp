@@ -97,8 +97,6 @@ namespace ACSVM
             {func, {FuncACS0::name, Func::transFunc, __VA_ARGS__}},
          #include "CodeList.hpp"
       };
-
-      Script scriptHead;
    };
 }
 
@@ -419,14 +417,6 @@ namespace ACSVM
    ModuleName Environment::getModuleName(char const *str, std::size_t len)
    {
       return {getString(str, len), nullptr, 0};
-   }
-
-   //
-   // Environment::getScriptHead
-   //
-   Script *Environment::getScriptHead()
-   {
-      return &pd->scriptHead;
    }
 
    //

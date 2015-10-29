@@ -25,24 +25,11 @@ namespace ACSVM
    //
    // Script constructor
    //
-   Script::Script() :
-      module{nullptr},
-
-      envNext{this},
-      envPrev{this}
-   {
-   }
-
-   //
-   // Script constructor
-   //
    Script::Script(Module *module_) :
       module{module_},
 
       name{},
 
-      envNext{module->env->getScriptHead()},
-      envPrev{envNext->envPrev},
       argC   {0},
       codeIdx{0},
       flags  {0},
@@ -53,8 +40,6 @@ namespace ACSVM
       flagClient{false},
       flagNet   {false}
    {
-      envNext->envPrev = this;
-      envPrev->envNext = this;
    }
 
    //
@@ -62,8 +47,6 @@ namespace ACSVM
    //
    Script::~Script()
    {
-      envNext->envPrev = envPrev;
-      envPrev->envNext = envNext;
    }
 }
 

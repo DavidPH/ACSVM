@@ -59,8 +59,6 @@ namespace ACSVM
 
       ScriptName name;
 
-      Script    *envNext;
-      Script    *envPrev;
       Word       argC;
       Word       codeIdx;
       Word       flags;
@@ -70,12 +68,6 @@ namespace ACSVM
 
       bool flagClient : 1;
       bool flagNet    : 1;
-
-
-      friend class Environment;
-
-   private:
-      Script();
    };
 }
 
