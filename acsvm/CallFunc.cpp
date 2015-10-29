@@ -71,7 +71,7 @@ namespace ACSVM
    {
       Word    dstOff = argv[1] + argv[2];
       Word    dstLen = argv[3];
-      String *src = thread->env->getString(argv[4]);
+      String *src = thread->scopeMap->getString(argv[4]);
       Word    srcIdx = argv[5];
 
       if(srcIdx > src->len) return false;
@@ -225,7 +225,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_PrintString(Thread *thread, Word const *argv, Word)
    {
-      String *s = thread->env->getString(argv[0]);
+      String *s = thread->scopeMap->getString(argv[0]);
       thread->printBuf.reserve(s->len0);
       thread->printBuf.put(s->str, s->len0);
       return false;
@@ -240,7 +240,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_ScrPauseS(Thread *thread, Word const *argv, Word)
    {
-      String *name = thread->env->getString(argv[0]);
+      String *name = thread->scopeMap->getString(argv[0]);
       Word    map  = argv[1];
 
       if(map && map != thread->scopeMap->id)
@@ -263,7 +263,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_ScrStartS(Thread *thread, Word const *argv, Word argc)
    {
-      String *name = thread->env->getString(argv[0]);
+      String *name = thread->scopeMap->getString(argv[0]);
       Word    map  = argv[1];
       bool    res;
 
@@ -305,7 +305,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_ScrStartSF(Thread *thread, Word const *argv, Word argc)
    {
-      String *name = thread->env->getString(argv[0]);
+      String *name = thread->scopeMap->getString(argv[0]);
       Word    map  = argv[1];
       bool    res;
 
@@ -347,7 +347,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_ScrStartSR(Thread *thread, Word const *argv, Word argc)
    {
-      String *name = thread->env->getString(argv[0]);
+      String *name = thread->scopeMap->getString(argv[0]);
       Word    res;
 
       if(Script *script = thread->scopeMap->findScript(name))
@@ -364,7 +364,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_ScrStopS(Thread *thread, Word const *argv, Word)
    {
-      String *name = thread->env->getString(argv[0]);
+      String *name = thread->scopeMap->getString(argv[0]);
       Word    map  = argv[1];
 
       if(map && map != thread->scopeMap->id)
@@ -391,7 +391,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_GetChar(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(thread->env->getString(argv[0])->get(argv[1]));
+      thread->dataStk.push(thread->scopeMap->getString(argv[0])->get(argv[1]));
       return false;
    }
 
@@ -400,8 +400,8 @@ namespace ACSVM
    //
    bool CallFunc_Func_StrCaseCmp(Thread *thread, Word const *argv, Word argc)
    {
-      String *l = thread->env->getString(argv[0]);
-      String *r = thread->env->getString(argv[1]);
+      String *l = thread->scopeMap->getString(argv[0]);
+      String *r = thread->scopeMap->getString(argv[1]);
       Word    n = argc > 2 ? argv[2] : -1;
 
       thread->dataStk.push(StrCaseCmp(l, r, n));
@@ -413,8 +413,8 @@ namespace ACSVM
    //
    bool CallFunc_Func_StrCmp(Thread *thread, Word const *argv, Word argc)
    {
-      String *l = thread->env->getString(argv[0]);
-      String *r = thread->env->getString(argv[1]);
+      String *l = thread->scopeMap->getString(argv[0]);
+      String *r = thread->scopeMap->getString(argv[1]);
       Word    n = argc > 2 ? argv[2] : -1;
 
       thread->dataStk.push(StrCmp(l, r, n));
@@ -462,7 +462,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_StrLeft(Thread *thread, Word const *argv, Word)
    {
-      String *str = thread->env->getString(argv[0]);
+      String *str = thread->scopeMap->getString(argv[0]);
       Word    len = argv[1];
 
       if(len < str->len)
@@ -477,7 +477,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_StrLen(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(thread->env->getString(argv[0])->len0);
+      thread->dataStk.push(thread->scopeMap->getString(argv[0])->len0);
       return false;
    }
 
@@ -486,7 +486,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_StrMid(Thread *thread, Word const *argv, Word)
    {
-      String *str = thread->env->getString(argv[0]);
+      String *str = thread->scopeMap->getString(argv[0]);
       Word    idx = argv[1];
       Word    len = argv[2];
 
@@ -509,7 +509,7 @@ namespace ACSVM
    //
    bool CallFunc_Func_StrRight(Thread *thread, Word const *argv, Word)
    {
-      String *str = thread->env->getString(argv[0]);
+      String *str = thread->scopeMap->getString(argv[0]);
       Word    len = argv[1];
 
       if(len < str->len)

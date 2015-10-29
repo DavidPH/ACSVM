@@ -274,7 +274,7 @@ namespace ACSVM
          break;
 
       case ThreadState::WaitScrS:
-         if(scopeMap->isScriptActive(scopeMap->findScript(env->getString(state.data))))
+         if(scopeMap->isScriptActive(scopeMap->findScript(scopeMap->getString(state.data))))
             return;
          break;
 
@@ -540,7 +540,7 @@ namespace ACSVM
 
       DeclCase(Push_StrArs):
          dataStk.drop();
-         dataStk[1] = module->env->getString(dataStk[1])->get(dataStk[0]);
+         dataStk[1] = scopeMap->getString(dataStk[1])->get(dataStk[0]);
          NextCase();
 
          //================================================

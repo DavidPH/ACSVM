@@ -104,6 +104,8 @@ namespace ACSVM
 
       void clear();
 
+      String &getNone() {return *strNone;}
+
       void loadState(std::istream &in);
 
       void saveState(std::ostream &out) const;

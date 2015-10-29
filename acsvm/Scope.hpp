@@ -130,6 +130,8 @@ namespace ACSVM
 
       ModuleScope *getModuleScope(Module *module);
 
+      String *getString(Word idx) const;
+
       bool hasActiveThread();
 
       bool isScriptActive(Script *script);
@@ -152,6 +154,9 @@ namespace ACSVM
 
       ListLink<ScriptAction> scriptAction;
       ListLink<Thread>       threadActive;
+
+      // Used for untagged string lookup.
+      Module *module0;
 
       bool active;
 

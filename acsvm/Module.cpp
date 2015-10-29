@@ -52,9 +52,6 @@ namespace ACSVM
    //
    Module::~Module()
    {
-      if(env->module0 == this)
-         env->module0 = nullptr;
-
       reset();
    }
 

@@ -87,14 +87,6 @@ namespace ACSVM
 
       Script *getScriptHead();
 
-      String *getString(Word idx)
-      {
-         if(idx & 0x80000000)
-            return &stringTable[~idx];
-         else
-            return &stringTable[idx]; // TODO: Read module 0.
-      }
-
       String *getString(char const *first, char const *last)
          {return &stringTable[{first, last}];}
 
@@ -143,9 +135,6 @@ namespace ACSVM
 
       // Function to return from getCallSpec for unknown specials.
       CallSpec defCallSpec;
-
-      // First loaded module.
-      Module *module0;
 
       // Default number of script variables. Default is 20.
       Word scriptLocRegC;

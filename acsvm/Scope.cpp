@@ -334,6 +334,8 @@ namespace ACSVM
       hub{hub_},
       id {id_},
 
+      module0{nullptr},
+
       active{false},
 
       pd{new PrivData}
@@ -354,6 +356,8 @@ namespace ACSVM
    //
    void MapScope::addModule(Module *module)
    {
+      if(!module0) module0 = module;
+
       if(pd->modules.count(module)) return;
 
       pd->modules.insert(module);
@@ -517,6 +521,20 @@ namespace ACSVM
    ModuleScope *MapScope::getModuleScope(Module *module)
    {
       return pd->moduleScopes.find(module);
+   }
+
+   //
+   // MapScope::getString
+   //
+   String *MapScope::getString(Word idx) const
+   {
+      if(idx & 0x80000000)
+         return &env->stringTable[~idx];
+
+      if(!module0 || idx >= module0->stringV.size())
+         return &env->stringTable.getNone();
+
+      return module0->stringV[idx];
    }
 
    //
