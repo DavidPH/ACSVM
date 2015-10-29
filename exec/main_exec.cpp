@@ -37,6 +37,9 @@
 //
 class Environment : public ACSVM::Environment
 {
+public:
+   Environment();
+
 protected:
    virtual void loadModule(ACSVM::Module *module);
 };
@@ -54,9 +57,9 @@ static bool NeedTestSaveEnv = false;
 //
 
 //
-// EndPrint
+// CF_EndPrint
 //
-static bool EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
+static bool CF_EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
 {
    std::cout << thread->printBuf.data() << '\n';
    thread->printBuf.drop();
@@ -64,18 +67,60 @@ static bool EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
 }
 
 //
-// TestSave
+// CF_TestSave
 //
-static bool TestSave(ACSVM::Thread *, ACSVM::Word const *, ACSVM::Word)
+static bool CF_TestSave(ACSVM::Thread *, ACSVM::Word const *, ACSVM::Word)
 {
    NeedTestSaveEnv = true;
    return false;
+}
+
+//
+// LoadModules
+//
+static void LoadModules(Environment &env, char const *const *argv, std::size_t argc)
+{
+   // Load modules.
+   std::vector<ACSVM::Module *> modules;
+   for(std::size_t i = 1; i < argc; ++i)
+      modules.push_back(env.getModule(env.getModuleName(argv[i])));
+
+   // Create and activate scopes.
+   ACSVM::GlobalScope *global = env.getGlobalScope(0);  global->active = true;
+   ACSVM::HubScope    *hub    = global->getHubScope(0); hub   ->active = true;
+   ACSVM::MapScope    *map    = hub->getMapScope(0);    map   ->active = true;
+
+   // Register modules with map scope.
+   for(auto &module : modules)
+      map->addModule(module);
+   map->addModuleFinish();
+
+   // Start Open scripts.
+   for(ACSVM::Script *head = env.getScriptHead(), *scr = head->envNext; scr != head; scr = scr->envNext)
+   {
+      if(scr->type == ACSVM::ScriptType::Open)
+         map->scriptStartForced(scr, nullptr, 0);
+   }
 }
 
 
 //----------------------------------------------------------------------------|
 // Extern Functions                                                           |
 //
+
+//
+// Environment constructor
+//
+Environment::Environment()
+{
+   ACSVM::Word funcEndPrint = addCallFunc(CF_EndPrint);
+   ACSVM::Word funcTestSave = addCallFunc(CF_TestSave);
+
+   addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
+   addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
+
+   addFuncDataACS0(0x10000, funcTestSave);
+}
 
 //
 // Environment::loadModule
@@ -101,20 +146,10 @@ int main(int argc, char *argv[])
 {
    Environment env;
 
-   ACSVM::Word funcEndPrint = env.addCallFunc(EndPrint);
-   ACSVM::Word funcTestSave = env.addCallFunc(TestSave);
-
-   env.addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
-   env.addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
-
-   env.addFuncDataACS0(0x10000, funcTestSave);
-
    // Load modules.
-   std::vector<ACSVM::Module *> modules;
    try
    {
-      for(int i = 1; i < argc; ++i)
-         modules.push_back(env.getModule(env.getModuleName(argv[i])));
+      LoadModules(env, argv, argc);
    }
    catch(ACSVM::ReadError &e)
    {
@@ -122,22 +157,7 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   ACSVM::GlobalScope *global = env.getGlobalScope(0);  global->active = true;
-   ACSVM::HubScope    *hub    = global->getHubScope(0); hub   ->active = true;
-   ACSVM::MapScope    *map    = hub->getMapScope(0);    map   ->active = true;
-
-   // Register modules with map scope.
-   for(auto &module : modules)
-      map->addModule(module);
-   map->addModuleFinish();
-
-   // Start Open scripts.
-   for(ACSVM::Script *head = env.getScriptHead(), *scr = head->envNext; scr != head; scr = scr->envNext)
-   {
-      if(scr->type == ACSVM::ScriptType::Open)
-         map->scriptStartForced(scr, nullptr, 0);
-   }
-
+   // Execute until all threads terminate.
    while(env.hasActiveThread())
    {
       std::chrono::duration<double> rate{1.0 / 35};
