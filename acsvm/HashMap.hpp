@@ -65,11 +65,66 @@ namespace ACSVM
       typename KeyEqual = std::equal_to<Key>>
    class HashMap
    {
+   private:
+      //
+      // Iterator
+      //
+      template<typename Obj>
+      class IteratorBase
+      {
+      public:
+         //
+         // operator ++
+         //
+         IteratorBase<Obj> &operator ++ ()
+         {
+            for(;;)
+            {
+               // Traverse to next link.
+               link = link->next;
+
+               // If it has an object, we are done.
+               if(link->obj) break;
+
+               // Otherwise, we are at the current chain's head. So increment
+               // to the next chain. If at the last chain, we are done.
+               if(++link == last) break;
+            }
+
+            return *this;
+         }
+
+         Obj &operator * () const {return *link->obj;}
+         Obj *operator -> () const {return link->obj;}
+
+         bool operator == (IteratorBase<Obj> const &iter)
+            {return iter.link == link;}
+         bool operator != (IteratorBase<Obj> const &iter)
+            {return iter.link != link;}
+
+
+         friend class HashMap;
+
+      private:
+         IteratorBase(ListLink<T> *link_, ListLink<T> *last_) :
+            link{link_}, last{last_} {if(link != last) ++*this;}
+
+         ListLink<T> *link, *last;
+      };
+
    public:
+      using const_iterator = IteratorBase<T const>;
+      using iterator       = IteratorBase<T>;
+      using size_type      = std::size_t;
+
+
       HashMap() : chainV{16}, objC{0}, growC{16} {}
-      HashMap(std::size_t count, std::size_t growC_) :
+      HashMap(size_type count, size_type growC_) :
          chainV{count}, objC{0}, growC{growC_} {}
       ~HashMap() {clear();}
+
+      // begin
+      iterator begin() {return {chainV.begin(), chainV.end()};}
 
       //
       // clear
@@ -85,6 +140,9 @@ namespace ACSVM
          objC = 0;
       }
 
+      // end
+      iterator end() {return {chainV.end(), chainV.end()};}
+
       //
       // find
       //
@@ -97,6 +155,22 @@ namespace ACSVM
          }
 
          return nullptr;
+      }
+
+      //
+      // free
+      //
+      // Unlinks and deletes all contained objects.
+      //
+      void free()
+      {
+         for(auto &chain : chainV)
+         {
+            while(auto obj = chain.next->obj)
+               (obj->*LinkMem).unlink(), delete obj;
+         }
+
+         objC = 0;
       }
 
       //
@@ -114,7 +188,9 @@ namespace ACSVM
       //
       // resize
       //
-      void resize(std::size_t count)
+      // Reallocates to count chains.
+      //
+      void resize(size_type count)
       {
          auto oldChainV = std::move(chainV);
          chainV.alloc(count);
@@ -125,6 +201,9 @@ namespace ACSVM
                (obj->*LinkMem).relink(&chainV[hasher(GetKey(obj)) % chainV.size()]);
          }
       }
+
+      // size
+      size_type size() const {return objC;}
 
       //
       // unlink
@@ -140,8 +219,8 @@ namespace ACSVM
       Hash                hasher;
       KeyEqual            equal;
 
-      std::size_t objC;
-      std::size_t growC;
+      size_type objC;
+      size_type growC;
 
 
       //
@@ -152,6 +231,34 @@ namespace ACSVM
          return HashMapGetKey<Key, T, !!KeyMem>::template Get<KeyMem>(obj);
       }
    };
+
+   //
+   // HashMapElem
+   //
+   // Wraps a type with a key and link for use in HashMap.
+   //
+   template<typename Key, typename T>
+   class HashMapElem
+   {
+   public:
+      HashMapElem(Key const &key_, T const &val_) :
+         key{key_}, val{val_}, link{this} {}
+
+      Key key;
+      T   val;
+
+      ListLink<HashMapElem<Key, T>> link;
+   };
+
+   //
+   // HashMapBasic
+   //
+   // Convenience typedef for HashMapElem-based HashMaps.
+   //
+   template<typename Key, typename T, typename Hash = std::hash<Key>,
+      typename KeyEqual = std::equal_to<Key>>
+   using HashMapBasic = HashMap<Key, HashMapElem<Key, T>,
+      &HashMapElem<Key, T>::link, &HashMapElem<Key, T>::key, Hash, KeyEqual>;
 }
 
 #endif//ACSVM__HashMap_H__

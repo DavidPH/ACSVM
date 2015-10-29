@@ -61,6 +61,8 @@ namespace ACSVM
       env{env_},
       name{std::move(name_)},
 
+      hashLink{this},
+
       loaded{false}
    {
    }

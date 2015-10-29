@@ -13,8 +13,10 @@
 #ifndef ACSVM__Module_H__
 #define ACSVM__Module_H__
 
+#include "List.hpp"
 #include "Vector.hpp"
 
+#include <functional>
 #include <memory>
 
 
@@ -93,6 +95,8 @@ namespace ACSVM
       Vector<Script>     scriptV;
       Vector<String *>   stringV;
 
+      ListLink<Module> hashLink;
+
       bool loaded;
 
 
@@ -163,6 +167,19 @@ namespace ACSVM
       String *readStringACS0(Byte const *data, std::size_t size, std::size_t iter);
 
       void setScriptNameTypeACSE(Script *scr, Word nameInt, Word type);
+   };
+}
+
+namespace std
+{
+   //
+   // hash<::ACSVM::ModuleName>
+   //
+   template<>
+   struct hash<::ACSVM::ModuleName>
+   {
+      size_t operator () (::ACSVM::ModuleName const &name) const
+         {return name.hash();}
    };
 }
 

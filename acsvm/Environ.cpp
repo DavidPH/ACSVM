@@ -18,6 +18,7 @@
 #include "Code.hpp"
 #include "CodeData.hpp"
 #include "Function.hpp"
+#include "HashMap.hpp"
 #include "Module.hpp"
 #include "PrintBuf.hpp"
 #include "Scope.hpp"
@@ -41,6 +42,9 @@ namespace ACSVM
    //
    struct Environment::PrivData
    {
+      using FuncName = std::pair<ModuleName, String *>;
+      using FuncElem = HashMapElem<FuncName, Word>;
+
       struct NameEqual
       {
          bool operator () (ModuleName const *l, ModuleName const *r) const
@@ -53,18 +57,21 @@ namespace ACSVM
             {return name->hash();}
       };
 
-      struct FuncPairHash
+      struct FuncNameHash
       {
-         std::size_t operator () (std::pair<ModuleName, String *> const &pair) const
-            {return pair.first.hash() + pair.second->hash;}
+         std::size_t operator () (FuncName const &name) const
+            {return name.first.hash() + name.second->hash;}
       };
 
-      std::unordered_map<std::pair<ModuleName, String *>, Word, FuncPairHash> functionTab;
 
       // Reserve index 0 as no function.
-      std::vector<Function *> functionVec{nullptr};
+      std::vector<Function *> functionByIdx{nullptr};
+
+      HashMapBasic<FuncName, Word, FuncNameHash> functionByName{16, 16};
 
       std::unordered_map<std::size_t, GlobalScope> globalScopes;
+
+      HashMap<ModuleName, Module, &Module::hashLink, &Module::name> modules;
 
       std::vector<CallFunc> tableCallFunc
       {
@@ -90,9 +97,6 @@ namespace ACSVM
             {func, {FuncACS0::name, Func::transFunc, __VA_ARGS__}},
          #include "CodeList.hpp"
       };
-
-      std::unordered_map<ModuleName const *, std::unique_ptr<Module>,
-         NameHash, NameEqual> tableModule;
 
       Script scriptHead;
    };
@@ -122,8 +126,8 @@ namespace ACSVM
    {
       tableCallFunc = pd->tableCallFunc.data();
 
-      funcV = pd->functionVec.data();
-      funcC = pd->functionVec.size();
+      funcV = pd->functionByIdx.data();
+      funcC = pd->functionByIdx.size();
    }
 
    //
@@ -131,11 +135,12 @@ namespace ACSVM
    //
    Environment::~Environment()
    {
-      while(!pd->tableModule.empty())
-         pd->tableModule.erase(pd->tableModule.begin());
+      pd->modules.free();
 
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
+
+      pd->functionByName.free();
 
       delete pd;
 
@@ -261,8 +266,7 @@ namespace ACSVM
    //
    Module *Environment::findModule(ModuleName const &name) const
    {
-      auto itr = pd->tableModule.find(&name);
-      return itr == pd->tableModule.end() ? nullptr : itr->second.get();
+      return pd->modules.find(name);
    }
 
    //
@@ -272,18 +276,16 @@ namespace ACSVM
    {
       // Null every reference to this function in every Module.
       // O(N*M) is not very nice, but that can be fixed if/when it comes up.
-      for(auto &moduleItr : pd->tableModule)
+      for(auto &module : pd->modules)
       {
-         auto &module = moduleItr.second;
-
-         for(Function *&funcItr : module->functionV)
+         for(Function *&funcItr : module.functionV)
          {
             if(funcItr == func)
                funcItr = nullptr;
          }
       }
 
-      pd->functionVec[func->idx] = nullptr;
+      pd->functionByIdx[func->idx] = nullptr;
       delete func;
    }
 
@@ -344,25 +346,28 @@ namespace ACSVM
    {
       if(funcName)
       {
-         auto &idx = pd->functionTab[{module->name, funcName}];
+         PrivData::FuncName namePair{module->name, funcName};
+         auto idx = pd->functionByName.find(namePair);
 
          if(!idx)
          {
             #if SIZE_MAX > UINT32_MAX
-            if(pd->functionVec.size() > UINT32_MAX)
+            if(pd->functionByIdx.size() > UINT32_MAX)
                throw std::bad_alloc();
             #endif
 
-            idx = pd->functionVec.size();
-            pd->functionVec.emplace_back();
-            funcV = pd->functionVec.data();
-            funcC = pd->functionVec.size();
+            idx = new PrivData::FuncElem{std::move(namePair), pd->functionByIdx.size()};
+            pd->functionByName.insert(idx);
+
+            pd->functionByIdx.emplace_back();
+            funcV = pd->functionByIdx.data();
+            funcC = pd->functionByIdx.size();
          }
 
-         auto &ptr = pd->functionVec[idx];
+         auto &ptr = pd->functionByIdx[idx->val];
 
          if(!ptr)
-            ptr = new Function{module, funcName, idx};
+            ptr = new Function{module, funcName, idx->val};
 
          return ptr;
       }
@@ -384,22 +389,21 @@ namespace ACSVM
    //
    Module *Environment::getModule(ModuleName &&name)
    {
-      auto itr = pd->tableModule.find(&name);
+      auto module = pd->modules.find(name);
 
-      if(itr == pd->tableModule.end())
+      if(!module)
       {
-         std::unique_ptr<Module> module{new Module(this, std::move(name))};
-         loadModule(module.get());
-         ModuleName const *namePtr = &module->name;
-         itr = pd->tableModule.emplace(namePtr, std::move(module)).first;
+         module = new Module{this, std::move(name)};
+         pd->modules.insert(module);
+         loadModule(module);
       }
       else
       {
-         if(!itr->second->loaded)
-            loadModule(itr->second.get());
+         if(!module->loaded)
+            loadModule(module);
       }
 
-      return itr->second.get();
+      return module;
    }
 
    //
@@ -446,31 +450,32 @@ namespace ACSVM
    void Environment::loadFunctions(std::istream &in)
    {
       // Function index map.
-      pd->functionTab.clear();
+      pd->functionByName.free();
       for(std::size_t n = ReadVLN<std::size_t>(in); n--;)
       {
          ModuleName name = readModuleName(in);
          String    *str  = &stringTable[ReadVLN<Word>(in)];
          Word       idx  = ReadVLN<Word>(in);
 
-         pd->functionTab[{name, str}] = idx;
+         pd->functionByName.insert(new PrivData::FuncElem{{name, str}, idx});
       }
 
       // Function vector.
-      auto oldTable = pd->functionVec;
+      auto oldTable = pd->functionByIdx;
 
-      pd->functionVec.clear();
-      pd->functionVec.resize(ReadVLN<std::size_t>(in), nullptr);
-      funcV = pd->functionVec.data();
-      funcC = pd->functionVec.size();
+      pd->functionByIdx.clear();
+      pd->functionByIdx.resize(ReadVLN<std::size_t>(in), nullptr);
+      funcV = pd->functionByIdx.data();
+      funcC = pd->functionByIdx.size();
 
       // Reset function indexes.
       for(Function *&func : oldTable)
       {
          if(func)
          {
-            func->idx = pd->functionTab[{func->module->name, func->name}];
-            pd->functionVec[func->idx] = func;
+            auto idx = pd->functionByName.find({func->module->name, func->name});
+            func->idx = idx ? idx->val : 0;
+            pd->functionByIdx[func->idx] = func;
          }
       }
    }
@@ -646,19 +651,11 @@ namespace ACSVM
    //
    void Environment::resetStrings()
    {
-      {
-         auto oldTable = std::move(pd->functionTab);
-         pd->functionTab.clear();
+      for(auto &funcIdx : pd->functionByName)
+         funcIdx.key.second = getString(funcIdx.key.second);
 
-         for(auto &itr : oldTable)
-         {
-            pd->functionTab.insert(
-               {{itr.first.first, getString(itr.first.second)}, itr.second});
-         }
-      }
-
-      for(auto &module : pd->tableModule)
-         module.second->resetStrings();
+      for(auto &module : pd->modules)
+         module.resetStrings();
    }
 
    //
@@ -666,15 +663,15 @@ namespace ACSVM
    //
    void Environment::saveFunctions(std::ostream &out) const
    {
-      WriteVLN(out, pd->functionTab.size());
-      for(auto &itr : pd->functionTab)
+      WriteVLN(out, pd->functionByName.size());
+      for(auto &funcIdx : pd->functionByName)
       {
-         writeModuleName(out, itr.first.first);
-         WriteVLN(out, itr.first.second->idx);
-         WriteVLN(out, itr.second);
+         writeModuleName(out, funcIdx.key.first);
+         WriteVLN(out, funcIdx.key.second->idx);
+         WriteVLN(out, funcIdx.val);
       }
 
-      WriteVLN(out, pd->functionVec.size());
+      WriteVLN(out, pd->functionByIdx.size());
    }
 
    //
