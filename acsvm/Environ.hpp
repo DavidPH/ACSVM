@@ -124,6 +124,7 @@ namespace ACSVM
       ScriptAction *readScriptAction(std::istream &in) const;
       void readScriptActions(std::istream &in, ListLink<ScriptAction> &out) const;
       ScriptName readScriptName(std::istream &in) const;
+      String *readString(std::istream &in) const;
 
       void resetStrings();
 
@@ -136,6 +137,7 @@ namespace ACSVM
       void writeScriptAction(std::ostream &out, ScriptAction const *in) const;
       void writeScriptActions(std::ostream &out, ListLink<ScriptAction> const &in) const;
       void writeScriptName(std::ostream &out, ScriptName const &in) const;
+      void writeString(std::ostream &out, String const *in) const;
 
       StringTable stringTable;
 

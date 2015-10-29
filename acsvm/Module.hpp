@@ -38,20 +38,19 @@ namespace ACSVM
    class ModuleName
    {
    public:
-      ModuleName(ModuleName const &name);
-      ModuleName(ModuleName &&name) = default;
-      ModuleName(std::unique_ptr<char[]> &&s_, void *p_, std::size_t i_) :
-         s{std::move(s_)}, p{p_}, i{i_} {}
+      ModuleName(String *s_, void *p_, std::size_t i_) : s{s_}, p{p_}, i{i_} {}
 
-      bool operator == (ModuleName const &name) const;
-      bool operator != (ModuleName const &name) const {return !(*this == name);}
+      bool operator == (ModuleName const &name) const
+         {return s == name.s && p == name.p && i == name.i;}
+      bool operator != (ModuleName const &name) const
+         {return s != name.s || p != name.p || i != name.i;}
 
       std::size_t hash() const;
 
-      // Null-terminated string. May be null.
-      std::unique_ptr<char[]> s;
+      // String value. May be null.
+      String *s;
 
-      // Arbitrary pointer value. Must be valid for equality compares.
+      // Arbitrary pointer value.
       void *p;
 
       // Arbitrary integer value.

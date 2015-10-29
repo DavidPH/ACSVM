@@ -27,31 +27,11 @@
 namespace ACSVM
 {
    //
-   // ModuleName copy constructor
-   //
-   ModuleName::ModuleName(ModuleName const &name) :
-      s{StrDup(name.s.get())}, p{name.p}, i{name.i}
-   {
-   }
-
-   //
-   // ModuleName::operator == ModuleName
-   //
-   bool ModuleName::operator == (ModuleName const &name) const
-   {
-      if(i != name.i || p != name.p) return false;
-
-      if(!s) return !name.s;
-      if(!name.s) return false;
-      return !std::strcmp(s.get(), name.s.get());
-   }
-
-   //
    // ModuleName::hash
    //
    std::size_t ModuleName::hash() const
    {
-      return StrHash(s.get()) + std::hash<void*>()(p) + i;
+      return s->hash + std::hash<void*>()(p) + i;
    }
 
    //
@@ -115,6 +95,8 @@ namespace ACSVM
    //
    void Module::resetStrings()
    {
+      name.s = env->getString(name.s);
+
       for(auto &s : arrImpV)   s = env->getString(s);
       for(auto &s : arrNameV)  s = env->getString(s);
       for(auto &s : funcNameV) s = env->getString(s);

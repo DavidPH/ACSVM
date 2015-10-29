@@ -82,7 +82,7 @@ static bool TestSave(ACSVM::Thread *, ACSVM::Word const *, ACSVM::Word)
 //
 void Environment::loadModule(ACSVM::Module *module)
 {
-   std::ifstream in{module->name.s.get(), std::ios_base::in | std::ios_base::binary};
+   std::ifstream in{module->name.s->str, std::ios_base::in | std::ios_base::binary};
 
    if(!in) throw ACSVM::ReadError("file open failure");
 

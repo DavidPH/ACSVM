@@ -417,9 +417,9 @@ namespace ACSVM
    //
    // Environment::getModuleName
    //
-   ModuleName Environment::getModuleName(char const *str, std::size_t)
+   ModuleName Environment::getModuleName(char const *str, std::size_t len)
    {
-      return {StrDup(str), nullptr, 0};
+      return {getString(str, len), nullptr, 0};
    }
 
    //
@@ -577,19 +577,10 @@ namespace ACSVM
    //
    ModuleName Environment::readModuleName(std::istream &in) const
    {
-      std::unique_ptr<char[]> s;
-
-      if(in.get())
-      {
-         auto len = ReadVLN<std::size_t>(in);
-         s.reset(new char[len + 1]);
-         in.read(s.get(), len);
-         s[len] = '\0';
-      }
-
+      auto s = readString(in);
       auto i = ReadVLN<std::size_t>(in);
 
-      return {std::move(s), nullptr, i};
+      return {s, nullptr, i};
    }
 
    //
@@ -647,12 +638,26 @@ namespace ACSVM
    }
 
    //
+   // Environment::readString
+   //
+   String *Environment::readString(std::istream &in) const
+   {
+      if(auto idx = ReadVLN<std::size_t>(in))
+         return &stringTable[idx - 1];
+      else
+         return nullptr;
+   }
+
+   //
    // Environment::resetStrings
    //
    void Environment::resetStrings()
    {
       for(auto &funcIdx : pd->functionByName)
-         funcIdx.key.second = getString(funcIdx.key.second);
+      {
+         funcIdx.key.first.s = getString(funcIdx.key.first.s);
+         funcIdx.key.second  = getString(funcIdx.key.second);
+      }
 
       for(auto &module : pd->modules)
          module.resetStrings();
@@ -719,17 +724,7 @@ namespace ACSVM
    //
    void Environment::writeModuleName(std::ostream &out, ModuleName const &in) const
    {
-      if(in.s)
-      {
-         out.put('\1');
-
-         std::size_t len = std::strlen(in.s.get());
-         WriteVLN(out, len);
-         out.write(in.s.get(), len);
-      }
-      else
-         out.put('\0');
-
+      writeString(out, in.s);
       WriteVLN(out, in.i);
    }
 
@@ -790,6 +785,17 @@ namespace ACSVM
          out.put('\0');
 
       WriteVLN(out, in.i);
+   }
+
+   //
+   // Environment::writeString
+   //
+   void Environment::writeString(std::ostream &out, String const *in) const
+   {
+      if(in)
+         WriteVLN<std::size_t>(out, in->idx + 1);
+      else
+         WriteVLN<std::size_t>(out, 0);
    }
 
    //
