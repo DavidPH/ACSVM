@@ -438,6 +438,10 @@ namespace ACSVM
          NextCase();
 
       DeclCase(Retn):
+         // If no call frames left, terminate the thread.
+         if(callStk.empty())
+            goto thread_stop;
+
          // Apply call frame.
          codePtr     = callStk[1].codePtr;
          module      = callStk[1].module;
