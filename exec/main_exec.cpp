@@ -96,7 +96,7 @@ static void LoadModules(Environment &env, char const *const *argv, std::size_t a
    map->addModuleFinish();
 
    // Start Open scripts.
-   map->scriptStartType(ACSVM::ScriptType::Open, nullptr, 0);
+   map->scriptStartType(ACSVM::ScriptType::Open, nullptr, nullptr, 0);
 }
 
 

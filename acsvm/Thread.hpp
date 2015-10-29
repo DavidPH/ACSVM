@@ -83,6 +83,17 @@ namespace ACSVM
    };
 
    //
+   // ThreadInfo
+   //
+   // Derived classes can be used to pass extra information to started threads.
+   //
+   class ThreadInfo
+   {
+   public:
+      virtual ~ThreadInfo() {}
+   };
+
+   //
    // Thread
    //
    class Thread
@@ -93,11 +104,14 @@ namespace ACSVM
 
       void exec();
 
+      virtual ThreadInfo const *getInfo() const;
+
       virtual void loadState(std::istream &in);
 
       virtual void saveState(std::ostream &out) const;
 
-      void start(Script *script, MapScope *map);
+      virtual void start(Script *script, MapScope *map, ThreadInfo const *info,
+         Word const *argV, Word argC);
 
       void stop();
 

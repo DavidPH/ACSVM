@@ -277,7 +277,7 @@ namespace ACSVM
       else if(Script *script = thread->scopeMap->findScript(name))
       {
          res = true;
-         thread->scopeMap->scriptStart(script, argv+2, argc-2);
+         thread->scopeMap->scriptStart(script, thread->getInfo(), argv+2, argc-2);
       }
       else
          res = false;
@@ -319,7 +319,7 @@ namespace ACSVM
       else if(Script *script = thread->scopeMap->findScript(name))
       {
          res = true;
-         thread->scopeMap->scriptStartForced(script, argv+2, argc-2);
+         thread->scopeMap->scriptStartForced(script, thread->getInfo(), argv+2, argc-2);
       }
       else
          res = false;
@@ -351,7 +351,7 @@ namespace ACSVM
       Word    res;
 
       if(Script *script = thread->scopeMap->findScript(name))
-         res = thread->scopeMap->scriptStartResult(script, argv+1, argc-1);
+         res = thread->scopeMap->scriptStartResult(script, thread->getInfo(), argv+1, argc-1);
       else
          res = 0;
 

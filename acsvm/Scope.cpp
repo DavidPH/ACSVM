@@ -444,11 +444,11 @@ namespace ACSVM
          if(script) switch(action->action)
          {
          case ScriptAction::Start:
-            scriptStart(script, action->argV.data(), action->argV.size());
+            scriptStart(script, nullptr, action->argV.data(), action->argV.size());
             break;
 
          case ScriptAction::StartForced:
-            scriptStartForced(script, action->argV.data(), action->argV.size());
+            scriptStartForced(script, nullptr, action->argV.data(), action->argV.size());
             break;
 
          case ScriptAction::Stop:
@@ -696,7 +696,8 @@ namespace ACSVM
    //
    // MapScope::scriptStart
    //
-   void MapScope::scriptStart(Script *script, Word const *argV, Word argC)
+   void MapScope::scriptStart(Script *script, ThreadInfo const *info,
+      Word const *argV, Word argC)
    {
       auto itr = pd->scriptThread.find(script);
       if(!itr) return;
@@ -708,32 +709,30 @@ namespace ACSVM
       else
       {
          thread = env->getFreeThread();
-
-         thread->start(script, this);
-         std::copy(argV, argV + std::min<Word>(argC, script->argC), &thread->localReg[0]);
+         thread->start(script, this, info, argV, argC);
       }
    }
 
    //
    // MapScope::scriptStartForced
    //
-   void MapScope::scriptStartForced(Script *script, Word const *argV, Word argC)
+   void MapScope::scriptStartForced(Script *script, ThreadInfo const *info,
+      Word const *argV, Word argC)
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this);
-      std::copy(argV, argV + std::min<Word>(argC, script->argC), &thread->localReg[0]);
+      thread->start(script, this, info, argV, argC);
    }
 
    //
    // MapScope::scriptStartResult
    //
-   Word MapScope::scriptStartResult(Script *script, Word const *argV, Word argC)
+   Word MapScope::scriptStartResult(Script *script, ThreadInfo const *info,
+      Word const *argV, Word argC)
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this);
-      std::copy(argV, argV + std::min<Word>(argC, script->argC), &thread->localReg[0]);
+      thread->start(script, this, info, argV, argC);
       thread->exec();
 
       Word result = thread->result;
@@ -745,12 +744,13 @@ namespace ACSVM
    //
    // MapScope::scriptStartType
    //
-   void MapScope::scriptStartType(ScriptType type, Word const *argV, Word argC)
+   void MapScope::scriptStartType(ScriptType type, ThreadInfo const *info,
+      Word const *argV, Word argC)
    {
       for(auto &script : pd->scriptThread)
       {
          if(script.key->type == type)
-            scriptStartForced(script.key, argV, argC);
+            scriptStartForced(script.key, info, argV, argC);
       }
    }
 

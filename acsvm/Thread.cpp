@@ -54,6 +54,14 @@ namespace ACSVM
    }
 
    //
+   // Thread::getInfo
+   //
+   ThreadInfo const *Thread::getInfo() const
+   {
+      return nullptr;
+   }
+
+   //
    // Thread::loadState
    //
    void Thread::loadState(std::istream &in)
@@ -161,7 +169,8 @@ namespace ACSVM
    //
    // Thread::start
    //
-   void Thread::start(Script *script_, MapScope *map)
+   void Thread::start(Script *script_, MapScope *map, ThreadInfo const *,
+      Word const *argV, Word argC)
    {
       link.insert(&map->threadActive);
 
@@ -178,6 +187,8 @@ namespace ACSVM
       dataStk.reserve(DataStkSize);
       localArr.alloc(script->locArrC);
       localReg.alloc(script->locRegC);
+
+      std::copy(argV, argV + std::min<Word>(argC, script->argC), &localReg[0]);
 
       delay  = 0;
       result = 0;

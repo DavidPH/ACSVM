@@ -67,6 +67,7 @@ namespace ACSVM
    class ScriptName;
    class String;
    class Thread;
+   class ThreadInfo;
    class ThreadState;
    class WordInit;
 }

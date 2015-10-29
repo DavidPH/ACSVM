@@ -143,10 +143,10 @@ namespace ACSVM
       void saveState(std::ostream &out) const;
 
       void scriptPause(Script *script);
-      void scriptStart(Script *script, Word const *argV, Word argC);
-      void scriptStartForced(Script *script, Word const *argV, Word argC);
-      Word scriptStartResult(Script *script, Word const *argV, Word argC);
-      void scriptStartType(ScriptType type, Word const *argV, Word argC);
+      void scriptStart(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
+      void scriptStartForced(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
+      Word scriptStartResult(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
+      void scriptStartType(ScriptType type, ThreadInfo const *info, Word const *argV, Word argC);
       void scriptStop(Script *script);
 
       Environment *const env;
