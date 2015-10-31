@@ -228,6 +228,16 @@ namespace ACSVM
    }
 
    //
+   // Environment::collectStrings
+   //
+   void Environment::collectStrings()
+   {
+      stringTable.collectBegin();
+      refStrings();
+      stringTable.collectEnd();
+   }
+
+   //
    // Environment::deferAction
    //
    void Environment::deferAction(ScriptAction &&action)
@@ -641,6 +651,27 @@ namespace ACSVM
          return &stringTable[idx - 1];
       else
          return nullptr;
+   }
+
+   //
+   // Environment::refStrings
+   //
+   void Environment::refStrings()
+   {
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->refStrings(this);
+
+      for(auto &funcIdx : pd->functionByName)
+      {
+         funcIdx.key.first.s->ref = true;
+         funcIdx.key.second->ref  = true;
+      }
+
+      for(auto &module : pd->modules)
+         module.refStrings();
+
+      for(auto &scope : pd->globalScopes)
+         scope.second.refStrings();
    }
 
    //

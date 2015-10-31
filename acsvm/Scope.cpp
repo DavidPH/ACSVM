@@ -171,6 +171,36 @@ namespace ACSVM
    }
 
    //
+   // GlobalScope::lockStrings
+   //
+   void GlobalScope::lockStrings() const
+   {
+      for(auto &arr : arrV) arr.lockStrings(env);
+      for(auto &reg : regV) ++env->getString(reg)->lock;
+
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->lockStrings(env);
+
+      for(auto &scope : pd->hubScopes)
+         scope.second.lockStrings();
+   }
+
+   //
+   // GlobalScope::refStrings
+   //
+   void GlobalScope::refStrings() const
+   {
+      for(auto &arr : arrV) arr.refStrings(env);
+      for(auto &reg : regV) env->getString(reg)->ref = true;
+
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->refStrings(env);
+
+      for(auto &scope : pd->hubScopes)
+         scope.second.refStrings();
+   }
+
+   //
    // GlobalScope::reset
    //
    void GlobalScope::reset()
@@ -205,9 +235,25 @@ namespace ACSVM
    }
 
    //
+   // GlobalScope::unlockStrings
+   //
+   void GlobalScope::unlockStrings() const
+   {
+      for(auto &arr : arrV) arr.unlockStrings(env);
+      for(auto &reg : regV) --env->getString(reg)->lock;
+
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->unlockStrings(env);
+
+      for(auto &scope : pd->hubScopes)
+         scope.second.unlockStrings();
+   }
+
+   //
    // HubScope constructor
    //
    HubScope::HubScope(GlobalScope *global_, Word id_) :
+      env   {global_->env},
       global{global_},
       id    {id_},
 
@@ -293,6 +339,36 @@ namespace ACSVM
    }
 
    //
+   // HubScope::lockStrings
+   //
+   void HubScope::lockStrings() const
+   {
+      for(auto &arr : arrV) arr.lockStrings(env);
+      for(auto &reg : regV) ++env->getString(reg)->lock;
+
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->lockStrings(env);
+
+      for(auto &scope : pd->mapScopes)
+         scope.second.lockStrings();
+   }
+
+   //
+   // HubScope::refStrings
+   //
+   void HubScope::refStrings() const
+   {
+      for(auto &arr : arrV) arr.refStrings(env);
+      for(auto &reg : regV) env->getString(reg)->ref = true;
+
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->refStrings(env);
+
+      for(auto &scope : pd->mapScopes)
+         scope.second.refStrings();
+   }
+
+   //
    // HubScope::reset
    //
    void HubScope::reset()
@@ -327,10 +403,25 @@ namespace ACSVM
    }
 
    //
+   // HubScope::unlockStrings
+   //
+   void HubScope::unlockStrings() const
+   {
+      for(auto &arr : arrV) arr.unlockStrings(env);
+      for(auto &reg : regV) --env->getString(reg)->lock;
+
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->unlockStrings(env);
+
+      for(auto &scope : pd->mapScopes)
+         scope.second.unlockStrings();
+   }
+
+   //
    // MapScope constructor
    //
    MapScope::MapScope(HubScope *hub_, Word id_) :
-      env{hub_->global->env},
+      env{hub_->env},
       hub{hub_},
       id {id_},
 
@@ -615,6 +706,36 @@ namespace ACSVM
    }
 
    //
+   // MapScope::lockStrings
+   //
+   void MapScope::lockStrings() const
+   {
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->lockStrings(env);
+
+      for(auto &scope : pd->moduleScopes)
+         scope.val.lockStrings();
+
+      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
+         thread->obj->lockStrings();
+   }
+
+   //
+   // MapScope::refStrings
+   //
+   void MapScope::refStrings() const
+   {
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->refStrings(env);
+
+      for(auto &scope : pd->moduleScopes)
+         scope.val.refStrings();
+
+      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
+         thread->obj->refStrings();
+   }
+
+   //
    // MapScope::reset
    //
    void MapScope::reset()
@@ -769,9 +890,25 @@ namespace ACSVM
    }
 
    //
+   // MapScope::unlockStrings
+   //
+   void MapScope::unlockStrings() const
+   {
+      for(auto action = scriptAction.next; action->obj; action = action->next)
+         action->obj->unlockStrings(env);
+
+      for(auto &scope : pd->moduleScopes)
+         scope.val.unlockStrings();
+
+      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
+         thread->obj->unlockStrings();
+   }
+
+   //
    // ModuleScope constructor
    //
    ModuleScope::ModuleScope(MapScope *map_, Module *module_) :
+      env   {map_->env},
       map   {map_},
       module{module_},
 
@@ -867,6 +1004,24 @@ namespace ACSVM
    }
 
    //
+   // ModuleScope::lockStrings
+   //
+   void ModuleScope::lockStrings() const
+   {
+      for(auto &arr : selfArrV) arr.lockStrings(env);
+      for(auto &reg : selfRegV) ++env->getString(reg)->lock;
+   }
+
+   //
+   // ModuleScope::refStrings
+   //
+   void ModuleScope::refStrings() const
+   {
+      for(auto &arr : selfArrV) arr.refStrings(env);
+      for(auto &reg : selfRegV) env->getString(reg)->ref = true;
+   }
+
+   //
    // ModuleScope::saveState
    //
    void ModuleScope::saveState(std::ostream &out) const
@@ -876,6 +1031,15 @@ namespace ACSVM
 
       for(auto &reg : selfRegV)
          WriteVLN(out, reg);
+   }
+
+   //
+   // ModuleScope::unlockStrings
+   //
+   void ModuleScope::unlockStrings() const
+   {
+      for(auto &arr : selfArrV) arr.unlockStrings(env);
+      for(auto &reg : selfRegV) --env->getString(reg)->lock;
    }
 }
 

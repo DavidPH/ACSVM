@@ -108,12 +108,18 @@ namespace ACSVM
 
       virtual void loadState(std::istream &in);
 
+      virtual void lockStrings() const;
+
+      virtual void refStrings() const;
+
       virtual void saveState(std::ostream &out) const;
 
       virtual void start(Script *script, MapScope *map, ThreadInfo const *info,
          Word const *argV, Word argC);
 
       void stop();
+
+      virtual void unlockStrings() const;
 
       Environment *const env;
 

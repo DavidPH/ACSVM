@@ -43,11 +43,17 @@ namespace ACSVM
 
       bool hasActiveThread();
 
+      void lockStrings() const;
+
       void loadState(std::istream &in);
+
+      void refStrings() const;
 
       void reset();
 
       void saveState(std::ostream &out) const;
+
+      void unlockStrings() const;
 
       Environment *const env;
       Word         const id;
@@ -85,12 +91,19 @@ namespace ACSVM
 
       bool hasActiveThread();
 
+      void lockStrings() const;
+
       void loadState(std::istream &in);
+
+      void refStrings() const;
 
       void reset();
 
       void saveState(std::ostream &out) const;
 
+      void unlockStrings() const;
+
+      Environment *const env;
       GlobalScope *const global;
       Word         const id;
 
@@ -138,6 +151,10 @@ namespace ACSVM
 
       void loadState(std::istream &in);
 
+      void lockStrings() const;
+
+      void refStrings() const;
+
       void reset();
 
       void saveState(std::ostream &out) const;
@@ -148,6 +165,8 @@ namespace ACSVM
       Word scriptStartResult(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
       void scriptStartType(ScriptType type, ThreadInfo const *info, Word const *argV, Word argC);
       void scriptStop(Script *script);
+
+      void unlockStrings() const;
 
       Environment *const env;
       HubScope    *const hub;
@@ -195,10 +214,17 @@ namespace ACSVM
 
       void loadState(std::istream &in);
 
+      void lockStrings() const;
+
+      void refStrings() const;
+
       void saveState(std::ostream &out) const;
 
-      MapScope *const map;
-      Module   *const module;
+      void unlockStrings() const;
+
+      Environment *const env;
+      MapScope    *const map;
+      Module      *const module;
 
       Array *arrV[ArrC];
       Word  *regV[RegC];

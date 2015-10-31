@@ -110,6 +110,24 @@ namespace ACSVM
    }
 
    //
+   // Thread::lockStrings
+   //
+   void Thread::lockStrings() const
+   {
+      for(auto &data : dataStk)
+         ++env->getString(data)->lock;
+
+      for(auto arr = localArr.beginFull(), end = localArr.end(); arr != end; ++arr)
+         arr->lockStrings(env);
+
+      for(auto reg = localReg.beginFull(), end = localReg.end(); reg != end; ++reg)
+         ++env->getString(*reg)->lock;
+
+      if(state.state == ThreadState::WaitScrS)
+         ++env->getString(state.data)->lock;
+   }
+
+   //
    // Thread::readCallFrame
    //
    CallFrame Thread::readCallFrame(std::istream &in) const
@@ -123,6 +141,24 @@ namespace ACSVM
       out.locRegC  = ReadVLN<std::size_t>(in);
 
       return out;
+   }
+
+   //
+   // Thread::refStrings
+   //
+   void Thread::refStrings() const
+   {
+      for(auto &data : dataStk)
+         env->getString(data)->ref = true;
+
+      for(auto arr = localArr.beginFull(), end = localArr.end(); arr != end; ++arr)
+         arr->refStrings(env);
+
+      for(auto reg = localReg.beginFull(), end = localReg.end(); reg != end; ++reg)
+         env->getString(*reg)->ref = true;
+
+      if(state.state == ThreadState::WaitScrS)
+         env->getString(state.data)->ref = true;
    }
 
    //
@@ -209,6 +245,24 @@ namespace ACSVM
 
       // Set state.
       state = ThreadState::Inactive;
+   }
+
+   //
+   // Thread::unlockStrings
+   //
+   void Thread::unlockStrings() const
+   {
+      for(auto &data : dataStk)
+         --env->getString(data)->lock;
+
+      for(auto arr = localArr.beginFull(), end = localArr.end(); arr != end; ++arr)
+         arr->unlockStrings(env);
+
+      for(auto reg = localReg.beginFull(), end = localReg.end(); reg != end; ++reg)
+         --env->getString(*reg)->lock;
+
+      if(state.state == ThreadState::WaitScrS)
+         --env->getString(state.data)->lock;
    }
 
    //

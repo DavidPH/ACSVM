@@ -60,6 +60,12 @@ namespace ACSVM
       ScriptAction(ScopeID id, ScriptName name, Action action, Vector<Word> &&argV);
       ~ScriptAction();
 
+      void lockStrings(Environment *env) const;
+
+      void refStrings(Environment *env) const;
+
+      void unlockStrings(Environment *env) const;
+
       Action                 action;
       Vector<Word>           argV;
       ScopeID                id;

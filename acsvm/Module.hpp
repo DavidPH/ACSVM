@@ -70,6 +70,8 @@ namespace ACSVM
 
       void readBytecode(Byte const *data, std::size_t size);
 
+      void refStrings() const;
+
       void reset();
 
       void resetStrings();

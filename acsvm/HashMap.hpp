@@ -94,6 +94,8 @@ namespace ACSVM
             return *this;
          }
 
+         IteratorBase<Obj> operator ++ (int) {auto i = *this; ++*this; return i;}
+
          Obj &operator * () const {return *link->obj;}
          Obj *operator -> () const {return link->obj;}
 

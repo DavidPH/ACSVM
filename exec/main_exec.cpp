@@ -57,6 +57,18 @@ static bool NeedTestSaveEnv = false;
 //
 
 //
+// CF_CollectStrings
+//
+static bool CF_CollectStrings(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
+{
+   std::size_t countOld = thread->env->stringTable.size();
+   thread->env->collectStrings();
+   std::size_t countNew = thread->env->stringTable.size();
+   thread->dataStk.push(countOld - countNew);
+   return false;
+}
+
+//
 // CF_EndPrint
 //
 static bool CF_EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
@@ -109,13 +121,15 @@ static void LoadModules(Environment &env, char const *const *argv, std::size_t a
 //
 Environment::Environment()
 {
-   ACSVM::Word funcEndPrint = addCallFunc(CF_EndPrint);
-   ACSVM::Word funcTestSave = addCallFunc(CF_TestSave);
+   ACSVM::Word funcCollectStrings = addCallFunc(CF_CollectStrings);
+   ACSVM::Word funcEndPrint       = addCallFunc(CF_EndPrint);
+   ACSVM::Word funcTestSave       = addCallFunc(CF_TestSave);
 
    addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
    addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
 
    addFuncDataACS0(0x10000, funcTestSave);
+   addFuncDataACS0(0x10001, funcCollectStrings);
 }
 
 //

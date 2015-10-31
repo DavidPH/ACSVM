@@ -13,6 +13,7 @@
 #include "Array.hpp"
 
 #include "BinaryIO.hpp"
+#include "Environ.hpp"
 
 
 //----------------------------------------------------------------------------|
@@ -66,6 +67,24 @@ namespace ACSVM
       }
       else
          FreeData(out);
+   }
+
+   //
+   // RefStringsData (Word)
+   //
+   static void RefStringsData(Environment *env, Word const &data, void (*ref)(String *))
+   {
+      ref(env->getString(data));
+   }
+
+   //
+   // RefStringsData
+   //
+   template<typename T>
+   static void RefStringsData(Environment *env, T *data, void (*ref)(String *))
+   {
+      if(data) for(auto &itr : *data)
+         RefStringsData(env, itr, ref);
    }
 
    //
@@ -154,11 +173,35 @@ namespace ACSVM
    }
 
    //
+   // Array::lockStrings
+   //
+   void Array::lockStrings(Environment *env) const
+   {
+      RefStringsData(env, data, [](String *s){++s->lock;});
+   }
+
+   //
+   // Array::refStrings
+   //
+   void Array::refStrings(Environment *env) const
+   {
+      RefStringsData(env, data, [](String *s){s->ref = true;});
+   }
+
+   //
    // Array::saveState
    //
    void Array::saveState(std::ostream &out) const
    {
       WriteData(out, data);
+   }
+
+   //
+   // Array::unlockStrings
+   //
+   void Array::unlockStrings(Environment *env) const
+   {
+      RefStringsData(env, data, [](String *s){--s->lock;});
    }
 }
 

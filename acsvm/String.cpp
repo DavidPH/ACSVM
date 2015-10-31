@@ -48,7 +48,7 @@ namespace ACSVM
    // String constructor
    //
    String::String(StringData const &data, Word idx_) :
-      StringData{data}, lckCount{0}, idx{idx_}, len0(std::strlen(str)), link{this}
+      StringData{data}, lock{0}, idx{idx_}, len0(std::strlen(str)), link{this}
    {
    }
 
@@ -208,6 +208,35 @@ namespace ACSVM
    }
 
    //
+   // StringTable::collectBegin
+   //
+   void StringTable::collectBegin()
+   {
+      for(auto &str : pd->stringByData)
+         str.ref = false;
+   }
+
+   //
+   // StringTable.collectEnd
+   //
+   void StringTable::collectEnd()
+   {
+      for(auto itr = pd->stringByData.begin(), end = pd->stringByData.end(); itr != end;)
+      {
+         if(!itr->ref && !itr->lock)
+         {
+            String &str = *itr++;
+            pd->stringByIdx[str.idx] = strNone;
+            pd->freeIdx.push_back(str.idx);
+            pd->stringByData.unlink(&str);
+            String::Delete(&str);
+         }
+         else
+            ++itr;
+      }
+   }
+
+   //
    // StringTable::loadState
    //
    void StringTable::loadState(std::istream &in)
@@ -233,7 +262,7 @@ namespace ACSVM
          if(in.get())
          {
             String *str = String::Read(in, idx);
-            str->lckCount = ReadVLN<std::size_t>(in);
+            str->lock = ReadVLN<std::size_t>(in);
             pd->stringByIdx[idx] = str;
             pd->stringByData.insert(str);
          }
@@ -259,11 +288,19 @@ namespace ACSVM
             out << '\1';
 
             String::Write(out, str);
-            WriteVLN(out, str->lckCount);
+            WriteVLN(out, str->lock);
          }
          else
             out << '\0';
       }
+   }
+
+   //
+   // StringTable::size
+   //
+   std::size_t StringTable::size() const
+   {
+      return pd->stringByData.size();
    }
 
    //

@@ -57,6 +57,28 @@ namespace ACSVM
    }
 
    //
+   // Module::refStrings
+   //
+   void Module::refStrings() const
+   {
+      if(name.s) name.s->ref = true;
+
+      for(auto &s : arrImpV)   if(s) s->ref = true;
+      for(auto &s : arrNameV)  if(s) s->ref = true;
+      for(auto &s : funcNameV) if(s) s->ref = true;
+      for(auto &s : regImpV)   if(s) s->ref = true;
+      for(auto &s : regNameV)  if(s) s->ref = true;
+      for(auto &s : scrNameV)  if(s) s->ref = true;
+      for(auto &s : stringV)   if(s) s->ref = true;
+
+      for(auto &func : functionV)
+         if(func && func->name) func->name->ref = true;
+
+      for(auto &scr : scriptV)
+         if(scr.name.s) scr.name.s->ref = true;
+   }
+
+   //
    // Module::reset
    //
    void Module::reset()
@@ -104,8 +126,11 @@ namespace ACSVM
       for(auto &s : scrNameV)  s = env->getString(s);
       for(auto &s : stringV)   s = env->getString(s);
 
-      for(auto &func : functionV) func->name = env->getString(func->name);
-      for(auto &scr  : scriptV)   scr.name.s = env->getString(scr.name.s);
+      for(auto &func : functionV)
+         if(func) func->name = env->getString(func->name);
+
+      for(auto &scr : scriptV)
+         scr.name.s = env->getString(scr.name.s);
    }
 }
 

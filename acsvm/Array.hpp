@@ -47,7 +47,13 @@ namespace ACSVM
 
       void loadState(std::istream &in);
 
+      void lockStrings(Environment *env) const;
+
+      void refStrings(Environment *env) const;
+
       void saveState(std::ostream &out) const;
+
+      void unlockStrings(Environment *env) const;
 
    private:
       static constexpr std::size_t PageSize = 256;

@@ -52,6 +52,8 @@ namespace ACSVM
       // continue. Default behavior is to always return false.
       virtual bool checkTag(Word type, Word tag);
 
+      void collectStrings();
+
       void deferAction(ScriptAction &&action);
 
       void exec();
@@ -83,6 +85,8 @@ namespace ACSVM
       ModuleName getModuleName(char const *str);
       virtual ModuleName getModuleName(char const *str, std::size_t len);
 
+      String *getString(Word idx) {return &stringTable[~idx];}
+
       String *getString(char const *first, char const *last)
          {return &stringTable[{first, last}];}
 
@@ -113,6 +117,8 @@ namespace ACSVM
       void readScriptActions(std::istream &in, ListLink<ScriptAction> &out) const;
       ScriptName readScriptName(std::istream &in) const;
       String *readString(std::istream &in) const;
+
+      virtual void refStrings();
 
       void resetStrings();
 

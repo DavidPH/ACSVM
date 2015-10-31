@@ -61,11 +61,12 @@ namespace ACSVM
    class String : public StringData
    {
    public:
-      std::size_t refCount;
-      std::size_t lckCount;
+      std::size_t lock;
 
       Word const idx;  // Index into table.
       Word const len0; // Null-terminated length.
+
+      bool ref;
 
       char get(std::size_t i) const {return i < len ? str[i] : '\0';}
 
@@ -104,11 +105,16 @@ namespace ACSVM
 
       void clear();
 
+      void collectBegin();
+      void collectEnd();
+
       String &getNone() {return *strNone;}
 
       void loadState(std::istream &in);
 
       void saveState(std::ostream &out) const;
+
+      std::size_t size() const;
 
    private:
       struct PrivData;
