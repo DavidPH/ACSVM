@@ -185,7 +185,7 @@ namespace ACSVM
    //
    static inline void OpFunc_CmpU_NE(Word &lop, Word rop)
    {
-      lop = lop == rop;
+      lop = lop != rop;
    }
 
    //
