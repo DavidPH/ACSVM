@@ -32,7 +32,7 @@ namespace ACSVM
    //
    static void PrintArray(Thread *thread, Word const *argv, Word argc, Array const &arr)
    {
-      Word idx = argv[1] + (argc > 2 ? argv[2] : 0);
+      Word idx = argv[0] + (argc > 2 ? argv[2] : 0);
       Word len = argc > 3 ? argv[3] : -1;
 
       thread->env->printArray(thread->printBuf, arr, idx, len);
@@ -69,7 +69,7 @@ namespace ACSVM
    //
    static bool StrCpyArray(Thread *thread, Word const *argv, Array &dst)
    {
-      Word    dstOff = argv[1] + argv[2];
+      Word    dstOff = argv[0] + argv[2];
       Word    dstLen = argv[3];
       String *src = thread->scopeMap->getString(argv[4]);
       Word    srcIdx = argv[5];
@@ -141,20 +141,20 @@ namespace ACSVM
    }
 
    //
-   // void PrintGblArr(int arr, int idx, int off = 0, int len = -1)
+   // void PrintGblArr(int idx, int arr, int off = 0, int len = -1)
    //
    bool CallFunc_Func_PrintGblArr(Thread *thread, Word const *argv, Word argc)
    {
-      PrintArray(thread, argv, argc, thread->scopeGbl->arrV[argv[0]]);
+      PrintArray(thread, argv, argc, thread->scopeGbl->arrV[argv[1]]);
       return false;
    }
 
    //
-   // void PrintHubArr(int arr, int idx, int off = 0, int len = -1)
+   // void PrintHubArr(int idx, int arr, int off = 0, int len = -1)
    //
    bool CallFunc_Func_PrintHubArr(Thread *thread, Word const *argv, Word argc)
    {
-      PrintArray(thread, argv, argc, thread->scopeHub->arrV[argv[0]]);
+      PrintArray(thread, argv, argc, thread->scopeHub->arrV[argv[1]]);
       return false;
    }
 
@@ -194,20 +194,20 @@ namespace ACSVM
    }
 
    //
-   // void PrintLocArr(int arr, int idx, int off = 0, int len = -1)
+   // void PrintLocArr(int idx, int arr, int off = 0, int len = -1)
    //
    bool CallFunc_Func_PrintLocArr(Thread *thread, Word const *argv, Word argc)
    {
-      PrintArray(thread, argv, argc, thread->localArr[argv[0]]);
+      PrintArray(thread, argv, argc, thread->localArr[argv[1]]);
       return false;
    }
 
    //
-   // void PrintModArr(int arr, int idx, int off = 0, int len = -1)
+   // void PrintModArr(int idx, int arr, int off = 0, int len = -1)
    //
    bool CallFunc_Func_PrintModArr(Thread *thread, Word const *argv, Word argc)
    {
-      PrintArray(thread, argv, argc, *thread->scopeMod->arrV[argv[0]]);
+      PrintArray(thread, argv, argc, *thread->scopeMod->arrV[argv[1]]);
       return false;
    }
 
@@ -422,38 +422,38 @@ namespace ACSVM
    }
 
    //
-   // int StrCpyGblArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   // int StrCpyGblArr(int idx, int dst, int dstOff, int dstLen, str src, int srcOff)
    //
    bool CallFunc_Func_StrCpyGblArr(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(StrCpyArray(thread, argv, thread->scopeGbl->arrV[argv[0]]));
+      thread->dataStk.push(StrCpyArray(thread, argv, thread->scopeGbl->arrV[argv[1]]));
       return false;
    }
 
    //
-   // int StrCpyHubArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   // int StrCpyHubArr(int idx, int dst, int dstOff, int dstLen, str src, int srcOff)
    //
    bool CallFunc_Func_StrCpyHubArr(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(StrCpyArray(thread, argv, thread->scopeHub->arrV[argv[0]]));
+      thread->dataStk.push(StrCpyArray(thread, argv, thread->scopeHub->arrV[argv[1]]));
       return false;
    }
 
    //
-   // int StrCpyLocArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   // int StrCpyLocArr(int idx, int dst, int dstOff, int dstLen, str src, int srcOff)
    //
    bool CallFunc_Func_StrCpyLocArr(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(StrCpyArray(thread, argv, thread->localArr[argv[0]]));
+      thread->dataStk.push(StrCpyArray(thread, argv, thread->localArr[argv[1]]));
       return false;
    }
 
    //
-   // int StrCpyModArr(int dst, int idx, int dstOff, int dstLen, str src, int srcOff)
+   // int StrCpyModArr(int idx, int dst, int dstOff, int dstLen, str src, int srcOff)
    //
    bool CallFunc_Func_StrCpyModArr(Thread *thread, Word const *argv, Word)
    {
-      thread->dataStk.push(StrCpyArray(thread, argv, *thread->scopeMod->arrV[argv[0]]));
+      thread->dataStk.push(StrCpyArray(thread, argv, *thread->scopeMod->arrV[argv[1]]));
       return false;
    }
 
