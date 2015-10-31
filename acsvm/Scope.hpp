@@ -61,6 +61,7 @@ namespace ACSVM
       Array arrV[ArrC];
       Word  regV[RegC];
 
+      ListLink<GlobalScope>  hashLink;
       ListLink<ScriptAction> scriptAction;
 
       bool active;
@@ -110,6 +111,7 @@ namespace ACSVM
       Array arrV[ArrC];
       Word  regV[RegC];
 
+      ListLink<HubScope>     hashLink;
       ListLink<ScriptAction> scriptAction;
 
       bool active;
@@ -172,6 +174,7 @@ namespace ACSVM
       HubScope    *const hub;
       Word         const id;
 
+      ListLink<MapScope>     hashLink;
       ListLink<ScriptAction> scriptAction;
       ListLink<Thread>       threadActive;
 

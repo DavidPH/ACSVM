@@ -34,7 +34,7 @@ namespace ACSVM
    template<typename Key, typename T, bool UseKeyMem>
    struct HashMapGetKey
    {
-      template<Key T::*KeyMem>
+      template<Key const T::*KeyMem>
       static Key const &Get(T *obj) {return obj->*KeyMem;}
    };
 
@@ -44,7 +44,7 @@ namespace ACSVM
    template<typename Key, typename T>
    struct HashMapGetKey<Key, T, false>
    {
-      template<Key T::*KeyMem>
+      template<Key const T::*KeyMem>
       static Key const &Get(T *obj) {return *obj;}
    };
 
@@ -61,7 +61,7 @@ namespace ACSVM
    // called before any other.
    //
    template<typename Key, typename T, ListLink<T> T::*LinkMem,
-      Key T::*KeyMem = nullptr, typename Hash = std::hash<Key>,
+      Key const T::*KeyMem = nullptr, typename Hash = std::hash<Key>,
       typename KeyEqual = std::equal_to<Key>>
    class HashMap
    {
@@ -99,9 +99,9 @@ namespace ACSVM
          Obj &operator * () const {return *link->obj;}
          Obj *operator -> () const {return link->obj;}
 
-         bool operator == (IteratorBase<Obj> const &iter)
+         bool operator == (IteratorBase<Obj> const &iter) const
             {return iter.link == link;}
-         bool operator != (IteratorBase<Obj> const &iter)
+         bool operator != (IteratorBase<Obj> const &iter) const
             {return iter.link != link;}
 
 

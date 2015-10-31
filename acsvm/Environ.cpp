@@ -69,9 +69,9 @@ namespace ACSVM
 
       HashMapBasic<FuncName, Word, FuncNameHash> functionByName{16, 16};
 
-      std::unordered_map<std::size_t, GlobalScope> globalScopes;
-
       HashMap<ModuleName, Module, &Module::hashLink, &Module::name> modules;
+
+      HashMap<Word, GlobalScope, &GlobalScope::hashLink, &GlobalScope::id> scopes;
 
       std::vector<CallFunc> tableCallFunc
       {
@@ -125,12 +125,12 @@ namespace ACSVM
    //
    Environment::~Environment()
    {
+      pd->functionByName.free();
       pd->modules.free();
+      pd->scopes.free();
 
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
-
-      pd->functionByName.free();
 
       delete pd;
 
@@ -253,15 +253,15 @@ namespace ACSVM
       // Delegate deferred script actions.
       for(auto itr = scriptAction.next, next = itr->next; itr->obj; itr = next, next = itr->next)
       {
-         auto lookup = pd->globalScopes.find(itr->obj->id.global);
-         if(lookup != pd->globalScopes.end() && lookup->second.active)
-            itr->relink(&lookup->second.scriptAction);
+         auto scope = pd->scopes.find(itr->obj->id.global);
+         if(scope && scope->active)
+            itr->relink(&scope->scriptAction);
       }
 
-      for(auto &itr : pd->globalScopes)
+      for(auto &scope : pd->scopes)
       {
-         if(itr.second.active)
-            itr.second.exec();
+         if(scope.active)
+            scope.exec();
       }
    }
 
@@ -393,8 +393,12 @@ namespace ACSVM
    //
    GlobalScope *Environment::getGlobalScope(Word id)
    {
-      return &pd->globalScopes.emplace(std::piecewise_construct,
-         std::make_tuple(id), std::make_tuple(this, id)).first->second;
+      if(auto *scope = pd->scopes.find(id))
+         return scope;
+
+      auto scope = new GlobalScope(this, id);
+      pd->scopes.insert(scope);
+      return scope;
    }
 
    //
@@ -440,9 +444,9 @@ namespace ACSVM
    //
    bool Environment::hasActiveThread()
    {
-      for(auto &itr : pd->globalScopes)
+      for(auto &scope : pd->scopes)
       {
-         if(itr.second.active && itr.second.hasActiveThread())
+         if(scope.active && scope.hasActiveThread())
             return true;
       }
 
@@ -491,7 +495,7 @@ namespace ACSVM
    void Environment::loadGlobalScopes(std::istream &in)
    {
       // Clear existing scopes.
-      pd->globalScopes.clear();
+      pd->scopes.free();
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getGlobalScope(ReadVLN<Word>(in))->loadState(in);
@@ -670,8 +674,8 @@ namespace ACSVM
       for(auto &module : pd->modules)
          module.refStrings();
 
-      for(auto &scope : pd->globalScopes)
-         scope.second.refStrings();
+      for(auto &scope : pd->scopes)
+         scope.refStrings();
    }
 
    //
@@ -710,11 +714,11 @@ namespace ACSVM
    //
    void Environment::saveGlobalScopes(std::ostream &out) const
    {
-      WriteVLN(out, pd->globalScopes.size());
-      for(auto &itr : pd->globalScopes)
+      WriteVLN(out, pd->scopes.size());
+      for(auto &scope : pd->scopes)
       {
-         WriteVLN(out, itr.first);
-         itr.second.saveState(out);
+         WriteVLN(out, scope.id);
+         scope.saveState(out);
       }
    }
 

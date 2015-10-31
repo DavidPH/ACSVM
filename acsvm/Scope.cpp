@@ -15,6 +15,7 @@
 #include "Action.hpp"
 #include "BinaryIO.hpp"
 #include "Environ.hpp"
+#include "HashMap.hpp"
 #include "HashMapFixed.hpp"
 #include "Init.hpp"
 #include "Module.hpp"
@@ -37,7 +38,7 @@ namespace ACSVM
    //
    struct GlobalScope::PrivData
    {
-      std::unordered_map<Word, HubScope> hubScopes;
+      HashMap<Word, HubScope, &HubScope::hashLink, &HubScope::id> scopes;
    };
 
    //
@@ -45,7 +46,7 @@ namespace ACSVM
    //
    struct HubScope::PrivData
    {
-      std::unordered_map<Word, MapScope> mapScopes;
+      HashMap<Word, MapScope, &MapScope::hashLink, &MapScope::id> scopes;
    };
 
    //
@@ -53,7 +54,7 @@ namespace ACSVM
    //
    struct MapScope::PrivData
    {
-      HashMapFixed<Module *, ModuleScope> moduleScopes;
+      HashMapFixed<Module *, ModuleScope> scopes;
 
       std::unordered_set<Module *> modules;
 
@@ -92,6 +93,8 @@ namespace ACSVM
       arrV{},
       regV{},
 
+      hashLink{this},
+
       active{false},
 
       pd{new PrivData}
@@ -103,6 +106,7 @@ namespace ACSVM
    //
    GlobalScope::~GlobalScope()
    {
+      reset();
       delete pd;
    }
 
@@ -114,25 +118,29 @@ namespace ACSVM
       // Delegate deferred script actions.
       for(auto itr = scriptAction.next, next = itr->next; itr->obj; itr = next, next = itr->next)
       {
-         auto lookup = pd->hubScopes.find(itr->obj->id.global);
-         if(lookup != pd->hubScopes.end() && lookup->second.active)
-            itr->relink(&lookup->second.scriptAction);
+         auto scope = pd->scopes.find(itr->obj->id.global);
+         if(scope && scope->active)
+            itr->relink(&scope->scriptAction);
       }
 
-      for(auto &itr : pd->hubScopes)
+      for(auto &scope : pd->scopes)
       {
-         if(itr.second.active)
-            itr.second.exec();
+         if(scope.active)
+            scope.exec();
       }
    }
 
    //
    // GlobalScope::getHubScope
    //
-   HubScope *GlobalScope::getHubScope(Word hubID)
+   HubScope *GlobalScope::getHubScope(Word scopeID)
    {
-      return &pd->hubScopes.emplace(std::piecewise_construct,
-         std::make_tuple(hubID), std::make_tuple(this, hubID)).first->second;
+      if(auto *scope = pd->scopes.find(scopeID))
+         return scope;
+
+      auto scope = new HubScope(this, scopeID);
+      pd->scopes.insert(scope);
+      return scope;
    }
 
    //
@@ -140,9 +148,9 @@ namespace ACSVM
    //
    bool GlobalScope::hasActiveThread()
    {
-      for(auto &itr : pd->hubScopes)
+      for(auto &scope : pd->scopes)
       {
-         if(itr.second.active && itr.second.hasActiveThread())
+         if(scope.active && scope.hasActiveThread())
             return true;
       }
 
@@ -181,8 +189,8 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->lockStrings(env);
 
-      for(auto &scope : pd->hubScopes)
-         scope.second.lockStrings();
+      for(auto &scope : pd->scopes)
+         scope.lockStrings();
    }
 
    //
@@ -196,8 +204,8 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->refStrings(env);
 
-      for(auto &scope : pd->hubScopes)
-         scope.second.refStrings();
+      for(auto &scope : pd->scopes)
+         scope.refStrings();
    }
 
    //
@@ -208,7 +216,7 @@ namespace ACSVM
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
 
-      pd->hubScopes.clear();
+      pd->scopes.free();
    }
 
    //
@@ -226,11 +234,11 @@ namespace ACSVM
 
       out.put(active ? '\1' : '\0');
 
-      WriteVLN(out, pd->hubScopes.size());
-      for(auto &itr : pd->hubScopes)
+      WriteVLN(out, pd->scopes.size());
+      for(auto &scope : pd->scopes)
       {
-         WriteVLN(out, itr.first);
-         itr.second.saveState(out);
+         WriteVLN(out, scope.id);
+         scope.saveState(out);
       }
    }
 
@@ -245,8 +253,8 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->unlockStrings(env);
 
-      for(auto &scope : pd->hubScopes)
-         scope.second.unlockStrings();
+      for(auto &scope : pd->scopes)
+         scope.unlockStrings();
    }
 
    //
@@ -260,6 +268,8 @@ namespace ACSVM
       arrV{},
       regV{},
 
+      hashLink{this},
+
       active{false},
 
       pd{new PrivData}
@@ -271,6 +281,7 @@ namespace ACSVM
    //
    HubScope::~HubScope()
    {
+      reset();
       delete pd;
    }
 
@@ -282,25 +293,29 @@ namespace ACSVM
       // Delegate deferred script actions.
       for(auto itr = scriptAction.next, next = itr->next; itr->obj; itr = next, next = itr->next)
       {
-         auto lookup = pd->mapScopes.find(itr->obj->id.global);
-         if(lookup != pd->mapScopes.end() && lookup->second.active)
-            itr->relink(&lookup->second.scriptAction);
+         auto scope = pd->scopes.find(itr->obj->id.global);
+         if(scope && scope->active)
+            itr->relink(&scope->scriptAction);
       }
 
-      for(auto &itr : pd->mapScopes)
+      for(auto &scope : pd->scopes)
       {
-         if(itr.second.active)
-            itr.second.exec();
+         if(scope.active)
+            scope.exec();
       }
    }
 
    //
    // HubScope::getMapScope
    //
-   MapScope *HubScope::getMapScope(Word mapID)
+   MapScope *HubScope::getMapScope(Word scopeID)
    {
-      return &pd->mapScopes.emplace(std::piecewise_construct,
-         std::make_tuple(mapID), std::make_tuple(this, mapID)).first->second;
+      if(auto *scope = pd->scopes.find(scopeID))
+         return scope;
+
+      auto scope = new MapScope(this, scopeID);
+      pd->scopes.insert(scope);
+      return scope;
    }
 
    //
@@ -308,9 +323,9 @@ namespace ACSVM
    //
    bool HubScope::hasActiveThread()
    {
-      for(auto &itr : pd->mapScopes)
+      for(auto &scope : pd->scopes)
       {
-         if(itr.second.active && itr.second.hasActiveThread())
+         if(scope.active && scope.hasActiveThread())
             return true;
       }
 
@@ -330,7 +345,7 @@ namespace ACSVM
       for(auto &reg : regV)
          reg = ReadVLN<Word>(in);
 
-      global->env->readScriptActions(in, scriptAction);
+      env->readScriptActions(in, scriptAction);
 
       active = in.get();
 
@@ -349,8 +364,8 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->lockStrings(env);
 
-      for(auto &scope : pd->mapScopes)
-         scope.second.lockStrings();
+      for(auto &scope : pd->scopes)
+         scope.lockStrings();
    }
 
    //
@@ -364,8 +379,8 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->refStrings(env);
 
-      for(auto &scope : pd->mapScopes)
-         scope.second.refStrings();
+      for(auto &scope : pd->scopes)
+         scope.refStrings();
    }
 
    //
@@ -376,7 +391,7 @@ namespace ACSVM
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
 
-      pd->mapScopes.clear();
+      pd->scopes.free();
    }
 
    //
@@ -390,15 +405,15 @@ namespace ACSVM
       for(auto &reg : regV)
          WriteVLN(out, reg);
 
-      global->env->writeScriptActions(out, scriptAction);
+      env->writeScriptActions(out, scriptAction);
 
       out.put(active ? '\1' : '\0');
 
-      WriteVLN(out, pd->mapScopes.size());
-      for(auto &itr : pd->mapScopes)
+      WriteVLN(out, pd->scopes.size());
+      for(auto &scope : pd->scopes)
       {
-         WriteVLN(out, itr.first);
-         itr.second.saveState(out);
+         WriteVLN(out, scope.id);
+         scope.saveState(out);
       }
    }
 
@@ -413,8 +428,8 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->unlockStrings(env);
 
-      for(auto &scope : pd->mapScopes)
-         scope.second.unlockStrings();
+      for(auto &scope : pd->scopes)
+         scope.unlockStrings();
    }
 
    //
@@ -424,6 +439,8 @@ namespace ACSVM
       env{hub_->env},
       hub{hub_},
       id {id_},
+
+      hashLink{this},
 
       module0{nullptr},
 
@@ -482,21 +499,21 @@ namespace ACSVM
 
       // Create lookup tables.
 
-      pd->moduleScopes.alloc(pd->modules.size());
+      pd->scopes.alloc(pd->modules.size());
       pd->scriptInt.alloc(scriptIntC);
       pd->scriptStr.alloc(scriptStrC);
       pd->scriptThread.alloc(scriptThrC);
 
-      auto moduleItr    = pd->moduleScopes.begin();
+      auto scopeItr     = pd->scopes.begin();
       auto scriptIntItr = pd->scriptInt.begin();
       auto scriptStrItr = pd->scriptStr.begin();
       auto scriptThrItr = pd->scriptThread.begin();
 
       for(auto &module : pd->modules)
       {
-         using ElemMod = HashMapFixed<Module *, ModuleScope>::Elem;
+         using ElemScope = HashMapFixed<Module *, ModuleScope>::Elem;
 
-         new(moduleItr++) ElemMod{module, {this, module}, nullptr};
+         new(scopeItr++) ElemScope{module, {this, module}, nullptr};
 
          for(auto &script : module->scriptV)
          {
@@ -513,13 +530,13 @@ namespace ACSVM
          }
       }
 
-      pd->moduleScopes.build();
+      pd->scopes.build();
       pd->scriptInt.build();
       pd->scriptStr.build();
       pd->scriptThread.build();
 
-      for(auto &moduleScope : pd->moduleScopes)
-         moduleScope.val.import();
+      for(auto &scope : pd->scopes)
+         scope.val.import();
    }
 
    //
@@ -612,7 +629,7 @@ namespace ACSVM
    //
    ModuleScope *MapScope::getModuleScope(Module *module)
    {
-      return pd->moduleScopes.find(module);
+      return pd->scopes.find(module);
    }
 
    //
@@ -669,7 +686,7 @@ namespace ACSVM
       addModuleFinish();
 
       for(auto &module : modules)
-         pd->moduleScopes.find(module)->loadState(in);
+         pd->scopes.find(module)->loadState(in);
    }
 
    //
@@ -713,7 +730,7 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->lockStrings(env);
 
-      for(auto &scope : pd->moduleScopes)
+      for(auto &scope : pd->scopes)
          scope.val.lockStrings();
 
       for(auto thread = threadActive.next; thread->obj; thread = thread->next)
@@ -728,7 +745,7 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->refStrings(env);
 
-      for(auto &scope : pd->moduleScopes)
+      for(auto &scope : pd->scopes)
          scope.val.refStrings();
 
       for(auto thread = threadActive.next; thread->obj; thread = thread->next)
@@ -752,7 +769,7 @@ namespace ACSVM
 
       active = false;
 
-      pd->moduleScopes.free();
+      pd->scopes.free();
 
       pd->modules.clear();
 
@@ -766,12 +783,12 @@ namespace ACSVM
    //
    void MapScope::saveModules(std::ostream &out) const
    {
-      WriteVLN(out, pd->moduleScopes.size());
+      WriteVLN(out, pd->scopes.size());
 
-      for(auto &scope : pd->moduleScopes)
+      for(auto &scope : pd->scopes)
          env->writeModuleName(out, scope.key->name);
 
-      for(auto &scope : pd->moduleScopes)
+      for(auto &scope : pd->scopes)
          scope.val.saveState(out);
    }
 
@@ -897,7 +914,7 @@ namespace ACSVM
       for(auto action = scriptAction.next; action->obj; action = action->next)
          action->obj->unlockStrings(env);
 
-      for(auto &scope : pd->moduleScopes)
+      for(auto &scope : pd->scopes)
          scope.val.unlockStrings();
 
       for(auto thread = threadActive.next; thread->obj; thread = thread->next)
