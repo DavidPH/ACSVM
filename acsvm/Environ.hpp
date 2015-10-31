@@ -56,7 +56,7 @@ namespace ACSVM
 
       void deferAction(ScriptAction &&action);
 
-      void exec();
+      virtual void exec();
 
       CodeDataACS0 const *findCodeDataACS0(Word code);
       FuncDataACS0 const *findFuncDataACS0(Word func);

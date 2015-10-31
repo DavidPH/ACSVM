@@ -40,6 +40,10 @@ class Environment : public ACSVM::Environment
 public:
    Environment();
 
+   virtual void exec() {++timer; ACSVM::Environment::exec();}
+
+   ACSVM::Word timer;
+
 protected:
    virtual void loadModule(ACSVM::Module *module);
 };
@@ -88,6 +92,15 @@ static bool CF_TestSave(ACSVM::Thread *, ACSVM::Word const *, ACSVM::Word)
 }
 
 //
+// CF_Timer
+//
+static bool CF_Timer(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
+{
+   thread->dataStk.push(static_cast<Environment *>(thread->env)->timer);
+   return false;
+}
+
+//
 // LoadModules
 //
 static void LoadModules(Environment &env, char const *const *argv, std::size_t argc)
@@ -119,13 +132,16 @@ static void LoadModules(Environment &env, char const *const *argv, std::size_t a
 //
 // Environment constructor
 //
-Environment::Environment()
+Environment::Environment() :
+   timer{0}
 {
    ACSVM::Word funcCollectStrings = addCallFunc(CF_CollectStrings);
    ACSVM::Word funcEndPrint       = addCallFunc(CF_EndPrint);
    ACSVM::Word funcTestSave       = addCallFunc(CF_TestSave);
+   ACSVM::Word funcTimer          = addCallFunc(CF_Timer);
 
    addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
+   addCodeDataACS0( 93, {"", ACSVM::Code::CallFunc, 0, funcTimer});
    addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
 
    addFuncDataACS0(0x10000, funcTestSave);
