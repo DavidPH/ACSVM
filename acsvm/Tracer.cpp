@@ -84,6 +84,7 @@ namespace ACSVM
          {
          case 'B': argBytes += 1; break;
          case 'H': argBytes += 2; break;
+         case 'J': argBytes += 4; break;
          case 'S': argBytes += 4; break;
          case 'W': argBytes += 4; break;
          case 'b': argBytes += compressed ? 1 : 4; break;
