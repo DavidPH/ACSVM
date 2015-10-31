@@ -251,11 +251,13 @@ namespace ACSVM
    void Environment::exec()
    {
       // Delegate deferred script actions.
-      for(auto itr = scriptAction.next, next = itr->next; itr->obj; itr = next, next = itr->next)
+      for(auto itr = scriptAction.begin(), end = scriptAction.end(); itr != end;)
       {
-         auto scope = pd->scopes.find(itr->obj->id.global);
+         auto scope = pd->scopes.find(itr->id.global);
          if(scope && scope->active)
-            itr->relink(&scope->scriptAction);
+            itr++->link.relink(&scope->scriptAction);
+         else
+            ++itr;
       }
 
       for(auto &scope : pd->scopes)
@@ -662,8 +664,8 @@ namespace ACSVM
    //
    void Environment::refStrings()
    {
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->refStrings(this);
+      for(auto &action : scriptAction)
+         action.refStrings(this);
 
       for(auto &funcIdx : pd->functionByName)
       {
@@ -791,14 +793,10 @@ namespace ACSVM
    void Environment::writeScriptActions(std::ostream &out,
       ListLink<ScriptAction> const &in) const
    {
-      std::size_t count = 0;
-      for(auto action = in.next; action->obj; action = action->next)
-         ++count;
+      WriteVLN(out, in.size());
 
-      WriteVLN(out, count);
-
-      for(auto action = in.next; action->obj; action = action->next)
-         writeScriptAction(out, action->obj);
+      for(auto &action : in)
+         writeScriptAction(out, &action);
    }
 
    //

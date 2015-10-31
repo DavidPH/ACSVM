@@ -13,6 +13,8 @@
 #ifndef ACSVM__List_H__
 #define ACSVM__List_H__
 
+#include "Types.hpp"
+
 
 //----------------------------------------------------------------------------|
 // Types                                                                      |
@@ -26,10 +28,46 @@ namespace ACSVM
    template<typename T>
    class ListLink
    {
+   private:
+      //
+      // IteratorBase
+      //
+      template<typename Obj>
+      class IteratorBase
+      {
+      public:
+         IteratorBase<Obj> &operator ++ () {link = link->next; return *this;}
+         IteratorBase<Obj> operator ++ (int) {auto i = *this; ++*this; return i;}
+
+         Obj &operator * () const {return *link->obj;}
+         Obj *operator -> () const {return link->obj;}
+
+         bool operator == (IteratorBase<Obj> const &iter) const
+            {return iter.link == link;}
+         bool operator != (IteratorBase<Obj> const &iter) const
+            {return iter.link != link;}
+
+
+         friend class ListLink;
+
+      private:
+         IteratorBase(ListLink<T> const *link_) : link{link_} {}
+
+         ListLink<T> const *link;
+      };
+
    public:
       ListLink() : obj{nullptr}, prev{this}, next{this} {}
       ListLink(T *obj_) : obj{obj_}, prev{this}, next{this} {}
       ~ListLink() {unlink();}
+
+      // begin
+      IteratorBase<T>       begin()       {return next;}
+      IteratorBase<T const> begin() const {return next;}
+
+      // end
+      IteratorBase<T>       end()       {return this;}
+      IteratorBase<T const> end() const {return this;}
 
       //
       // insert
@@ -41,6 +79,16 @@ namespace ACSVM
       }
 
       void relink(ListLink<T> *head) {unlink(); insert(head);}
+
+      //
+      // size
+      //
+      std::size_t size() const
+      {
+         std::size_t count = 0;
+         for(auto const &o : *this) (void)o, ++count;
+         return count;
+      }
 
       //
       // unlink

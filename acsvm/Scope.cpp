@@ -116,11 +116,13 @@ namespace ACSVM
    void GlobalScope::exec()
    {
       // Delegate deferred script actions.
-      for(auto itr = scriptAction.next, next = itr->next; itr->obj; itr = next, next = itr->next)
+      for(auto itr = scriptAction.begin(), end = scriptAction.end(); itr != end;)
       {
-         auto scope = pd->scopes.find(itr->obj->id.global);
+         auto scope = pd->scopes.find(itr->id.global);
          if(scope && scope->active)
-            itr->relink(&scope->scriptAction);
+            itr++->link.relink(&scope->scriptAction);
+         else
+            ++itr;
       }
 
       for(auto &scope : pd->scopes)
@@ -186,8 +188,8 @@ namespace ACSVM
       for(auto &arr : arrV) arr.lockStrings(env);
       for(auto &reg : regV) ++env->getString(reg)->lock;
 
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->lockStrings(env);
+      for(auto &action : scriptAction)
+         action.lockStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.lockStrings();
@@ -201,8 +203,8 @@ namespace ACSVM
       for(auto &arr : arrV) arr.refStrings(env);
       for(auto &reg : regV) env->getString(reg)->ref = true;
 
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->refStrings(env);
+      for(auto &action : scriptAction)
+         action.refStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.refStrings();
@@ -250,8 +252,8 @@ namespace ACSVM
       for(auto &arr : arrV) arr.unlockStrings(env);
       for(auto &reg : regV) --env->getString(reg)->lock;
 
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->unlockStrings(env);
+      for(auto &action : scriptAction)
+         action.unlockStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.unlockStrings();
@@ -291,11 +293,13 @@ namespace ACSVM
    void HubScope::exec()
    {
       // Delegate deferred script actions.
-      for(auto itr = scriptAction.next, next = itr->next; itr->obj; itr = next, next = itr->next)
+      for(auto itr = scriptAction.begin(), end = scriptAction.end(); itr != end;)
       {
-         auto scope = pd->scopes.find(itr->obj->id.global);
+         auto scope = pd->scopes.find(itr->id.global);
          if(scope && scope->active)
-            itr->relink(&scope->scriptAction);
+            itr++->link.relink(&scope->scriptAction);
+         else
+            ++itr;
       }
 
       for(auto &scope : pd->scopes)
@@ -361,8 +365,8 @@ namespace ACSVM
       for(auto &arr : arrV) arr.lockStrings(env);
       for(auto &reg : regV) ++env->getString(reg)->lock;
 
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->lockStrings(env);
+      for(auto &action : scriptAction)
+         action.lockStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.lockStrings();
@@ -376,8 +380,8 @@ namespace ACSVM
       for(auto &arr : arrV) arr.refStrings(env);
       for(auto &reg : regV) env->getString(reg)->ref = true;
 
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->refStrings(env);
+      for(auto &action : scriptAction)
+         action.refStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.refStrings();
@@ -425,8 +429,8 @@ namespace ACSVM
       for(auto &arr : arrV) arr.unlockStrings(env);
       for(auto &reg : regV) --env->getString(reg)->lock;
 
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->unlockStrings(env);
+      for(auto &action : scriptAction)
+         action.unlockStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.unlockStrings();
@@ -573,12 +577,13 @@ namespace ACSVM
       }
 
       // Execute running threads.
-      for(ListLink<Thread> *itr = threadActive.next; itr->obj;)
+      for(auto itr = threadActive.begin(), end = threadActive.end(); itr != end;)
       {
-         itr->obj->exec();
-         itr = itr->next;
-         if(itr->prev->obj->state.state == ThreadState::Inactive)
-            freeThread(itr->prev->obj);
+         itr->exec();
+         if(itr->state.state == ThreadState::Inactive)
+            freeThread(&*itr++);
+         else
+            ++itr;
       }
    }
 
@@ -651,9 +656,9 @@ namespace ACSVM
    //
    bool MapScope::hasActiveThread()
    {
-      for(ListLink<Thread> *itr = threadActive.next; itr->obj; itr = itr->next)
+      for(auto &thread : threadActive)
       {
-         if(itr->obj->state.state != ThreadState::Inactive)
+         if(thread.state.state != ThreadState::Inactive)
             return true;
       }
 
@@ -727,14 +732,14 @@ namespace ACSVM
    //
    void MapScope::lockStrings() const
    {
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->lockStrings(env);
+      for(auto &action : scriptAction)
+         action.lockStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.val.lockStrings();
 
-      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
-         thread->obj->lockStrings();
+      for(auto &thread : threadActive)
+         thread.lockStrings();
    }
 
    //
@@ -742,14 +747,14 @@ namespace ACSVM
    //
    void MapScope::refStrings() const
    {
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->refStrings(env);
+      for(auto &action : scriptAction)
+         action.refStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.val.refStrings();
 
-      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
-         thread->obj->refStrings();
+      for(auto &thread : threadActive)
+         thread.refStrings();
    }
 
    //
@@ -808,17 +813,13 @@ namespace ACSVM
    //
    void MapScope::saveThreads(std::ostream &out) const
    {
-      std::size_t count = 0;
-      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
-         ++count;
-
-      WriteVLN(out, count);
-      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
+      WriteVLN(out, threadActive.size());
+      for(auto &thread : threadActive)
       {
-         thread->obj->saveState(out);
+         thread.saveState(out);
 
-         auto scrThread = pd->scriptThread.find(thread->obj->script);
-         out.put(scrThread && *scrThread == thread->obj ? '\1' : '\0');
+         auto scrThread = pd->scriptThread.find(thread.script);
+         out.put(scrThread && *scrThread == &thread ? '\1' : '\0');
       }
    }
 
@@ -911,14 +912,14 @@ namespace ACSVM
    //
    void MapScope::unlockStrings() const
    {
-      for(auto action = scriptAction.next; action->obj; action = action->next)
-         action->obj->unlockStrings(env);
+      for(auto &action : scriptAction)
+         action.unlockStrings(env);
 
       for(auto &scope : pd->scopes)
          scope.val.unlockStrings();
 
-      for(auto thread = threadActive.next; thread->obj; thread = thread->next)
-         thread->obj->unlockStrings();
+      for(auto &thread : threadActive)
+         thread.unlockStrings();
    }
 
    //
