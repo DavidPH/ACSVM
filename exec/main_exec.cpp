@@ -73,6 +73,23 @@ static bool CF_CollectStrings(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM:
 }
 
 //
+// CF_DumpLocals
+//
+static bool CF_DumpLocals(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
+{
+   // LocReg store info.
+   std::cout << "LocReg="
+      << thread->localReg.begin()     << '+' << thread->localReg.size()     << " / "
+      << thread->localReg.beginFull() << '+' << thread->localReg.sizeFull() << "\n";
+
+   // LocReg values for current function.
+   for(std::size_t i = 0, e = thread->localReg.size(); i != e; ++i)
+      std::cout << "  [" << i << "]=" << thread->localReg[i] << '\n';
+
+   return false;
+}
+
+//
 // CF_EndPrint
 //
 static bool CF_EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
@@ -136,6 +153,7 @@ Environment::Environment() :
    timer{0}
 {
    ACSVM::Word funcCollectStrings = addCallFunc(CF_CollectStrings);
+   ACSVM::Word funcDumpLocals     = addCallFunc(CF_DumpLocals);
    ACSVM::Word funcEndPrint       = addCallFunc(CF_EndPrint);
    ACSVM::Word funcTestSave       = addCallFunc(CF_TestSave);
    ACSVM::Word funcTimer          = addCallFunc(CF_Timer);
@@ -146,6 +164,7 @@ Environment::Environment() :
 
    addFuncDataACS0(0x10000, funcTestSave);
    addFuncDataACS0(0x10001, funcCollectStrings);
+   addFuncDataACS0(0x10002, funcDumpLocals);
 }
 
 //
