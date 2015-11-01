@@ -61,10 +61,10 @@ namespace ACSVM
 
             // Allocate and initialize new array.
             T *storeNew = static_cast<T *>(::operator new(storeEndIdx * sizeof(T)));
-            for(T *itrNew = storeNew, *itr = activeEnd, *end = store; itr != end;)
+            for(T *out = storeNew, *in = store, *end = activeEnd; in != end; ++out, ++in)
             {
-               new(itrNew++) T(std::move(*--itr));
-               itr->~T();
+               new(out) T(std::move(*in));
+               in->~T();
             }
 
             // Free old array.
@@ -95,6 +95,10 @@ namespace ACSVM
          active = activeEnd - count;
       }
 
+      // begin
+      T       *begin()       {return active;}
+      T const *begin() const {return active;}
+
       // beginFull
       T       *beginFull()       {return store;}
       T const *beginFull() const {return store;}
@@ -120,7 +124,7 @@ namespace ACSVM
       //
       // free
       //
-      // count must be the size (in elements)of the previous allocation.
+      // count must be the size (in elements) of the previous allocation.
       //
       void free(std::size_t count)
       {
