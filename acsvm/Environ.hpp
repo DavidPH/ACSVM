@@ -101,8 +101,7 @@ namespace ACSVM
 
       virtual void loadState(std::istream &in);
 
-      // Prints an array to a print buffer. Default behavior is to convert the
-      // sequence as UTF-32 to UTF-8.
+      // Prints an array to a print buffer. Default behavior is PrintArrayChar.
       virtual void printArray(PrintBuf &buf, Array const &array, Word index, Word limit);
 
       // Function to print Kill instructions. Default behavior is to print
@@ -138,6 +137,14 @@ namespace ACSVM
       // Default number of script variables. Default is 20.
       Word scriptLocRegC;
 
+
+      // Prints an array to a print buffer, truncating elements of the array to
+      // fit char.
+      static void PrintArrayChar(PrintBuf &buf, Array const &array, Word index, Word limit);
+
+      // Prints an array to a print buffer, converting the array as a UTF-32
+      // sequence into a UTF-8 sequence.
+      static void PrintArrayUTF8(PrintBuf &buf, Array const &array, Word index, Word limit);
 
       static constexpr Word ScriptLocRegCDefault = 20;
 

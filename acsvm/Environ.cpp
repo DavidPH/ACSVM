@@ -537,41 +537,7 @@ namespace ACSVM
    //
    void Environment::printArray(PrintBuf &buf, Array const &array, Word index, Word limit)
    {
-      // Calculate output length and end index.
-      std::size_t len = 0;
-      Word        end;
-      for(Word &itr = end = index; itr - index != limit; ++itr)
-      {
-         Word c = array.find(itr);
-         if(!c) break;
-         if(c > 0x10FFFF) c = 0xFFFD;
-
-              if(c <= 0x007F) len += 1;
-         else if(c <= 0x07FF) len += 2;
-         else if(c <= 0xFFFF) len += 3;
-         else                 len += 4;
-      }
-
-      // Acquire output buffer.
-      buf.reserve(len);
-      char *s = buf.getBuf(len);
-
-      // Convert UTF-32 sequence to UTF-8.
-      for(Word itr = index; itr != end; ++itr)
-      {
-         Word c = array.find(itr);
-         if(c > 0x10FFFF) c = 0xFFFD;
-
-         if(c <= 0x7F)   {*s++ = 0x00 | (c >>  0); goto put0;}
-         if(c <= 0x7FF)  {*s++ = 0xC0 | (c >>  6); goto put1;}
-         if(c <= 0xFFFF) {*s++ = 0xE0 | (c >> 12); goto put2;}
-                         {*s++ = 0xF0 | (c >> 18); goto put3;}
-
-         put3: *s++ = 0x80 | ((c >> 12) & 0x3F);
-         put2: *s++ = 0x80 | ((c >>  6) & 0x3F);
-         put1: *s++ = 0x80 | ((c >>  0) & 0x3F);
-         put0:;
-      }
+      PrintArrayChar(buf, array, index, limit);
    }
 
    //
@@ -824,6 +790,72 @@ namespace ACSVM
          WriteVLN<std::size_t>(out, in->idx + 1);
       else
          WriteVLN<std::size_t>(out, 0);
+   }
+
+   //
+   // Environment::PrintArrayChar
+   //
+   void Environment::PrintArrayChar(PrintBuf &buf, Array const &array, Word index, Word limit)
+   {
+      // Calculate output length and end index.
+      std::size_t len = 0;
+      Word        end;
+      for(Word &itr = end = index; itr - index != limit; ++itr)
+      {
+         Word c = array.find(itr);
+         if(!c) break;
+         ++len;
+      }
+
+      // Acquire output buffer.
+      buf.reserve(len);
+      char *s = buf.getBuf(len);
+
+      // Truncate elements to char.
+      for(Word itr = index; itr != end; ++itr)
+         *s++ = array.find(itr);
+   }
+
+   //
+   // Environment::PrintArrayUTF8
+   //
+   void Environment::PrintArrayUTF8(PrintBuf &buf, Array const &array, Word index, Word limit)
+   {
+      // Calculate output length and end index.
+      std::size_t len = 0;
+      Word        end;
+      for(Word &itr = end = index; itr - index != limit; ++itr)
+      {
+         Word c = array.find(itr);
+         if(!c) break;
+         if(c > 0x10FFFF) c = 0xFFFD;
+
+              if(c <= 0x007F) len += 1;
+         else if(c <= 0x07FF) len += 2;
+         else if(c <= 0xFFFF) len += 3;
+         else                 len += 4;
+      }
+
+      // Acquire output buffer.
+      buf.reserve(len);
+      char *s = buf.getBuf(len);
+
+      // Convert UTF-32 sequence to UTF-8.
+      for(Word itr = index; itr != end; ++itr)
+      {
+         Word c = array.find(itr);
+         if(c > 0x10FFFF) c = 0xFFFD;
+
+         if(c <= 0x7F)   {*s++ = 0x00 | (c >>  0); goto put0;}
+         if(c <= 0x7FF)  {*s++ = 0xC0 | (c >>  6); goto put1;}
+         if(c <= 0xFFFF) {*s++ = 0xE0 | (c >> 12); goto put2;}
+                         {*s++ = 0xF0 | (c >> 18); goto put3;}
+
+         put3: *s++ = 0x80 | ((c >> 12) & 0x3F);
+         put2: *s++ = 0x80 | ((c >>  6) & 0x3F);
+         put1: *s++ = 0x80 | ((c >>  0) & 0x3F);
+         put0:;
+      }
    }
 }
 
