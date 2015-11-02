@@ -55,12 +55,22 @@ namespace ACSVM
       CodeACS0 code;
 
       // String describing the code's arguments.
+      //    A - Previous value is MapReg index.
+      //    a - Previous Value is MapArr index.
       //    B - Single byte.
       //    b - Single byte if compressed, full word otherwise.
+      //    G - Previous value is GblReg index.
+      //    g - Previous Value is GblArr index.
       //    H - Half word.
       //    h - Half word if compressed, full word otherwise.
-      //    J - Full word as jump target.
-      //    S - Full word as string index.
+      //    J - Previous value is jump index.
+      //    L - Previous value is LocReg index.
+      //    l - Previous Value is LocArr index.
+      //    O - Previous value is ModReg index.
+      //    o - Previous Value is ModArr index.
+      //    S - Previous value is string index.
+      //    U - Previous value is HubReg index.
+      //    u - Previous Value is HubArr index.
       //    W - Full word.
       char const *args;
       std::size_t argc;
@@ -73,6 +83,9 @@ namespace ACSVM
 
       // CallFunc index to translate to.
       Word transFunc;
+
+   private:
+      static std::size_t CountArgs(char const *args);
    };
 
    //

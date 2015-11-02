@@ -31,7 +31,7 @@ namespace ACSVM
       Word stackArgC_, Word transFunc_) :
       code     {CodeACS0::None},
       args     {args_},
-      argc     {std::strlen(args_)},
+      argc     {CountArgs(args_)},
       stackArgC{stackArgC_},
       transCode{transCode_},
       transFunc{transFunc_}
@@ -45,11 +45,32 @@ namespace ACSVM
       Code transCode_, Word stackArgC_, Func transFunc_) :
       code     {code_},
       args     {args_},
-      argc     {std::strlen(args_)},
+      argc     {CountArgs(args_)},
       stackArgC{stackArgC_},
       transCode{transCode_},
       transFunc{transFunc_ != Func::None ? static_cast<Word>(transFunc_) : 0}
    {
+   }
+
+   //
+   // CodeDataACS0::CountArgs
+   //
+   std::size_t CodeDataACS0::CountArgs(char const *args)
+   {
+      std::size_t argc = 0;
+
+      for(; *args; ++args) switch(*args)
+      {
+      case 'B':
+      case 'H':
+      case 'W':
+      case 'b':
+      case 'h':
+         ++argc;
+         break;
+      }
+
+      return argc;
    }
 
    //

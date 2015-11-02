@@ -84,8 +84,6 @@ namespace ACSVM
          {
          case 'B': argBytes += 1; break;
          case 'H': argBytes += 2; break;
-         case 'J': argBytes += 4; break;
-         case 'S': argBytes += 4; break;
          case 'W': argBytes += 4; break;
          case 'b': argBytes += compressed ? 1 : 4; break;
          case 'h': argBytes += compressed ? 2 : 4; break;
@@ -533,13 +531,12 @@ namespace ACSVM
             case 'W': *codeItr++ = ReadLE4(data + iter); iter += 4; break;
 
             case 'J':
-               *jumpItr++ = codeItr;
-               *codeItr++ = ReadLE4(data + iter); iter += 4;
+               *jumpItr++ = codeItr - 1;
                break;
 
             case 'S':
-               // TODO: Translate index.
-               *codeItr++ = ReadLE4(data + iter); iter += 4;
+               if(*(codeItr - 1) < module->stringV.size())
+                  *(codeItr - 1) = ~module->stringV[*(codeItr - 1)]->idx;
                break;
 
             case 'b':
