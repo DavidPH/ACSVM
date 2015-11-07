@@ -131,7 +131,7 @@ namespace ACSVM
          {
             if(size - iter < 2) throw ReadError();
             ++opSize;
-            opCode = 240 + ((opSize - 240) << 8) + data[iter + 1];
+            opCode = 240 + ((opCode - 240) << 8) + data[iter + 1];
          }
 
          return std::make_tuple(opCode, env->findCodeDataACS0(opCode), opSize);
@@ -455,7 +455,6 @@ namespace ACSVM
                *codeItr++ = data[iter++];
             break;
 
-         case CodeACS0::Push_LitB:
          case CodeACS0::Push_Lit2B:
          case CodeACS0::Push_Lit3B:
          case CodeACS0::Push_Lit4B:
