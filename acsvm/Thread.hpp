@@ -69,6 +69,9 @@ namespace ACSVM
       ThreadState(State state_, Word data_, Word type_) :
          state{state_}, data{data_}, type{type_} {}
 
+      bool operator == (State s) const {return state == s;}
+      bool operator != (State s) const {return state != s;}
+
       State state;
 
       // Extra state data. Used by:

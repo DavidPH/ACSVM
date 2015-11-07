@@ -123,7 +123,7 @@ namespace ACSVM
       for(auto reg = localReg.beginFull(), end = localReg.end(); reg != end; ++reg)
          ++env->getString(*reg)->lock;
 
-      if(state.state == ThreadState::WaitScrS)
+      if(state == ThreadState::WaitScrS)
          ++env->getString(state.data)->lock;
    }
 
@@ -157,7 +157,7 @@ namespace ACSVM
       for(auto reg = localReg.beginFull(), end = localReg.end(); reg != end; ++reg)
          env->getString(*reg)->ref = true;
 
-      if(state.state == ThreadState::WaitScrS)
+      if(state == ThreadState::WaitScrS)
          env->getString(state.data)->ref = true;
    }
 
@@ -261,7 +261,7 @@ namespace ACSVM
       for(auto reg = localReg.beginFull(), end = localReg.end(); reg != end; ++reg)
          --env->getString(*reg)->lock;
 
-      if(state.state == ThreadState::WaitScrS)
+      if(state == ThreadState::WaitScrS)
          --env->getString(state.data)->lock;
    }
 

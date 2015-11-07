@@ -580,7 +580,7 @@ namespace ACSVM
       for(auto itr = threadActive.begin(), end = threadActive.end(); itr != end;)
       {
          itr->exec();
-         if(itr->state.state == ThreadState::Inactive)
+         if(itr->state == ThreadState::Inactive)
             freeThread(&*itr++);
          else
             ++itr;
@@ -658,7 +658,7 @@ namespace ACSVM
    {
       for(auto &thread : threadActive)
       {
-         if(thread.state.state != ThreadState::Inactive)
+         if(thread.state != ThreadState::Inactive)
             return true;
       }
 
@@ -671,7 +671,7 @@ namespace ACSVM
    bool MapScope::isScriptActive(Script *script)
    {
       auto itr = pd->scriptThread.find(script);
-      return itr && *itr && (*itr)->state.state != ThreadState::Inactive;
+      return itr && *itr && (*itr)->state != ThreadState::Inactive;
    }
 
    //
@@ -876,7 +876,7 @@ namespace ACSVM
       thread->exec();
 
       Word result = thread->result;
-      if(thread->state.state == ThreadState::Inactive)
+      if(thread->state == ThreadState::Inactive)
          freeThread(thread);
       return result;
    }
