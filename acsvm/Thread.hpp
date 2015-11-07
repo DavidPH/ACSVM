@@ -117,7 +117,7 @@ namespace ACSVM
       virtual void start(Script *script, MapScope *map, ThreadInfo const *info,
          Word const *argV, Word argC);
 
-      void stop();
+      virtual void stop();
 
       virtual void unlockStrings() const;
 
