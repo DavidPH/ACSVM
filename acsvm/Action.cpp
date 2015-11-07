@@ -22,6 +22,18 @@
 namespace ACSVM
 {
    //
+   // ScriptAction move constructor
+   //
+   ScriptAction::ScriptAction(ScriptAction &&a) :
+      action{std::move(a.action)},
+      argV  {std::move(a.argV)},
+      id    {std::move(a.id)},
+      link  {this, std::move(a.link)},
+      name  {std::move(a.name)}
+   {
+   }
+
+   //
    // ScriptAction constructor
    //
    ScriptAction::ScriptAction(ScopeID id_, ScriptName name_, Action action_, Vector<Word> &&argV_) :

@@ -56,7 +56,7 @@ namespace ACSVM
       };
 
 
-      ScriptAction(ScriptAction &&action) = default;
+      ScriptAction(ScriptAction &&action);
       ScriptAction(ScopeID id, ScriptName name, Action action, Vector<Word> &&argV);
       ~ScriptAction();
 
