@@ -128,13 +128,33 @@ namespace ACSVM
    class MapScope
    {
    public:
+      using ScriptStartFunc = void (*)(Thread *);
+
+      //
+      // ScriptStartInfo
+      //
+      class ScriptStartInfo
+      {
+      public:
+         ScriptStartInfo() : argV{nullptr}, func{nullptr}, info{nullptr}, argC{0} {}
+         ScriptStartInfo(Word const *argV_, std::size_t argC_,
+            ThreadInfo const *info_ = nullptr, ScriptStartFunc func_ = nullptr) :
+            argV{argV_}, func{func_}, info{info_}, argC{argC_} {}
+
+         Word       const *argV;
+         ScriptStartFunc   func;
+         ThreadInfo const *info;
+         std::size_t       argC;
+      };
+
+
       MapScope(MapScope const &) = delete;
       MapScope(HubScope *hub, Word id);
       ~MapScope();
 
       void addModule(Module *module);
 
-      //This must be called after all modules have been added.
+      // This must be called after all modules have been added.
       void addModuleFinish();
 
       void exec();
@@ -162,10 +182,10 @@ namespace ACSVM
       void saveState(std::ostream &out) const;
 
       void scriptPause(Script *script);
-      void scriptStart(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
-      void scriptStartForced(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
-      Word scriptStartResult(Script *script, ThreadInfo const *info, Word const *argV, Word argC);
-      void scriptStartType(ScriptType type, ThreadInfo const *info, Word const *argV, Word argC);
+      void scriptStart(Script *script, ScriptStartInfo info);
+      void scriptStartForced(Script *script, ScriptStartInfo info);
+      Word scriptStartResult(Script *script, ScriptStartInfo info);
+      void scriptStartType(ScriptType type, ScriptStartInfo info);
       void scriptStop(Script *script);
 
       void unlockStrings() const;
