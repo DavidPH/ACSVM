@@ -826,48 +826,122 @@ namespace ACSVM
    //
    // MapScope::scriptPause
    //
-   void MapScope::scriptPause(Script *script)
+   bool MapScope::scriptPause(Script *script)
    {
       auto itr = pd->scriptThread.find(script);
-      if(itr && *itr)
+      if(!itr || !*itr)
+         return false;
+
+      switch((*itr)->state.state)
+      {
+      case ThreadState::Inactive:
+      case ThreadState::Paused:
+      case ThreadState::Stopped:
+         return false;
+
+      default:
          (*itr)->state = ThreadState::Paused;
+         return true;
+      }
+   }
+
+   //
+   // MapScope::scriptPause
+   //
+   bool MapScope::scriptPause(ScriptName name, ScopeID scope)
+   {
+      if(scope != ScopeID{hub->global->id, hub->id, id})
+      {
+         env->deferAction({scope, name, ScriptAction::Pause, {}});
+         return true;
+      }
+
+      if(Script *script = findScript(name))
+         return scriptPause(script);
+      else
+         return false;
    }
 
    //
    // MapScope::scriptStart
    //
-   void MapScope::scriptStart(Script *script, ScriptStartInfo info)
+   bool MapScope::scriptStart(Script *script, ScriptStartInfo const &info)
    {
       auto itr = pd->scriptThread.find(script);
-      if(!itr) return;
+      if(!itr)
+         return false;
 
       if(Thread *&thread = *itr)
       {
-         thread->state = ThreadState::Running;
+         switch(thread->state.state)
+         {
+         case ThreadState::Paused:
+            thread->state = ThreadState::Running;
+            return true;
+
+         default:
+            return false;
+         }
       }
       else
       {
          thread = env->getFreeThread();
          thread->start(script, this, info.info, info.argV, info.argC);
          if(info.func) info.func(thread);
+         return true;
       }
+   }
+
+   //
+   // MapScope::scriptStart
+   //
+   bool MapScope::scriptStart(ScriptName name, ScopeID scope, ScriptStartInfo const &info)
+   {
+      if(scope != ScopeID{hub->global->id, hub->id, id})
+      {
+         env->deferAction({scope, name, ScriptAction::Start, {info.argV, info.argC}});
+         return true;
+      }
+
+      if(Script *script = findScript(name))
+         return scriptStart(script, info);
+      else
+         return false;
    }
 
    //
    // MapScope::scriptStartForced
    //
-   void MapScope::scriptStartForced(Script *script, ScriptStartInfo info)
+   bool MapScope::scriptStartForced(Script *script, ScriptStartInfo const &info)
    {
       Thread *thread = env->getFreeThread();
 
       thread->start(script, this, info.info, info.argV, info.argC);
       if(info.func) info.func(thread);
+      return true;
+   }
+
+   //
+   // MapScope::scriptStartForced
+   //
+   bool MapScope::scriptStartForced(ScriptName name, ScopeID scope, ScriptStartInfo const &info)
+   {
+      if(scope != ScopeID{hub->global->id, hub->id, id})
+      {
+         env->deferAction({scope, name, ScriptAction::StartForced, {info.argV, info.argC}});
+         return true;
+      }
+
+      if(Script *script = findScript(name))
+         return scriptStartForced(script, info);
+      else
+         return false;
    }
 
    //
    // MapScope::scriptStartResult
    //
-   Word MapScope::scriptStartResult(Script *script, ScriptStartInfo info)
+   Word MapScope::scriptStartResult(Script *script, ScriptStartInfo const &info)
    {
       Thread *thread = env->getFreeThread();
 
@@ -882,28 +956,69 @@ namespace ACSVM
    }
 
    //
+   // MapScope::scriptStartResult
+   //
+   Word MapScope::scriptStartResult(ScriptName name, ScriptStartInfo const &info)
+   {
+      if(Script *script = findScript(name))
+         return scriptStartResult(script, info);
+      else
+         return 0;
+   }
+
+   //
    // MapScope::scriptStartType
    //
-   void MapScope::scriptStartType(ScriptType type, ScriptStartInfo info)
+   Word MapScope::scriptStartType(ScriptType type, ScriptStartInfo const &info)
    {
+      Word result = 0;
+
       for(auto &script : pd->scriptThread)
       {
          if(script.key->type == type)
-            scriptStartForced(script.key, info);
+            result += scriptStartForced(script.key, info);
+      }
+
+      return result;
+   }
+
+   //
+   // MapScope::scriptStop
+   //
+   bool MapScope::scriptStop(Script *script)
+   {
+      auto itr = pd->scriptThread.find(script);
+      if(!itr || !*itr)
+         return false;
+
+      switch((*itr)->state.state)
+      {
+      case ThreadState::Inactive:
+      case ThreadState::Stopped:
+         return false;
+
+      default:
+         (*itr)->state = ThreadState::Stopped;
+         (*itr)        = nullptr;
+         return true;
       }
    }
 
    //
    // MapScope::scriptStop
    //
-   void MapScope::scriptStop(Script *script)
+   bool MapScope::scriptStop(ScriptName name, ScopeID scope)
    {
-      auto itr = pd->scriptThread.find(script);
-      if(itr && *itr)
+      if(scope != ScopeID{hub->global->id, hub->id, id})
       {
-         (*itr)->state = ThreadState::Stopped;
-         (*itr)        = nullptr;
+         env->deferAction({scope, name, ScriptAction::Stop, {}});
+         return true;
       }
+
+      if(Script *script = findScript(name))
+         return scriptStop(script);
+      else
+         return false;
    }
 
    //

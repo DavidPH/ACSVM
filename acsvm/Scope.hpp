@@ -181,12 +181,17 @@ namespace ACSVM
 
       void saveState(std::ostream &out) const;
 
-      void scriptPause(Script *script);
-      void scriptStart(Script *script, ScriptStartInfo info);
-      void scriptStartForced(Script *script, ScriptStartInfo info);
-      Word scriptStartResult(Script *script, ScriptStartInfo info);
-      void scriptStartType(ScriptType type, ScriptStartInfo info);
-      void scriptStop(Script *script);
+      bool scriptPause(Script *script);
+      bool scriptPause(ScriptName name, ScopeID scope);
+      bool scriptStart(Script *script, ScriptStartInfo const &info);
+      bool scriptStart(ScriptName name, ScopeID scope, ScriptStartInfo const &info);
+      bool scriptStartForced(Script *script, ScriptStartInfo const &info);
+      bool scriptStartForced(ScriptName name, ScopeID scope, ScriptStartInfo const &info);
+      Word scriptStartResult(Script *script, ScriptStartInfo const &info);
+      Word scriptStartResult(ScriptName name, ScriptStartInfo const &info);
+      Word scriptStartType(ScriptType type, ScriptStartInfo const &info);
+      bool scriptStop(Script *script);
+      bool scriptStop(ScriptName name, ScopeID scope);
 
       void unlockStrings() const;
 

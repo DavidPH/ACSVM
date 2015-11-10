@@ -62,6 +62,7 @@ namespace ACSVM
    class ModuleName;
    class ModuleScope;
    class PrintBuf;
+   class ScopeID;
    class Script;
    class ScriptAction;
    class ScriptName;
