@@ -148,7 +148,7 @@ namespace ACSVM
    //
    // GlobalScope::hasActiveThread
    //
-   bool GlobalScope::hasActiveThread()
+   bool GlobalScope::hasActiveThread() const
    {
       for(auto &scope : pd->scopes)
       {
@@ -325,7 +325,7 @@ namespace ACSVM
    //
    // HubScope::hasActiveThread
    //
-   bool HubScope::hasActiveThread()
+   bool HubScope::hasActiveThread() const
    {
       for(auto &scope : pd->scopes)
       {
@@ -654,7 +654,7 @@ namespace ACSVM
    //
    // MapScope::hasActiveThread
    //
-   bool MapScope::hasActiveThread()
+   bool MapScope::hasActiveThread() const
    {
       for(auto &thread : threadActive)
       {
@@ -888,6 +888,7 @@ namespace ACSVM
          thread = env->getFreeThread();
          thread->start(script, this, info.info, info.argV, info.argC);
          if(info.func) info.func(thread);
+         if(info.funcc) info.funcc(thread);
          return true;
       }
    }
@@ -918,6 +919,7 @@ namespace ACSVM
 
       thread->start(script, this, info.info, info.argV, info.argC);
       if(info.func) info.func(thread);
+      if(info.funcc) info.funcc(thread);
       return true;
    }
 
@@ -947,6 +949,7 @@ namespace ACSVM
 
       thread->start(script, this, info.info, info.argV, info.argC);
       if(info.func) info.func(thread);
+      if(info.funcc) info.funcc(thread);
       thread->exec();
 
       Word result = thread->result;

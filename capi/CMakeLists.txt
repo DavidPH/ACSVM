@@ -6,7 +6,7 @@
 ##
 ##-----------------------------------------------------------------------------
 ##
-## CMake file for acsvm-exec.
+## CMake file for acsvm-capi.
 ##
 ##-----------------------------------------------------------------------------
 
@@ -23,26 +23,31 @@ include_directories(.)
 ##
 
 ##
-## acsvm-exec
+## acsvm-capi
 ##
-add_executable(acsvm-exec
-   main_exec.cpp
+add_library(acsvm-capi ${ACSVM_SHARED_DECL}
+   Array.cpp
+   Array.h
+   BinaryIO.cpp
+   BinaryIO.h
+   Environment.cpp
+   Environment.h
+   Module.cpp
+   Module.h
+   PrintBuf.cpp
+   PrintBuf.h
+   Scope.cpp
+   Scope.h
+   String.cpp
+   String.h
+   Thread.cpp
+   Thread.h
+   Types.h
 )
 
-target_link_libraries(acsvm-exec acsvm)
+target_link_libraries(acsvm-capi acsvm)
 
-##
-## acsvm-execc
-##
-## Used to test the C API.
-##
-if(EXISTS "${CMAKE_SOURCE_DIR}/capi")
-   add_executable(acsvm-execc
-      main_execc.c
-   )
-
-   target_link_libraries(acsvm-execc acsvm-capi)
-endif()
+ACSVM_INSTALL_LIB(acsvm-capi)
 
 ## EOF
 

@@ -41,7 +41,7 @@ namespace ACSVM
       void addCodeDataACS0(Word code, CodeDataACS0 &&data);
       void addFuncDataACS0(Word func, FuncDataACS0 &&data);
 
-      bool callFunc(Thread *thread, Word func, Word const *argV, Word argC);
+      virtual bool callFunc(Thread *thread, Word func, Word const *argV, Word argC);
       Word callSpec(Thread *thread, Word spec, Word const *argV, Word argC);
 
       // Function to check if a lock can be opened. Default behavior is to
@@ -97,7 +97,7 @@ namespace ACSVM
          {return data ? &stringTable[*data] : nullptr;}
 
       // Returns true if any contained scope is active and has an active thread.
-      bool hasActiveThread();
+      bool hasActiveThread() const;
 
       virtual void loadState(std::istream &in);
 
@@ -119,7 +119,7 @@ namespace ACSVM
 
       virtual void refStrings();
 
-      void resetStrings();
+      virtual void resetStrings();
 
       virtual void saveState(std::ostream &out) const;
 

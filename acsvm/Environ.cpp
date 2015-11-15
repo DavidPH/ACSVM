@@ -444,7 +444,7 @@ namespace ACSVM
    //
    // Environment::hasActiveThread
    //
-   bool Environment::hasActiveThread()
+   bool Environment::hasActiveThread() const
    {
       for(auto &scope : pd->scopes)
       {

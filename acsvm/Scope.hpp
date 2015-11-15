@@ -23,6 +23,8 @@
 
 namespace ACSVM
 {
+   extern "C" using MapScope_ScriptStartFuncC = void (*)(void *);
+
    //
    // GlobalScope
    //
@@ -41,7 +43,7 @@ namespace ACSVM
 
       HubScope *getHubScope(Word id);
 
-      bool hasActiveThread();
+      bool hasActiveThread() const;
 
       void lockStrings() const;
 
@@ -90,7 +92,7 @@ namespace ACSVM
 
       MapScope *getMapScope(Word id);
 
-      bool hasActiveThread();
+      bool hasActiveThread() const;
 
       void lockStrings() const;
 
@@ -129,6 +131,7 @@ namespace ACSVM
    {
    public:
       using ScriptStartFunc = void (*)(Thread *);
+      using ScriptStartFuncC = MapScope_ScriptStartFuncC;
 
       //
       // ScriptStartInfo
@@ -136,13 +139,18 @@ namespace ACSVM
       class ScriptStartInfo
       {
       public:
-         ScriptStartInfo() : argV{nullptr}, func{nullptr}, info{nullptr}, argC{0} {}
+         ScriptStartInfo() :
+            argV{nullptr}, func{nullptr}, funcc{nullptr}, info{nullptr}, argC{0} {}
          ScriptStartInfo(Word const *argV_, std::size_t argC_,
             ThreadInfo const *info_ = nullptr, ScriptStartFunc func_ = nullptr) :
-            argV{argV_}, func{func_}, info{info_}, argC{argC_} {}
+            argV{argV_}, func{func_}, funcc{nullptr}, info{info_}, argC{argC_} {}
+         ScriptStartInfo(Word const *argV_, std::size_t argC_,
+            ThreadInfo const *info_, ScriptStartFuncC func_) :
+            argV{argV_}, func{nullptr}, funcc{func_}, info{info_}, argC{argC_} {}
 
          Word       const *argV;
          ScriptStartFunc   func;
+         ScriptStartFuncC  funcc;
          ThreadInfo const *info;
          std::size_t       argC;
       };
@@ -167,7 +175,7 @@ namespace ACSVM
 
       String *getString(Word idx) const;
 
-      bool hasActiveThread();
+      bool hasActiveThread() const;
 
       bool isScriptActive(Script *script);
 
