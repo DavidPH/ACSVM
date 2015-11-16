@@ -10,8 +10,8 @@
 //
 //-----------------------------------------------------------------------------
 
-#ifndef ACSVM__Environ_H__
-#define ACSVM__Environ_H__
+#ifndef ACSVM__Environment_H__
+#define ACSVM__Environment_H__
 
 #include "List.hpp"
 #include "String.hpp"
@@ -23,8 +23,6 @@
 
 namespace ACSVM
 {
-   using CallFunc = bool (*)(Thread *thread, Word const *argv, Word argc);
-
    //
    // Environment
    //
@@ -180,5 +178,5 @@ namespace ACSVM
    };
 }
 
-#endif//ACSVM__Environ_H__
+#endif//ACSVM__Environment_H__
 
