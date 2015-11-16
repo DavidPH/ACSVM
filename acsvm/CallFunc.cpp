@@ -13,7 +13,7 @@
 #include "CallFunc.hpp"
 
 #include "Action.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "Module.hpp"
 #include "Scope.hpp"
 #include "Thread.hpp"

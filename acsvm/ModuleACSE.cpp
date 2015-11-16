@@ -14,7 +14,7 @@
 
 #include "Array.hpp"
 #include "BinaryIO.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "Error.hpp"
 #include "Function.hpp"
 #include "Init.hpp"

@@ -30,7 +30,7 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    Array.cpp
    CallFunc.cpp
    CodeData.cpp
-   Environ.cpp
+   Environment.cpp
    Function.cpp
    Init.cpp
    Jump.cpp

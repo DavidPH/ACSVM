@@ -14,7 +14,7 @@
 
 #include "Array.hpp"
 #include "Code.hpp"
-#include "Environ.hpp"
+#include "Environment.hpp"
 #include "Function.hpp"
 #include "Jump.hpp"
 #include "Module.hpp"

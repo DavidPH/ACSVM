@@ -10,10 +10,9 @@
 //
 //----------------------------------------------------------------------------
 
-#include "acsvm/Environ.hpp"
-
 #include "acsvm/Code.hpp"
 #include "acsvm/CodeData.hpp"
+#include "acsvm/Environment.hpp"
 #include "acsvm/Error.hpp"
 #include "acsvm/Module.hpp"
 #include "acsvm/Scope.hpp"
