@@ -15,7 +15,6 @@
 #include "Environment.h"
 
 #include "../acsvm/Error.hpp"
-#include "../acsvm/Module.hpp"
 
 
 extern "C"

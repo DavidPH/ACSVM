@@ -14,8 +14,6 @@
 
 #include "Environment.h"
 
-#include "acsvm/Array.hpp"
-
 
 extern "C"
 {

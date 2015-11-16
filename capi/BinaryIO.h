@@ -18,6 +18,8 @@
 #include <stdio.h>
 
 #ifdef __cplusplus
+#include "../acsvm/BinaryIO.hpp"
+
 #include <istream>
 #include <ostream>
 #endif

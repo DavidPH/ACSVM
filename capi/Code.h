@@ -15,6 +15,10 @@
 
 #include "Types.h"
 
+#ifdef __cplusplus
+#include "../acsvm/Code.hpp"
+#endif
+
 
 //----------------------------------------------------------------------------|
 // Types                                                                      |

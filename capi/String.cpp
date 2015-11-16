@@ -12,8 +12,6 @@
 
 #include "String.h"
 
-#include "acsvm/String.hpp"
-
 
 extern "C"
 {

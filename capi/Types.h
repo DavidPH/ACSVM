@@ -13,6 +13,10 @@
 #ifndef ACSVM__CAPI__Types_H__
 #define ACSVM__CAPI__Types_H__
 
+#ifdef __cplusplus
+#include "../acsvm/Types.hpp"
+#endif
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>

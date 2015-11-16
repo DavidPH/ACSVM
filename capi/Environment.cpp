@@ -12,10 +12,10 @@
 
 #include "Environment.h"
 
+#include "Code.h"
 #include "Module.h"
 #include "Thread.h"
 
-#include "../acsvm/Code.hpp"
 #include "../acsvm/CodeData.hpp"
 #include "../acsvm/Error.hpp"
 

@@ -16,7 +16,6 @@
 #include "Thread.h"
 
 #include "acsvm/Action.hpp"
-#include "acsvm/Scope.hpp"
 
 
 extern "C"

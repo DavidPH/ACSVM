@@ -15,6 +15,10 @@
 
 #include "Types.h"
 
+#ifdef __cplusplus
+#include "../acsvm/String.hpp"
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {

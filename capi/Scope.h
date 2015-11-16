@@ -15,6 +15,10 @@
 
 #include "Script.h"
 
+#ifdef __cplusplus
+#include "../acsvm/Scope.hpp"
+#endif
+
 
 #ifdef __cplusplus
 extern "C" {
