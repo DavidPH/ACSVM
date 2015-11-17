@@ -156,7 +156,16 @@ static void LoadModules(ACSVM_Environment *env, char **argv, int argc)
    ACSVM_MapScope *map = ACSVM_HubScope_GetMapScope(hub, 0);
    ACSVM_MapScope_SetActive(map, true);
 
-   // Load modules and register them with map scope.
+   // Load modules.
+
+   size_t         moduleC = argc - 1;
+   ACSVM_Module **moduleV = malloc(sizeof(ACSVM_Module *) * moduleC);
+   if(!moduleV)
+   {
+      fprintf(stderr, "failed to alloc moduleV[%zu]\n", moduleC);
+      exit(EXIT_FAILURE);
+   }
+
    for(int argi = 1; argi < argc; ++argi)
    {
       char const      *arg  = argv[argi];
@@ -165,12 +174,11 @@ static void LoadModules(ACSVM_Environment *env, char **argv, int argc)
       ACSVM_ModuleName name =
          {ACSVM_StringTable_GetStringByData(strTab, arg, len, hash), NULL, 0};
 
-      ACSVM_Module *module = ACSVM_Environment_GetModule(env, name);
-
-      ACSVM_MapScope_AddModule(map, module);
+      moduleV[argi - 1] = ACSVM_Environment_GetModule(env, name);
    }
 
-   ACSVM_MapScope_AddModuleFinish(map);
+   // Register modules with map scope.
+   ACSVM_MapScope_AddModules(map, moduleV, moduleC);
 
    // Start Open scripts.
    ACSVM_MapScope_ScriptStartType(map, ACSVM_ScriptType_Open, NULL, 0, NULL, NULL);

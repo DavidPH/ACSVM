@@ -166,32 +166,14 @@ void ACSVM_HubScope_SetHubReg(ACSVM_HubScope *scope, ACSVM_Word idx, ACSVM_Word 
 //
 // ACSVM_MapScope_AddModule
 //
-void ACSVM_MapScope_AddModule(ACSVM_MapScope *scope_, ACSVM_Module *module)
+void ACSVM_MapScope_AddModules(ACSVM_MapScope *scope_,
+   ACSVM_Module *const *moduleV, size_t moduleC)
 {
    auto scope = reinterpret_cast<ACSVM::MapScope *>(scope_);
 
    try
    {
-      scope->addModule(reinterpret_cast<ACSVM::Module *>(module));
-   }
-   catch(std::bad_alloc const &e)
-   {
-      auto env = static_cast<ACSVM_Environment *>(scope->env);
-      if(env->funcs.bad_alloc)
-         env->funcs.bad_alloc(env, e.what());
-   }
-}
-
-//
-// ACSVM_MapScope_AddModuleFinish
-//
-void ACSVM_MapScope_AddModuleFinish(ACSVM_MapScope *scope_)
-{
-   auto scope = reinterpret_cast<ACSVM::MapScope *>(scope_);
-
-   try
-   {
-      scope->addModuleFinish();
+      scope->addModules(reinterpret_cast<ACSVM::Module *const *>(moduleV), moduleC);
    }
    catch(std::bad_alloc const &e)
    {
@@ -209,6 +191,14 @@ ACSVM_ModuleScope *ACSVM_MapScope_GetModuleScope(ACSVM_MapScope *scope, ACSVM_Mo
    return reinterpret_cast<ACSVM_ModuleScope *>(
       reinterpret_cast<ACSVM::MapScope *>(scope)->getModuleScope(
          reinterpret_cast<ACSVM::Module *>(module)));
+}
+
+//
+// ACSVM_MapScope_HasModules
+//
+bool ACSVM_MapScope_HasModules(ACSVM_MapScope const *scope)
+{
+   return reinterpret_cast<ACSVM::MapScope const *>(scope)->hasModules();
 }
 
 //

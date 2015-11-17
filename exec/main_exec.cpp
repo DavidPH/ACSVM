@@ -132,9 +132,7 @@ static void LoadModules(Environment &env, char const *const *argv, std::size_t a
    ACSVM::MapScope    *map    = hub->getMapScope(0);    map   ->active = true;
 
    // Register modules with map scope.
-   for(auto &module : modules)
-      map->addModule(module);
-   map->addModuleFinish();
+   map->addModules(modules.data(), modules.size());
 
    // Start Open scripts.
    map->scriptStartType(ACSVM::ScriptType::Open, {});

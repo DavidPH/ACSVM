@@ -61,10 +61,12 @@ ACSVM_Word      ACSVM_HubScope_GetHubRegC (ACSVM_HubScope const *scope);
 void ACSVM_HubScope_SetActive(ACSVM_HubScope *scope, bool active);
 void ACSVM_HubScope_SetHubReg(ACSVM_HubScope *scope, ACSVM_Word idx, ACSVM_Word reg);
 
-void ACSVM_MapScope_AddModule(ACSVM_MapScope *scope, ACSVM_Module *module);
-void ACSVM_MapScope_AddModuleFinish(ACSVM_MapScope *scope);
+void ACSVM_MapScope_AddModules(ACSVM_MapScope *scope,
+   ACSVM_Module *const *moduleV, size_t moduleC);
 
 ACSVM_ModuleScope *ACSVM_MapScope_GetModuleScope(ACSVM_MapScope *scope, ACSVM_Module *module);
+
+bool ACSVM_MapScope_HasModules(ACSVM_MapScope const *scope);
 
 bool ACSVM_MapScope_ScriptPause(ACSVM_MapScope *scope,
    ACSVM_ScriptName name, ACSVM_ScopeID id);

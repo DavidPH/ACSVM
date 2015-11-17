@@ -160,10 +160,7 @@ namespace ACSVM
       MapScope(HubScope *hub, Word id);
       ~MapScope();
 
-      void addModule(Module *module);
-
-      // This must be called after all modules have been added.
-      void addModuleFinish();
+      void addModules(Module *const *moduleV, std::size_t moduleC);
 
       void exec();
 
@@ -176,6 +173,8 @@ namespace ACSVM
       String *getString(Word idx) const;
 
       bool hasActiveThread() const;
+
+      bool hasModules() const;
 
       bool isScriptActive(Script *script);
 
