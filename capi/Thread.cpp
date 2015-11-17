@@ -323,8 +323,7 @@ void ACSVM_Thread_DataStk_Push(ACSVM_Thread *thread, ACSVM_Word data)
 //
 void ACSVM_Thread_SetCodePtr(ACSVM_Thread *thread, ACSVM_Word const *codePtr)
 {
-   // HACK: Remove const_cast when Thread::codePtr has cast.
-   thread->codePtr = const_cast<ACSVM_Word *>(codePtr);
+   thread->codePtr = codePtr;
 }
 
 //

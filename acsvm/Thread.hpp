@@ -36,7 +36,7 @@ namespace ACSVM
    class CallFrame
    {
    public:
-      Word        *codePtr;
+      Word  const *codePtr;
       Module      *module;
       ModuleScope *scopeMod;
       std::size_t  locArrC;
@@ -135,7 +135,7 @@ namespace ACSVM
       PrintBuf         printBuf;
       ThreadState      state;
 
-      Word        *codePtr; // Instruction pointer.
+      Word  const *codePtr; // Instruction pointer.
       Module      *module;  // Current execution Module.
       GlobalScope *scopeGbl;
       HubScope    *scopeHub;
