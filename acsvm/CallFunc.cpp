@@ -13,6 +13,7 @@
 #include "CallFunc.hpp"
 
 #include "Action.hpp"
+#include "Code.hpp"
 #include "Environment.hpp"
 #include "Module.hpp"
 #include "Scope.hpp"
@@ -97,6 +98,16 @@ namespace ACSVM
    bool CallFunc_Func_Nop(Thread *, Word const *, Word)
    {
       return false;
+   }
+
+   //
+   // [[noreturn]] void Kill()
+   //
+   bool CallFunc_Func_Kill(Thread *thread, Word const *, Word)
+   {
+      thread->env->printKill(thread, static_cast<Word>(KillType::UnknownFunc), 0);
+      thread->state = ThreadState::Stopped;
+      return true;
    }
 
    //======================================================
