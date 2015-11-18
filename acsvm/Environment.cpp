@@ -109,6 +109,7 @@ namespace ACSVM
    // Environment constructor
    //
    Environment::Environment() :
+      branchLimit  {0},
       scriptLocRegC{ScriptLocRegCDefault},
 
       funcV{nullptr},
@@ -546,7 +547,7 @@ namespace ACSVM
    void Environment::printKill(Thread *thread, Word type, Word data)
    {
       std::cerr << "ACSVM ERROR: Kill " << type << ':' << data
-         << " at " << (thread->codePtr - thread->module->codeV.data() - 3) << '\n';
+         << " at " << (thread->codePtr - thread->module->codeV.data() - 1) << '\n';
    }
 
    //

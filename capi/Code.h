@@ -50,5 +50,19 @@ typedef enum ACSVM_Func
    ACSVM_Func_None
 } ACSVM_Func;
 
+//
+// ACSVM_KillType
+//
+// ACSVM::KillType mirror.
+//
+typedef enum ACSVM_KillType
+{
+   ACSVM_KillType_None,
+   ACSVM_KillType_OutOfBounds,
+   ACSVM_KillType_UnknownCode,
+   ACSVM_KillType_UnknownFunc,
+   ACSVM_KillType_BranchLimit,
+} ACSVM_KillType;
+
 #endif//ACSVM__CAPI__Code_H__
 

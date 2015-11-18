@@ -132,6 +132,10 @@ namespace ACSVM
 
       StringTable stringTable;
 
+      // Number of branches allowed per call to Thread::exec. Default of 0
+      // means no limit.
+      Word branchLimit;
+
       // Default number of script variables. Default is 20.
       Word scriptLocRegC;
 

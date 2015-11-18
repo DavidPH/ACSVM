@@ -166,6 +166,7 @@ void ACSVM_Environment_CollectStrings(ACSVM_Environment *env);
 
 void ACSVM_Environment_Exec(ACSVM_Environment *env);
 
+ACSVM_Word         ACSVM_Environment_GetBranchLimit(ACSVM_Environment const *env);
 void              *ACSVM_Environment_GetData(ACSVM_Environment const *env);
 ACSVM_GlobalScope *ACSVM_Environment_GetGlobalScope(ACSVM_Environment *env, ACSVM_Word id);
 ACSVM_Module      *ACSVM_Environment_GetModule(ACSVM_Environment *env, ACSVM_ModuleName name);
@@ -178,6 +179,7 @@ void ACSVM_Environment_LoadState(ACSVM_Environment *env, ACSVM_IStream *in);
 
 void ACSVM_Environment_SaveState(ACSVM_Environment *env, ACSVM_OStream *out);
 
+void ACSVM_Environment_SetBranchLimit(ACSVM_Environment *env, ACSVM_Word branchLimit);
 void ACSVM_Environment_SetData(ACSVM_Environment *env, void *data);
 void ACSVM_Environment_SetScriptLocRegC(ACSVM_Environment *env, ACSVM_Word scriptLocRegC);
 

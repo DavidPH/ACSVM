@@ -320,6 +320,14 @@ void ACSVM_Environment_Exec(ACSVM_Environment *env)
 }
 
 //
+// ACSVM_Environment_GetBranchLimit
+//
+ACSVM_Word ACSVM_Environment_GetBranchLimit(ACSVM_Environment const *env)
+{
+   return env->branchLimit;
+}
+
+//
 // ACSVM_Environment_GetData
 //
 void *ACSVM_Environment_GetData(ACSVM_Environment const *env)
@@ -417,6 +425,14 @@ void ACSVM_Environment_LoadState(ACSVM_Environment *env, ACSVM_IStream *in)
 void ACSVM_Environment_SaveState(ACSVM_Environment *env, ACSVM_OStream *out)
 {
    env->saveState(reinterpret_cast<std::ostream &>(*out));
+}
+
+//
+// ACSVM_Environment_SetBranchLimit
+//
+void ACSVM_Environment_SetBranchLimit(ACSVM_Environment *env, ACSVM_Word branchLimit)
+{
+   env->branchLimit = branchLimit;
 }
 
 //

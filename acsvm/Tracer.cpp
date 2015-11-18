@@ -361,7 +361,7 @@ namespace ACSVM
 
       // Add Kill to catch branches to zero.
       *codeItr++ = static_cast<Word>(Code::Kill);
-      *codeItr++ = 0;
+      *codeItr++ = static_cast<Word>(KillType::OutOfBounds);
       *codeItr++ = 0;
 
       for(std::size_t iter = 0, next; iter != size; iter = next)
@@ -386,7 +386,7 @@ namespace ACSVM
          if(!opData)
          {
             *codeItr++ = static_cast<Word>(Code::Kill);
-            *codeItr++ = 1;
+            *codeItr++ = static_cast<Word>(KillType::UnknownCode);
             *codeItr++ = opCode;
             next = iter + opSize;
             continue;
@@ -479,7 +479,7 @@ namespace ACSVM
                if(!opFunc)
                {
                   *codeItr++ = static_cast<Word>(Code::Kill);
-                  *codeItr++ = 2;
+                  *codeItr++ = static_cast<Word>(KillType::UnknownFunc);
                   *codeItr++ = func;
                   continue;
                }
@@ -489,7 +489,7 @@ namespace ACSVM
                *codeItr++ = static_cast<Word>(opTran->code);
                if(opTran->code == Code::Kill)
                {
-                  *codeItr++ = 2;
+                  *codeItr++ = static_cast<Word>(KillType::UnknownFunc);
                   *codeItr++ = func;
                   continue;
                }
@@ -505,7 +505,7 @@ namespace ACSVM
             *codeItr++ = static_cast<Word>(opData->transCode);
             if(opTran->code == Code::Kill)
             {
-               *codeItr++ = 1;
+               *codeItr++ = static_cast<Word>(KillType::UnknownCode);
                *codeItr++ = opCode;
                continue;
             }
@@ -559,7 +559,7 @@ namespace ACSVM
 
       // Add Kill to catch execution past end.
       *codeItr++ = static_cast<Word>(Code::Kill);
-      *codeItr++ = 0;
+      *codeItr++ = static_cast<Word>(KillType::OutOfBounds);
       *codeItr++ = 1;
 
       // Translate jumps. Has to be done after code in order to jump forward.
