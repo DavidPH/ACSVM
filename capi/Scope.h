@@ -43,6 +43,8 @@ struct ACSVM_ScopeID
 // Extern Functions                                                           |
 //
 
+void ACSVM_GlobalScope_FreeHubScope(ACSVM_GlobalScope *scope, ACSVM_HubScope *scopeHub);
+
 ACSVM_Array    *ACSVM_GlobalScope_GetGblArr  (ACSVM_GlobalScope       *scope, ACSVM_Word idx);
 ACSVM_Word      ACSVM_GlobalScope_GetGblArrC (ACSVM_GlobalScope const *scope);
 ACSVM_HubScope *ACSVM_GlobalScope_GetHubScope(ACSVM_GlobalScope       *scope, ACSVM_Word id);
@@ -51,6 +53,8 @@ ACSVM_Word      ACSVM_GlobalScope_GetGblRegC (ACSVM_GlobalScope const *scope);
 
 void ACSVM_GlobalScope_SetActive(ACSVM_GlobalScope *scope, bool active);
 void ACSVM_GlobalScope_SetGblReg(ACSVM_GlobalScope *scope, ACSVM_Word idx, ACSVM_Word reg);
+
+void ACSVM_HubScope_FreeMapScope(ACSVM_HubScope *scope, ACSVM_MapScope *scopeMap);
 
 ACSVM_Array    *ACSVM_HubScope_GetHubArr  (ACSVM_HubScope       *scope, ACSVM_Word idx);
 ACSVM_Word      ACSVM_HubScope_GetHubArrC (ACSVM_HubScope const *scope);

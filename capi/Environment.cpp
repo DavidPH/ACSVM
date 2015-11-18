@@ -320,6 +320,22 @@ void ACSVM_Environment_Exec(ACSVM_Environment *env)
 }
 
 //
+// ACSVM_Environment_FreeGlobalScope
+//
+void ACSVM_Environment_FreeGlobalScope(ACSVM_Environment *env, ACSVM_GlobalScope *scope)
+{
+   env->freeGlobalScope(reinterpret_cast<ACSVM::GlobalScope *>(scope));
+}
+
+//
+// ACSVM_Environment_FreeModule
+//
+void ACSVM_Environment_FreeModule(ACSVM_Environment *env, ACSVM_Module *module)
+{
+   env->freeModule(reinterpret_cast<ACSVM::Module *>(module));
+}
+
+//
 // ACSVM_Environment_GetBranchLimit
 //
 ACSVM_Word ACSVM_Environment_GetBranchLimit(ACSVM_Environment const *env)

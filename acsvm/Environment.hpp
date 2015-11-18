@@ -64,6 +64,10 @@ namespace ACSVM
       // Used by Module when unloading.
       void freeFunction(Function *func);
 
+      void freeGlobalScope(GlobalScope *scope);
+
+      void freeModule(Module *module);
+
       void freeThread(Thread *thread);
 
       CodeData const *getCodeData(Code code);

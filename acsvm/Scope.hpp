@@ -41,6 +41,8 @@ namespace ACSVM
 
       void exec();
 
+      void freeHubScope(HubScope *scope);
+
       HubScope *getHubScope(Word id);
 
       bool hasActiveThread() const;
@@ -89,6 +91,8 @@ namespace ACSVM
       ~HubScope();
 
       void exec();
+
+      void freeMapScope(MapScope *scope);
 
       MapScope *getMapScope(Word id);
 

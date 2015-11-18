@@ -130,6 +130,15 @@ namespace ACSVM
    }
 
    //
+   // GlobalScope::freeHubScope
+   //
+   void GlobalScope::freeHubScope(HubScope *scope)
+   {
+      pd->scopes.unlink(scope);
+      delete scope;
+   }
+
+   //
    // GlobalScope::getHubScope
    //
    HubScope *GlobalScope::getHubScope(Word scopeID)
@@ -304,6 +313,15 @@ namespace ACSVM
          if(scope.active)
             scope.exec();
       }
+   }
+
+   //
+   // HubScope::freeMapScope
+   //
+   void HubScope::freeMapScope(MapScope *scope)
+   {
+      pd->scopes.unlink(scope);
+      delete scope;
    }
 
    //

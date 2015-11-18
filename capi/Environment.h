@@ -166,6 +166,9 @@ void ACSVM_Environment_CollectStrings(ACSVM_Environment *env);
 
 void ACSVM_Environment_Exec(ACSVM_Environment *env);
 
+void ACSVM_Environment_FreeGlobalScope(ACSVM_Environment *env, ACSVM_GlobalScope *scope);
+void ACSVM_Environment_FreeModule(ACSVM_Environment *env, ACSVM_Module *module);
+
 ACSVM_Word         ACSVM_Environment_GetBranchLimit(ACSVM_Environment const *env);
 void              *ACSVM_Environment_GetData(ACSVM_Environment const *env);
 ACSVM_GlobalScope *ACSVM_Environment_GetGlobalScope(ACSVM_Environment *env, ACSVM_Word id);

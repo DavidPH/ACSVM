@@ -315,6 +315,24 @@ namespace ACSVM
    }
 
    //
+   // Environment::freeGlobalScope
+   //
+   void Environment::freeGlobalScope(GlobalScope *scope)
+   {
+      pd->scopes.unlink(scope);
+      delete scope;
+   }
+
+   //
+   // Environment::freeModule
+   //
+   void Environment::freeModule(Module *module)
+   {
+      pd->modules.unlink(module);
+      delete module;
+   }
+
+   //
    // Environment::freeThread
    //
    void Environment::freeThread(Thread *thread)

@@ -26,6 +26,15 @@ extern "C"
 //
 
 //
+// ACSVM_GlobalScope_FreeHubScope
+//
+void ACSVM_GlobalScope_FreeHubScope(ACSVM_GlobalScope *scope, ACSVM_HubScope *scopeHub)
+{
+   reinterpret_cast<ACSVM::GlobalScope *>(scope)
+      ->freeHubScope(reinterpret_cast<ACSVM::HubScope *>(scopeHub));
+}
+
+//
 // ACSVM_GlobalScope_GetGblArr
 //
 ACSVM_Array *ACSVM_GlobalScope_GetGblArr(ACSVM_GlobalScope *scope, ACSVM_Word idx)
@@ -92,6 +101,15 @@ void ACSVM_GlobalScope_SetActive(ACSVM_GlobalScope *scope, bool active)
 void ACSVM_GlobalScope_SetGblReg(ACSVM_GlobalScope *scope, ACSVM_Word idx, ACSVM_Word reg)
 {
    reinterpret_cast<ACSVM::GlobalScope *>(scope)->regV[idx] = reg;
+}
+
+//
+// ACSVM_HubScope_FreeMapScope
+//
+void ACSVM_HubScope_FreeMapScope(ACSVM_HubScope *scope, ACSVM_MapScope *scopeMap)
+{
+   reinterpret_cast<ACSVM::HubScope *>(scope)
+      ->freeMapScope(reinterpret_cast<ACSVM::MapScope *>(scopeMap));
 }
 
 //
