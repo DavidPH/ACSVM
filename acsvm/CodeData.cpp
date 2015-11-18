@@ -41,6 +41,19 @@ namespace ACSVM
    //
    // CodeDataACS0 constructor
    //
+   CodeDataACS0::CodeDataACS0(char const *args_, Word stackArgC_, Word transFunc_) :
+      code     {CodeACS0::None},
+      args     {args_},
+      argc     {CountArgs(args_)},
+      stackArgC{stackArgC_},
+      transCode{argc ? Code::CallFunc_Lit : Code::CallFunc},
+      transFunc{transFunc_}
+   {
+   }
+
+   //
+   // CodeDataACS0 constructor
+   //
    CodeDataACS0::CodeDataACS0(CodeACS0 code_, char const *args_,
       Code transCode_, Word stackArgC_, Func transFunc_) :
       code     {code_},

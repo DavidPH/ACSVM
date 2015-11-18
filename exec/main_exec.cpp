@@ -155,9 +155,9 @@ Environment::Environment() :
    ACSVM::Word funcTestSave       = addCallFunc(CF_TestSave);
    ACSVM::Word funcTimer          = addCallFunc(CF_Timer);
 
-   addCodeDataACS0( 86, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
-   addCodeDataACS0( 93, {"", ACSVM::Code::CallFunc, 0, funcTimer});
-   addCodeDataACS0(270, {"", ACSVM::Code::CallFunc, 0, funcEndPrint});
+   addCodeDataACS0( 86, {"", 0, funcEndPrint});
+   addCodeDataACS0( 93, {"", 0, funcTimer});
+   addCodeDataACS0(270, {"", 0, funcEndPrint});
 
    addFuncDataACS0(0x10000, funcTestSave);
    addFuncDataACS0(0x10001, funcCollectStrings);

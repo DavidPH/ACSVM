@@ -49,6 +49,7 @@ namespace ACSVM
    public:
       CodeDataACS0(char const *args, Code transCode, Word stackArgC,
          Word transFunc = 0);
+      CodeDataACS0(char const *args, Word stackArgC, Word transFunc);
       CodeDataACS0(CodeACS0 code, char const *args, Code transCode,
          Word stackArgC, Func transFunc);
 
