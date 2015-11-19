@@ -92,6 +92,9 @@ namespace ACSVM
       String *getString(char const *first, char const *last)
          {return &stringTable[{first, last}];}
 
+      String *getString(char const *str)
+         {return getString(str, std::strlen(str));}
+
       String *getString(char const *str, std::size_t len)
          {return &stringTable[{str, len}];}
 
