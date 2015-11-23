@@ -37,9 +37,9 @@ int ACSVM_Buffer::overflow(int c)
 }
 
 //
-// ACSVM_Buffer::underflow
+// ACSVM_Buffer::uflow
 //
-int ACSVM_Buffer::underflow()
+int ACSVM_Buffer::uflow()
 {
    return std::fgetc(stream);
 }

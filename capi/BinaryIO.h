@@ -47,7 +47,7 @@ public:
 protected:
    virtual int overflow(int c);
 
-   virtual int underflow();
+   virtual int uflow();
 };
 
 //
