@@ -425,13 +425,13 @@ namespace ACSVM
    //
    // Environment::getModule
    //
-   Module *Environment::getModule(ModuleName &&name)
+   Module *Environment::getModule(ModuleName const &name)
    {
       auto module = pd->modules.find(name);
 
       if(!module)
       {
-         module = new Module{this, std::move(name)};
+         module = new Module{this, name};
          pd->modules.insert(module);
          loadModule(module);
       }
