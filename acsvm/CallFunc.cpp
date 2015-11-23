@@ -19,6 +19,7 @@
 #include "Scope.hpp"
 #include "Thread.hpp"
 
+#include <cctype>
 #include <cinttypes>
 
 

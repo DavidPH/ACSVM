@@ -22,6 +22,7 @@
 #include "Script.hpp"
 #include "Thread.hpp"
 
+#include <algorithm>
 #include <unordered_set>
 #include <vector>
 

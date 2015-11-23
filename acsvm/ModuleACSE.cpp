@@ -21,6 +21,8 @@
 #include "Jump.hpp"
 #include "Script.hpp"
 
+#include <algorithm>
+
 
 //----------------------------------------------------------------------------|
 // Extern Functions                                                           |
