@@ -181,7 +181,7 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.get();
+      active = in.get() != '\0';
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getHubScope(ReadVLN<Word>(in))->loadState(in);
@@ -367,7 +367,7 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.get();
+      active = in.get() != '\0';
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getMapScope(ReadVLN<Word>(in))->loadState(in);
@@ -729,7 +729,7 @@ namespace ACSVM
       reset();
 
       env->readScriptActions(in, scriptAction);
-      active = in.get();
+      active = in.get() != '\0';
       loadModules(in);
       loadThreads(in);
    }
