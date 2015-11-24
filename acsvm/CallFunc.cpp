@@ -321,7 +321,7 @@ namespace ACSVM
    {
       String *name = thread->scopeMap->getString(argV[0]);
 
-      thread->dataStk.push(thread->scopeMap->scriptStartResult(name, {argV+2, argC-2}));
+      thread->dataStk.push(thread->scopeMap->scriptStartResult(name, {argV+1, argC-1}));
       return false;
    }
 
