@@ -32,6 +32,8 @@ add_library(acsvm-capi ${ACSVM_SHARED_DECL}
    BinaryIO.h
    Environment.cpp
    Environment.h
+   Floats.cpp
+   Floats.h
    Module.cpp
    Module.h
    PrintBuf.cpp
@@ -45,7 +47,7 @@ add_library(acsvm-capi ${ACSVM_SHARED_DECL}
    Types.h
 )
 
-target_link_libraries(acsvm-capi acsvm)
+target_link_libraries(acsvm-capi acsvm-util)
 
 ACSVM_INSTALL_LIB(acsvm-capi)
 

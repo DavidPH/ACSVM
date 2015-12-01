@@ -19,6 +19,8 @@
 #include "acsvm/Script.hpp"
 #include "acsvm/Thread.hpp"
 
+#include "util/Floats.hpp"
+
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -162,6 +164,17 @@ Environment::Environment() :
    addFuncDataACS0(0x10000, funcTestSave);
    addFuncDataACS0(0x10001, funcCollectStrings);
    addFuncDataACS0(0x10002, funcDumpLocals);
+
+   addFuncDataACS0(0x10100, addCallFunc(ACSVM::CF_AddF_W1));
+   addFuncDataACS0(0x10101, addCallFunc(ACSVM::CF_DivF_W1));
+   addFuncDataACS0(0x10102, addCallFunc(ACSVM::CF_MulF_W1));
+   addFuncDataACS0(0x10103, addCallFunc(ACSVM::CF_SubF_W1));
+   addFuncDataACS0(0x10104, addCallFunc(ACSVM::CF_AddF_W2));
+   addFuncDataACS0(0x10105, addCallFunc(ACSVM::CF_DivF_W2));
+   addFuncDataACS0(0x10106, addCallFunc(ACSVM::CF_MulF_W2));
+   addFuncDataACS0(0x10107, addCallFunc(ACSVM::CF_SubF_W2));
+   addFuncDataACS0(0x10108, addCallFunc(ACSVM::CF_PrintFloat));
+   addFuncDataACS0(0x10109, addCallFunc(ACSVM::CF_PrintDouble));
 }
 
 //
