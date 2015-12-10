@@ -38,7 +38,7 @@ namespace ACSVM
    //
    struct GlobalScope::PrivData
    {
-      HashMap<Word, HubScope, &HubScope::hashLink, &HubScope::id> scopes;
+      HashMapKeyMem<Word, HubScope, &HubScope::id, &HubScope::hashLink> scopes;
    };
 
    //
@@ -46,7 +46,7 @@ namespace ACSVM
    //
    struct HubScope::PrivData
    {
-      HashMap<Word, MapScope, &MapScope::hashLink, &MapScope::id> scopes;
+      HashMapKeyMem<Word, MapScope, &MapScope::id, &MapScope::hashLink> scopes;
    };
 
    //
