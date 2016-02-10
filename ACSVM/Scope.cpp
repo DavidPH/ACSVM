@@ -109,6 +109,22 @@ namespace ACSVM
    }
 
    //
+   // GlobalScope::countActiveThread
+   //
+   std::size_t GlobalScope::countActiveThread() const
+   {
+      std::size_t n = 0;
+
+      for(auto &scope : pd->scopes)
+      {
+         if(scope.active)
+            n += scope.countActiveThread();
+      }
+
+      return n;
+   }
+
+   //
    // GlobalScope::exec
    //
    void GlobalScope::exec()
@@ -292,6 +308,22 @@ namespace ACSVM
    {
       reset();
       delete pd;
+   }
+
+   //
+   // HubScope::countActiveThread
+   //
+   std::size_t HubScope::countActiveThread() const
+   {
+      std::size_t n = 0;
+
+      for(auto &scope : pd->scopes)
+      {
+         if(scope.active)
+            n += scope.countActiveThread();
+      }
+
+      return n;
    }
 
    //
@@ -562,6 +594,14 @@ namespace ACSVM
 
       for(auto &scope : pd->scopes)
          scope.val.import();
+   }
+
+   //
+   // MapScope::countActiveThread
+   //
+   std::size_t MapScope::countActiveThread() const
+   {
+      return threadActive.size();
    }
 
    //

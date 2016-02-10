@@ -54,6 +54,7 @@ protected:
 // Static Objects                                                             |
 //
 
+static bool NeedExit        = false;
 static bool NeedTestSaveEnv = false;
 
 
@@ -98,6 +99,16 @@ static bool CF_EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
    std::cout << thread->printBuf.data() << '\n';
    thread->printBuf.drop();
    return false;
+}
+
+//
+// CF_Exit
+//
+static bool CF_Exit(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
+{
+   NeedExit = true;
+   thread->state = ACSVM::ThreadState::Stopped;
+   return true;
 }
 
 //
@@ -154,6 +165,7 @@ Environment::Environment() :
    ACSVM::Word funcCollectStrings = addCallFunc(CF_CollectStrings);
    ACSVM::Word funcDumpLocals     = addCallFunc(CF_DumpLocals);
    ACSVM::Word funcEndPrint       = addCallFunc(CF_EndPrint);
+   ACSVM::Word funcExit           = addCallFunc(CF_Exit);
    ACSVM::Word funcTestSave       = addCallFunc(CF_TestSave);
    ACSVM::Word funcTimer          = addCallFunc(CF_Timer);
 
@@ -164,6 +176,7 @@ Environment::Environment() :
    addFuncDataACS0(0x10000, funcTestSave);
    addFuncDataACS0(0x10001, funcCollectStrings);
    addFuncDataACS0(0x10002, funcDumpLocals);
+   addFuncDataACS0(0x10003, funcExit);
 
    addFuncDataACS0(0x10100, addCallFunc(ACSVM::CF_AddF_W1));
    addFuncDataACS0(0x10101, addCallFunc(ACSVM::CF_DivF_W1));
@@ -213,7 +226,7 @@ int main(int argc, char *argv[])
    }
 
    // Execute until all threads terminate.
-   while(env.hasActiveThread())
+   while(!NeedExit && env.hasActiveThread())
    {
       std::chrono::duration<double> rate{1.0 / 35};
       auto time = std::chrono::steady_clock::now() + rate;

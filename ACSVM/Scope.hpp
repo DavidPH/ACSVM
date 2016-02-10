@@ -39,6 +39,8 @@ namespace ACSVM
       GlobalScope(Environment *env, Word id);
       ~GlobalScope();
 
+      std::size_t countActiveThread() const;
+
       void exec();
 
       void freeHubScope(HubScope *scope);
@@ -89,6 +91,8 @@ namespace ACSVM
       HubScope(HubScope const &) = delete;
       HubScope(GlobalScope *global, Word id);
       ~HubScope();
+
+      std::size_t countActiveThread() const;
 
       void exec();
 
@@ -165,6 +169,8 @@ namespace ACSVM
       ~MapScope();
 
       void addModules(Module *const *moduleV, std::size_t moduleC);
+
+      std::size_t countActiveThread() const;
 
       void exec();
 
