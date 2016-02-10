@@ -14,7 +14,7 @@
 #define ACSVM__CAPI__Types_H__
 
 #ifdef __cplusplus
-#include "../acsvm/Types.hpp"
+#include "../ACSVM/Types.hpp"
 #endif
 
 #include <stdarg.h>

@@ -10,13 +10,13 @@
 //
 //----------------------------------------------------------------------------
 
-#include "capi/BinaryIO.h"
-#include "capi/Environment.h"
-#include "capi/Module.h"
-#include "capi/PrintBuf.h"
-#include "capi/Scope.h"
-#include "capi/String.h"
-#include "capi/Thread.h"
+#include "CAPI/BinaryIO.h"
+#include "CAPI/Environment.h"
+#include "CAPI/Module.h"
+#include "CAPI/PrintBuf.h"
+#include "CAPI/Scope.h"
+#include "CAPI/String.h"
+#include "CAPI/Thread.h"
 
 #include <errno.h>
 #include <stdio.h>

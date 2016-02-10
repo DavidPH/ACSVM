@@ -16,7 +16,7 @@
 #include "Types.h"
 
 #ifdef __cplusplus
-#include "../acsvm/Thread.hpp"
+#include "../ACSVM/Thread.hpp"
 #endif
 
 

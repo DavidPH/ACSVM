@@ -16,7 +16,7 @@
 #include "Script.h"
 
 #ifdef __cplusplus
-#include "../acsvm/Scope.hpp"
+#include "../ACSVM/Scope.hpp"
 #endif
 
 

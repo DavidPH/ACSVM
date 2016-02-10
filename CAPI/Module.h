@@ -6,17 +6,17 @@
 //
 //-----------------------------------------------------------------------------
 //
-// Scripts.
+// Modules.
 //
 //-----------------------------------------------------------------------------
 
-#ifndef ACSVM__CAPI__Script_H__
-#define ACSVM__CAPI__Script_H__
+#ifndef ACSVM__CAPI__Module_H__
+#define ACSVM__CAPI__Module_H__
 
 #include "Types.h"
 
 #ifdef __cplusplus
-#include "acsvm/Script.hpp"
+#include "../ACSVM/Module.hpp"
 #endif
 
 
@@ -29,35 +29,15 @@ extern "C" {
 //
 
 //
-// ACSVM_ScriptType
+// ACSVM_ModuleName
 //
-typedef enum ACSVM_ScriptType
-{
-   ACSVM_ScriptType_Closed,
-   ACSVM_ScriptType_BlueReturn,
-   ACSVM_ScriptType_Death,
-   ACSVM_ScriptType_Disconnect,
-   ACSVM_ScriptType_Enter,
-   ACSVM_ScriptType_Event,
-   ACSVM_ScriptType_Lightning,
-   ACSVM_ScriptType_Open,
-   ACSVM_ScriptType_Pickup,
-   ACSVM_ScriptType_RedReturn,
-   ACSVM_ScriptType_Respawn,
-   ACSVM_ScriptType_Return,
-   ACSVM_ScriptType_Unloading,
-   ACSVM_ScriptType_WhiteReturn,
-} ACSVM_ScriptType;
-
+// ACSVM::ModuleName mirror.
 //
-// ACSVM_ScriptName
-//
-// ACSVM::ScriptName mirror.
-//
-struct ACSVM_ScriptName
+struct ACSVM_ModuleName
 {
    ACSVM_String *s;
-   ACSVM_Word    i;
+   void         *p;
+   size_t        i;
 };
 
 
@@ -65,9 +45,14 @@ struct ACSVM_ScriptName
 // Extern Functions                                                           |
 //
 
+ACSVM_ModuleName ACSVM_Module_GetName(ACSVM_Module const *module);
+
+// Returns false if reading fails.
+bool ACSVM_Module_ReadBytecode(ACSVM_Module *module, ACSVM_Byte const *data, size_t size);
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif//ACSVM__CAPI__Script_H__
+#endif//ACSVM__CAPI__Module_H__
 

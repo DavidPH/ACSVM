@@ -13,7 +13,7 @@
 #ifndef ACSVM__Util__Floats_H__
 #define ACSVM__Util__Floats_H__
 
-#include "../acsvm/Types.hpp"
+#include "../ACSVM/Types.hpp"
 
 #include <array>
 #include <cmath>

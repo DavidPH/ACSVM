@@ -16,7 +16,7 @@
 #include "Types.h"
 
 #ifdef __cplusplus
-#include "../acsvm/Code.hpp"
+#include "../ACSVM/Code.hpp"
 #endif
 
 
@@ -32,7 +32,7 @@
 typedef enum ACSVM_Code
 {
    #define ACSVM_CodeList(name, ...) ACSVM_Code_##name,
-   #include "../acsvm/CodeList.hpp"
+   #include "../ACSVM/CodeList.hpp"
 
    ACSVM_Code_None
 } ACSVM_Code;
@@ -45,7 +45,7 @@ typedef enum ACSVM_Code
 typedef enum ACSVM_Func
 {
    #define ACSVM_FuncList(name) ACSVM_Func_##name,
-   #include "../acsvm/CodeList.hpp"
+   #include "../ACSVM/CodeList.hpp"
 
    ACSVM_Func_None
 } ACSVM_Func;

@@ -16,7 +16,7 @@
 #include "Code.h"
 
 #ifdef __cplusplus
-#include "../acsvm/Environment.hpp"
+#include "../ACSVM/Environment.hpp"
 
 #include <vector>
 #endif

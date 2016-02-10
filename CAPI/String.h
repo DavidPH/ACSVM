@@ -16,7 +16,7 @@
 #include "Types.h"
 
 #ifdef __cplusplus
-#include "../acsvm/String.hpp"
+#include "../ACSVM/String.hpp"
 #endif
 
 

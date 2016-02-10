@@ -16,7 +16,7 @@
 #include "Types.h"
 
 #ifdef __cplusplus
-#include "../acsvm/Array.hpp"
+#include "../ACSVM/Array.hpp"
 #endif
 
 

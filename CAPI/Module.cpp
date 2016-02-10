@@ -14,7 +14,7 @@
 
 #include "Environment.h"
 
-#include "../acsvm/Error.hpp"
+#include "ACSVM/Error.hpp"
 
 
 extern "C"

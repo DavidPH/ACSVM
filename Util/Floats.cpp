@@ -12,7 +12,7 @@
 
 #include "Floats.hpp"
 
-#include "acsvm/Thread.hpp"
+#include "ACSVM/Thread.hpp"
 
 #include <cstdio>
 

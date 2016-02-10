@@ -16,8 +16,8 @@
 #include "Module.h"
 #include "Thread.h"
 
-#include "../acsvm/CodeData.hpp"
-#include "../acsvm/Error.hpp"
+#include "ACSVM/CodeData.hpp"
+#include "ACSVM/Error.hpp"
 
 
 extern "C"
