@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2016 David Hill
 //
 // See COPYING for license information.
 //
@@ -276,6 +276,18 @@ ACSVM_Word ACSVM_MapScope_ScriptStartType(ACSVM_MapScope *scope,
    auto type = static_cast<ACSVM::ScriptType>(type_);
    return reinterpret_cast<ACSVM::MapScope *>(scope)
       ->scriptStartType(type, {argV, argC, info, func});
+}
+
+//
+// ACSVM_MapScope_ScriptStartTypeForced
+//
+ACSVM_Word ACSVM_MapScope_ScriptStartTypeForced(ACSVM_MapScope *scope,
+   ACSVM_ScriptType type_, ACSVM_Word const *argV, ACSVM_Word argC,
+   ACSVM_ThreadInfo const *info, void (*func)(void *thread))
+{
+   auto type = static_cast<ACSVM::ScriptType>(type_);
+   return reinterpret_cast<ACSVM::MapScope *>(scope)
+      ->scriptStartTypeForced(type, {argV, argC, info, func});
 }
 
 //

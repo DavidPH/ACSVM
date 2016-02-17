@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2016 David Hill
 //
 // See COPYING for license information.
 //
@@ -88,6 +88,10 @@ ACSVM_Word ACSVM_MapScope_ScriptStartResult(ACSVM_MapScope *scope,
    ACSVM_ThreadInfo const *info, void (*func)(void *thread));
 
 ACSVM_Word ACSVM_MapScope_ScriptStartType(ACSVM_MapScope *scope,
+   ACSVM_ScriptType type, ACSVM_Word const *argV, ACSVM_Word argC,
+   ACSVM_ThreadInfo const *info, void (*func)(void *thread));
+
+ACSVM_Word ACSVM_MapScope_ScriptStartTypeForced(ACSVM_MapScope *scope,
    ACSVM_ScriptType type, ACSVM_Word const *argV, ACSVM_Word argC,
    ACSVM_ThreadInfo const *info, void (*func)(void *thread));
 

@@ -839,6 +839,7 @@ Synopsis:
     Word scriptStartResult(Script *script, ScriptStartInfo const &info);
     Word scriptStartResult(ScriptName name, ScriptStartInfo const &info);
     Word scriptStartType(ScriptType type, ScriptStartInfo const &info);
+    Word scriptStartTypeForced(ScriptType type, ScriptStartInfo const &info);
     bool scriptStop(Script *script);
     bool scriptStop(ScriptName name, ScopeID scope);
 
