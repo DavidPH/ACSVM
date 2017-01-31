@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2016 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -13,6 +13,7 @@
 #include "Scope.h"
 
 #include "Environment.h"
+#include "Script.h"
 #include "Thread.h"
 
 #include "ACSVM/Action.hpp"
@@ -270,10 +271,9 @@ ACSVM_Word ACSVM_MapScope_ScriptStartResult(ACSVM_MapScope *scope,
 // ACSVM_MapScope_ScriptStartType
 //
 ACSVM_Word ACSVM_MapScope_ScriptStartType(ACSVM_MapScope *scope,
-   ACSVM_ScriptType type_, ACSVM_Word const *argV, ACSVM_Word argC,
+   ACSVM_Word type, ACSVM_Word const *argV, ACSVM_Word argC,
    ACSVM_ThreadInfo const *info, void (*func)(void *thread))
 {
-   auto type = static_cast<ACSVM::ScriptType>(type_);
    return reinterpret_cast<ACSVM::MapScope *>(scope)
       ->scriptStartType(type, {argV, argC, info, func});
 }
@@ -282,10 +282,9 @@ ACSVM_Word ACSVM_MapScope_ScriptStartType(ACSVM_MapScope *scope,
 // ACSVM_MapScope_ScriptStartTypeForced
 //
 ACSVM_Word ACSVM_MapScope_ScriptStartTypeForced(ACSVM_MapScope *scope,
-   ACSVM_ScriptType type_, ACSVM_Word const *argV, ACSVM_Word argC,
+   ACSVM_Word type, ACSVM_Word const *argV, ACSVM_Word argC,
    ACSVM_ThreadInfo const *info, void (*func)(void *thread))
 {
-   auto type = static_cast<ACSVM::ScriptType>(type_);
    return reinterpret_cast<ACSVM::MapScope *>(scope)
       ->scriptStartTypeForced(type, {argV, argC, info, func});
 }

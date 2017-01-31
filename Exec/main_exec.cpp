@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -148,7 +148,7 @@ static void LoadModules(Environment &env, char const *const *argv, std::size_t a
    map->addModules(modules.data(), modules.size());
 
    // Start Open scripts.
-   map->scriptStartType(ACSVM::ScriptType::Open, {});
+   map->scriptStartType(1, {});
 }
 
 

@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -181,7 +181,7 @@ static void LoadModules(ACSVM_Environment *env, char **argv, int argc)
    ACSVM_MapScope_AddModules(map, moduleV, moduleC);
 
    // Start Open scripts.
-   ACSVM_MapScope_ScriptStartType(map, ACSVM_ScriptType_Open, NULL, 0, NULL, NULL);
+   ACSVM_MapScope_ScriptStartType(map, 1, NULL, 0, NULL, NULL);
 }
 
 

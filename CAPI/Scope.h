@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2016 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -13,7 +13,7 @@
 #ifndef ACSVM__CAPI__Scope_H__
 #define ACSVM__CAPI__Scope_H__
 
-#include "Script.h"
+#include "Types.h"
 
 #ifdef __cplusplus
 #include "../ACSVM/Scope.hpp"
@@ -88,11 +88,11 @@ ACSVM_Word ACSVM_MapScope_ScriptStartResult(ACSVM_MapScope *scope,
    ACSVM_ThreadInfo const *info, void (*func)(void *thread));
 
 ACSVM_Word ACSVM_MapScope_ScriptStartType(ACSVM_MapScope *scope,
-   ACSVM_ScriptType type, ACSVM_Word const *argV, ACSVM_Word argC,
+   ACSVM_Word type, ACSVM_Word const *argV, ACSVM_Word argC,
    ACSVM_ThreadInfo const *info, void (*func)(void *thread));
 
 ACSVM_Word ACSVM_MapScope_ScriptStartTypeForced(ACSVM_MapScope *scope,
-   ACSVM_ScriptType type, ACSVM_Word const *argV, ACSVM_Word argC,
+   ACSVM_Word type, ACSVM_Word const *argV, ACSVM_Word argC,
    ACSVM_ThreadInfo const *info, void (*func)(void *thread));
 
 bool ACSVM_MapScope_ScriptStop(ACSVM_MapScope *scope,
