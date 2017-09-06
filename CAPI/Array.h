@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -37,13 +37,13 @@ ACSVM_Word ACSVM_Array_Find(ACSVM_Array const *arr, ACSVM_Word idx);
 
 ACSVM_Word *ACSVM_Array_Get(ACSVM_Array *arr, ACSVM_Word idx);
 
-bool ACSVM_Array_LoadState(ACSVM_Array *arr, ACSVM_IStream *in);
+bool ACSVM_Array_LoadState(ACSVM_Array *arr, ACSVM_Serial *in);
 
 void ACSVM_Array_LockStrings(ACSVM_Array const *arr, ACSVM_Environment *env);
 
 void ACSVM_Array_RefStrings(ACSVM_Array const *arr, ACSVM_Environment *env);
 
-void ACSVM_Array_SaveState(ACSVM_Array const *arr, ACSVM_OStream *out);
+void ACSVM_Array_SaveState(ACSVM_Array const *arr, ACSVM_Serial *out);
 
 void ACSVM_Array_UnlockStrings(ACSVM_Array const *arr, ACSVM_Environment *env);
 

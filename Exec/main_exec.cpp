@@ -17,6 +17,7 @@
 #include "ACSVM/Module.hpp"
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Script.hpp"
+#include "ACSVM/Serial.hpp"
 #include "ACSVM/Thread.hpp"
 
 #include "Util/Floats.hpp"
@@ -236,8 +237,21 @@ int main(int argc, char *argv[])
       if(NeedTestSaveEnv)
       {
          std::stringstream buf;
-         env.saveState(buf);
-         env.loadState(buf);
+
+         {
+            ACSVM::Serial out{static_cast<std::ostream &>(buf)};
+            out.signs = true;
+            out.saveHead();
+            env.saveState(out);
+            out.saveTail();
+         }
+
+         {
+            ACSVM::Serial in{static_cast<std::istream &>(buf)};
+            in.loadHead();
+            env.loadState(in);
+            in.loadTail();
+         }
 
          NeedTestSaveEnv = false;
       }

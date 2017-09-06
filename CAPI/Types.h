@@ -51,6 +51,7 @@ typedef struct ACSVM_PrintBuf     ACSVM_PrintBuf;
 typedef struct ACSVM_ScopeID      ACSVM_ScopeID;
 typedef struct ACSVM_Script       ACSVM_Script;
 typedef struct ACSVM_ScriptName   ACSVM_ScriptName;
+typedef struct ACSVM_Serial       ACSVM_Serial;
 typedef struct ACSVM_String       ACSVM_String;
 typedef struct ACSVM_StringTable  ACSVM_StringTable;
 typedef struct ACSVM_Thread       ACSVM_Thread;

@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -68,12 +68,12 @@ ACSVM::ThreadInfo const *ACSVM_Thread::getInfo() const
 //
 // ACSVM_Thread::loadState
 //
-void ACSVM_Thread::loadState(std::istream &in)
+void ACSVM_Thread::loadState(ACSVM::Serial &in)
 {
    ACSVM::Thread::loadState(in);
 
    if(funcs.loadState)
-      funcs.loadState(this, reinterpret_cast<ACSVM_IStream *>(&in));
+      funcs.loadState(this, reinterpret_cast<ACSVM_Serial *>(&in));
 }
 
 //
@@ -101,12 +101,12 @@ void ACSVM_Thread::refStrings() const
 //
 // ACSVM_Thread::saveState
 //
-void ACSVM_Thread::saveState(std::ostream &out) const
+void ACSVM_Thread::saveState(ACSVM::Serial &out) const
 {
    ACSVM::Thread::saveState(out);
 
    if(funcs.saveState)
-      funcs.saveState(this, reinterpret_cast<ACSVM_OStream *>(&out));
+      funcs.saveState(this, reinterpret_cast<ACSVM_Serial *>(&out));
 }
 
 //

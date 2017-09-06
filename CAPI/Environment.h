@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -48,6 +48,10 @@ typedef struct ACSVM_EnvironmentFuncs
    // normally.
    void (*readError)(ACSVM_Environment *env, char const *what);
 
+   // Called if an ACSVM::SerialError is caught. This function may return
+   // normally, but the VM state is indeterminate.
+   void (*serialError)(ACSVM_Environment *env, char const *what);
+
    // public
 
    void (*ctor)(ACSVM_Environment *env);
@@ -62,7 +66,7 @@ typedef struct ACSVM_EnvironmentFuncs
       char const *str, size_t len);
 
    // Called after base class's.
-   void (*loadState)(ACSVM_Environment *env, ACSVM_IStream *in);
+   void (*loadState)(ACSVM_Environment *env, ACSVM_Serial *in);
 
    void (*printArray)(ACSVM_Environment const *env, ACSVM_PrintBuf *buf,
       ACSVM_Array const *array, ACSVM_Word index, ACSVM_Word limit);
@@ -70,7 +74,7 @@ typedef struct ACSVM_EnvironmentFuncs
    void (*printKill)(ACSVM_Environment const *env, ACSVM_Thread *thread,
       ACSVM_Word type, ACSVM_Word data);
 
-   ACSVM_ModuleName (*readModuleName)(ACSVM_Environment const *env, ACSVM_IStream *in);
+   ACSVM_ModuleName (*readModuleName)(ACSVM_Environment const *env, ACSVM_Serial *in);
 
    // Called after base class's.
    void (*refStrings)(ACSVM_Environment *env);
@@ -79,9 +83,9 @@ typedef struct ACSVM_EnvironmentFuncs
    void (*resetStrings)(ACSVM_Environment *env);
 
    // Called after base class's.
-   void (*saveState)(ACSVM_Environment const *env, ACSVM_OStream *out);
+   void (*saveState)(ACSVM_Environment const *env, ACSVM_Serial *out);
 
-   void (*writeModuleName)(ACSVM_Environment const *env, ACSVM_OStream *out,
+   void (*writeModuleName)(ACSVM_Environment const *env, ACSVM_Serial *out,
       ACSVM_ModuleName in);
 
    // protected
@@ -114,22 +118,22 @@ public:
 
    virtual ACSVM::ModuleName getModuleName(char const *str, size_t len);
 
-   virtual void loadState(std::istream &in);
+   virtual void loadState(ACSVM::Serial &in);
 
    virtual void printArray(ACSVM::PrintBuf &buf, ACSVM::Array const &array,
       ACSVM::Word index, ACSVM::Word limit);
 
    virtual void printKill(ACSVM::Thread *thread, ACSVM::Word type, ACSVM::Word data);
 
-   virtual ACSVM::ModuleName readModuleName(std::istream &in) const;
+   virtual ACSVM::ModuleName readModuleName(ACSVM::Serial &in) const;
 
    virtual void refStrings();
 
    virtual void resetStrings();
 
-   virtual void saveState(std::ostream &out) const;
+   virtual void saveState(ACSVM::Serial &out) const;
 
-   virtual void writeModuleName(std::ostream &out, ACSVM::ModuleName const &in) const;
+   virtual void writeModuleName(ACSVM::Serial &out, ACSVM::ModuleName const &in) const;
 
    std::vector<ACSVM_CallFunc> callFuncV;
    ACSVM_EnvironmentFuncs      funcs;
@@ -178,9 +182,9 @@ ACSVM_StringTable *ACSVM_Environment_GetStringTable(ACSVM_Environment *env);
 
 bool ACSVM_Environment_HasActiveThread(ACSVM_Environment const *env);
 
-void ACSVM_Environment_LoadState(ACSVM_Environment *env, ACSVM_IStream *in);
+bool ACSVM_Environment_LoadState(ACSVM_Environment *env, ACSVM_Serial *in);
 
-void ACSVM_Environment_SaveState(ACSVM_Environment *env, ACSVM_OStream *out);
+void ACSVM_Environment_SaveState(ACSVM_Environment *env, ACSVM_Serial *out);
 
 void ACSVM_Environment_SetBranchLimit(ACSVM_Environment *env, ACSVM_Word branchLimit);
 void ACSVM_Environment_SetData(ACSVM_Environment *env, void *data);

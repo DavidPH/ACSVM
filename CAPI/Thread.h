@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -54,13 +54,13 @@ typedef struct ACSVM_ThreadFuncs
    void (*ctor)(ACSVM_Thread *env);
    void (*dtor)(ACSVM_Thread *env);
 
-   void (*loadState)(ACSVM_Thread *thread, ACSVM_IStream *in);
+   void (*loadState)(ACSVM_Thread *thread, ACSVM_Serial *in);
 
    void (*lockStrings)(ACSVM_Thread const *thread);
 
    void (*refStrings)(ACSVM_Thread const *thread);
 
-   void (*saveState)(ACSVM_Thread const *thread, ACSVM_OStream *out);
+   void (*saveState)(ACSVM_Thread const *thread, ACSVM_Serial *out);
 
    void (*start)(ACSVM_Thread *thread, void *data);
 
@@ -105,13 +105,13 @@ public:
 
    virtual ACSVM::ThreadInfo const *getInfo() const;
 
-   virtual void loadState(std::istream &in);
+   virtual void loadState(ACSVM::Serial &in);
 
    virtual void lockStrings() const;
 
    virtual void refStrings() const;
 
-   virtual void saveState(std::ostream &out) const;
+   virtual void saveState(ACSVM::Serial &out) const;
 
    virtual void start(ACSVM::Script *script, ACSVM::MapScope *map,
       ACSVM::ThreadInfo const *info, ACSVM::Word const *argV, ACSVM::Word argC);

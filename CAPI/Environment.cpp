@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -18,6 +18,7 @@
 
 #include "ACSVM/CodeData.hpp"
 #include "ACSVM/Error.hpp"
+#include "ACSVM/Serial.hpp"
 
 
 extern "C"
@@ -134,12 +135,12 @@ void ACSVM_Environment::loadModule(ACSVM::Module *module)
 //
 // ACSVM_Environment::loadState
 //
-void ACSVM_Environment::loadState(std::istream &in)
+void ACSVM_Environment::loadState(ACSVM::Serial &in)
 {
    ACSVM::Environment::loadState(in);
 
    if(funcs.loadState)
-      funcs.loadState(this, reinterpret_cast<ACSVM_IStream *>(&in));
+      funcs.loadState(this, reinterpret_cast<ACSVM_Serial *>(&in));
 }
 
 //
@@ -169,12 +170,12 @@ void ACSVM_Environment::printKill(ACSVM::Thread *thread, ACSVM::Word type, ACSVM
 //
 // ACSVM_Environment::readModuleName
 //
-ACSVM::ModuleName ACSVM_Environment::readModuleName(std::istream &in) const
+ACSVM::ModuleName ACSVM_Environment::readModuleName(ACSVM::Serial &in) const
 {
    if(!funcs.readModuleName)
       return ACSVM::Environment::readModuleName(in);
 
-   auto name = funcs.readModuleName(this, reinterpret_cast<ACSVM_IStream *>(&in));
+   auto name = funcs.readModuleName(this, reinterpret_cast<ACSVM_Serial *>(&in));
    return {reinterpret_cast<ACSVM::String *>(name.s), name.p, name.i};
 }
 
@@ -203,23 +204,23 @@ void ACSVM_Environment::resetStrings()
 //
 // ACSVM_Environment::saveState
 //
-void ACSVM_Environment::saveState(std::ostream &out) const
+void ACSVM_Environment::saveState(ACSVM::Serial &out) const
 {
    ACSVM::Environment::saveState(out);
 
    if(funcs.saveState)
-      funcs.saveState(this, reinterpret_cast<ACSVM_OStream *>(&out));
+      funcs.saveState(this, reinterpret_cast<ACSVM_Serial *>(&out));
 }
 
 //
 // ACSVM_Environment::writeModuleName
 //
-void ACSVM_Environment::writeModuleName(std::ostream &out, ACSVM::ModuleName const &in) const
+void ACSVM_Environment::writeModuleName(ACSVM::Serial &out, ACSVM::ModuleName const &in) const
 {
    if(!funcs.writeModuleName)
       return ACSVM::Environment::writeModuleName(out, in);
 
-   funcs.writeModuleName(this, reinterpret_cast<ACSVM_OStream *>(&out),
+   funcs.writeModuleName(this, reinterpret_cast<ACSVM_Serial *>(&out),
       {reinterpret_cast<ACSVM_String *>(in.s), in.p, in.i});
 }
 
@@ -422,25 +423,35 @@ bool ACSVM_Environment_HasActiveThread(ACSVM_Environment const *env)
 //
 // ACSVM_Environment_LoadState
 //
-void ACSVM_Environment_LoadState(ACSVM_Environment *env, ACSVM_IStream *in)
+bool ACSVM_Environment_LoadState(ACSVM_Environment *env, ACSVM_Serial *in)
 {
    try
    {
-      env->loadState(reinterpret_cast<std::istream &>(*in));
+      env->loadState(*reinterpret_cast<ACSVM::Serial *>(in));
+      return true;
+   }
+   catch(ACSVM::SerialError const &e)
+   {
+      if(env->funcs.serialError)
+         env->funcs.serialError(env, e.what());
+
+      return false;
    }
    catch(std::bad_alloc const &e)
    {
       if(env->funcs.bad_alloc)
          env->funcs.bad_alloc(env, e.what());
+
+      return false;
    }
 }
 
 //
 // ACSVM_Environment_SaveState
 //
-void ACSVM_Environment_SaveState(ACSVM_Environment *env, ACSVM_OStream *out)
+void ACSVM_Environment_SaveState(ACSVM_Environment *env, ACSVM_Serial *out)
 {
-   env->saveState(reinterpret_cast<std::ostream &>(*out));
+   env->saveState(*reinterpret_cast<ACSVM::Serial *>(out));
 }
 
 //

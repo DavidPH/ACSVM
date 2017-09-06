@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -72,12 +72,12 @@ ACSVM_Word *ACSVM_Array_Get(ACSVM_Array *arr, ACSVM_Word idx)
 //
 // ACSVM_Array_LoadState
 //
-bool ACSVM_Array_LoadState(ACSVM_Array *arr, ACSVM_IStream *in)
+bool ACSVM_Array_LoadState(ACSVM_Array *arr, ACSVM_Serial *in)
 {
    try
    {
       reinterpret_cast<ACSVM::Array *>(arr)->loadState(
-         reinterpret_cast<std::istream &>(*in));
+         *reinterpret_cast<ACSVM::Serial *>(in));
 
       return true;
    }
@@ -106,10 +106,10 @@ void ACSVM_Array_RefStrings(ACSVM_Array const *arr, ACSVM_Environment *env)
 //
 // ACSVM_Array_SaveState
 //
-void ACSVM_Array_SaveState(ACSVM_Array const *arr, ACSVM_OStream *out)
+void ACSVM_Array_SaveState(ACSVM_Array const *arr, ACSVM_Serial *out)
 {
    reinterpret_cast<ACSVM::Array const *>(arr)->saveState(
-      reinterpret_cast<std::ostream &>(*out));
+      *reinterpret_cast<ACSVM::Serial *>(out));
 }
 
 //
