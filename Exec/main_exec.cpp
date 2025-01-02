@@ -1,6 +1,6 @@
 //----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -93,6 +93,22 @@ static bool CF_DumpLocals(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Wor
 }
 
 //
+// CF_DumpStack
+//
+static bool CF_DumpStack(ACSVM::Thread *thread, ACSVM::Word const *argv, ACSVM::Word argc)
+{
+   // Stack info.
+   std::cout << "Stack=" << thread->dataStk.begin() << '+' << thread->dataStk.size() << "\n";
+
+   // Stack values.
+   if(argc >= 1 && argv[0])
+      for(std::size_t i = 0, e = thread->dataStk.size(); i != e; ++i)
+         std::cout << "  [" << i << "]=" << thread->dataStk[i] << '\n';
+
+   return false;
+}
+
+//
 // CF_EndPrint
 //
 static bool CF_EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
@@ -165,6 +181,7 @@ Environment::Environment() :
 {
    ACSVM::Word funcCollectStrings = addCallFunc(CF_CollectStrings);
    ACSVM::Word funcDumpLocals     = addCallFunc(CF_DumpLocals);
+   ACSVM::Word funcDumpStack      = addCallFunc(CF_DumpStack);
    ACSVM::Word funcEndPrint       = addCallFunc(CF_EndPrint);
    ACSVM::Word funcExit           = addCallFunc(CF_Exit);
    ACSVM::Word funcTestSave       = addCallFunc(CF_TestSave);
@@ -178,6 +195,7 @@ Environment::Environment() :
    addFuncDataACS0(0x10001, funcCollectStrings);
    addFuncDataACS0(0x10002, funcDumpLocals);
    addFuncDataACS0(0x10003, funcExit);
+   addFuncDataACS0(0x10004, funcDumpStack);
 
    addFuncDataACS0(0x10100, addCallFunc(ACSVM::CF_AddF_W1));
    addFuncDataACS0(0x10101, addCallFunc(ACSVM::CF_DivF_W1));
