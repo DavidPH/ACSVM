@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -48,7 +48,7 @@ namespace ACSVM
    //
    // ReadData (Word)
    //
-   static void ReadData(std::istream &in, Word &out)
+   static void ReadData(Serial &in, Word &out)
    {
       out = ReadVLN<Word>(in);
    }
@@ -57,9 +57,9 @@ namespace ACSVM
    // ReadData
    //
    template<typename T>
-   static void ReadData(std::istream &in, T *&out)
+   static void ReadData(Serial &in, T *&out)
    {
-      if(in.get())
+      if(in.readByte())
       {
          if(!out) out = new T[1]{};
 
@@ -91,7 +91,7 @@ namespace ACSVM
    //
    // WriteData (Word)
    //
-   static void WriteData(std::ostream &out, Word const &in)
+   static void WriteData(Serial &out, Word const &in)
    {
       WriteVLN(out, in);
    }
@@ -100,17 +100,17 @@ namespace ACSVM
    // WriteData
    //
    template<typename T>
-   static void WriteData(std::ostream &out, T *const &in)
+   static void WriteData(Serial &out, T *const &in)
    {
       if(in)
       {
-         out.put('\1');
+         out.writeByte(1);
 
          for(auto &itr : *in)
             WriteData(out, itr);
       }
       else
-         out.put('\0');
+         out.writeByte(0);
    }
 }
 

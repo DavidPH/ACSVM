@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2020 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -200,7 +200,7 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.in->get() != '\0';
+      active = in.readByte();
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getHubScope(ReadVLN<Word>(in))->loadState(in);
@@ -264,7 +264,7 @@ namespace ACSVM
 
       env->writeScriptActions(out, scriptAction);
 
-      out.out->put(active ? '\1' : '\0');
+      out.writeByte(active);
 
       WriteVLN(out, pd->scopes.size());
       for(auto &scope : pd->scopes)
@@ -410,7 +410,7 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.in->get() != '\0';
+      active = in.readByte();
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getMapScope(ReadVLN<Word>(in))->loadState(in);
@@ -474,7 +474,7 @@ namespace ACSVM
 
       env->writeScriptActions(out, scriptAction);
 
-      out.out->put(active ? '\1' : '\0');
+      out.writeByte(active);
 
       WriteVLN(out, pd->scopes.size());
       for(auto &scope : pd->scopes)
@@ -791,7 +791,7 @@ namespace ACSVM
       in.readSign(Signature::MapScope);
 
       env->readScriptActions(in, scriptAction);
-      active = in.in->get() != '\0';
+      active = in.readByte();
       loadModules(in);
       loadThreads(in);
 
@@ -809,7 +809,7 @@ namespace ACSVM
          thread->link.insert(&threadActive);
          thread->loadState(in);
 
-         if(in.in->get())
+         if(in.readByte())
          {
             auto scrThread = pd->scriptThread.find(thread->script);
             if(scrThread)
@@ -894,7 +894,7 @@ namespace ACSVM
       out.writeSign(Signature::MapScope);
 
       env->writeScriptActions(out, scriptAction);
-      out.out->put(active ? '\1' : '\0');
+      out.writeByte(active);
       saveModules(out);
       saveThreads(out);
 
@@ -912,7 +912,7 @@ namespace ACSVM
          thread.saveState(out);
 
          auto scrThread = pd->scriptThread.find(thread.script);
-         out.out->put(scrThread && *scrThread == &thread ? '\1' : '\0');
+         out.writeByte(scrThread && *scrThread == &thread);
       }
    }
 

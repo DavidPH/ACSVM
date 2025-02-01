@@ -1,6 +1,6 @@
 ##-----------------------------------------------------------------------------
 ##
-## Copyright (C) 2015-2016 David Hill
+## Copyright (C) 2015-2025 David Hill
 ##
 ## See COPYING for license information.
 ##
@@ -177,9 +177,9 @@ include_directories(.)
 
 add_subdirectory(ACSVM)
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/CAPI")
-   add_subdirectory(CAPI)
-endif()
+#if(EXISTS "${CMAKE_SOURCE_DIR}/CAPI")
+#   add_subdirectory(CAPI)
+#endif()
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/Exec")
    add_subdirectory(Exec)

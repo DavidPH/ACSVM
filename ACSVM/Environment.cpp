@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -650,7 +650,7 @@ namespace ACSVM
    //
    ScriptName Environment::readScriptName(Serial &in) const
    {
-      String *s = in.in->get() ? &stringTable[ReadVLN<Word>(in)] : nullptr;
+      String *s = in.readByte() ? &stringTable[ReadVLN<Word>(in)] : nullptr;
       Word    i = ReadVLN<Word>(in);
       return {s, i};
    }
@@ -817,11 +817,11 @@ namespace ACSVM
    {
       if(in.s)
       {
-         out.out->put('\1');
+         out.writeByte(1);
          WriteVLN(out, in.s->idx);
       }
       else
-         out.out->put('\0');
+         out.writeByte(0);
 
       WriteVLN(out, in.i);
    }

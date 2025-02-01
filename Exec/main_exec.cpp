@@ -17,7 +17,7 @@
 #include "ACSVM/Module.hpp"
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Script.hpp"
-#include "ACSVM/Serial.hpp"
+#include "ACSVM/SerialSTD.hpp"
 #include "ACSVM/Thread.hpp"
 
 #include "Util/Floats.hpp"
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
          std::stringstream buf;
 
          {
-            ACSVM::Serial out{static_cast<std::ostream &>(buf)};
+            ACSVM::SerialSTD out{static_cast<std::ostream &>(buf)};
             out.signs = true;
             out.saveHead();
             env.saveState(out);
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
          }
 
          {
-            ACSVM::Serial in{static_cast<std::istream &>(buf)};
+            ACSVM::SerialSTD in{static_cast<std::istream &>(buf)};
             in.loadHead();
             env.loadState(in);
             in.loadTail();

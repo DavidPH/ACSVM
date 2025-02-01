@@ -1,6 +1,6 @@
 ##-----------------------------------------------------------------------------
 ##
-## Copyright (C) 2015-2017 David Hill
+## Copyright (C) 2015-2025 David Hill
 ##
 ## See COPYING for license information.
 ##
@@ -30,7 +30,6 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    Action.hpp
    Array.cpp
    Array.hpp
-   BinaryIO.cpp
    BinaryIO.hpp
    CallFunc.cpp
    CallFunc.hpp
@@ -63,6 +62,8 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    Script.hpp
    Serial.cpp
    Serial.hpp
+   SerialSTD.cpp
+   SerialSTD.hpp
    Stack.hpp
    Store.hpp
    String.cpp
