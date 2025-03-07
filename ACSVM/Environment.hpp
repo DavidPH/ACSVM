@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2025 David Hill
 //
 // See COPYING for license information.
 //
@@ -155,6 +155,9 @@ namespace ACSVM
 
       // Default number of script variables. Default is 20.
       Word scriptLocRegC;
+
+      // If true, delays last an extra tic as in Hexen. Default is false.
+      bool longDelay : 1;
 
 
       // Prints an array to a print buffer, truncating elements of the array to

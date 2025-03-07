@@ -112,6 +112,7 @@ namespace ACSVM
    Environment::Environment() :
       branchLimit  {0},
       scriptLocRegC{ScriptLocRegCDefault},
+      longDelay{false},
 
       funcV{nullptr},
       funcC{0},

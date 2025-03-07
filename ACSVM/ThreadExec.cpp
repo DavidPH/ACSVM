@@ -566,11 +566,11 @@ namespace ACSVM
 
       DeclCase(ScrDelay):
          dataStk.drop();
-         delay = dataStk[0];
+         delay = dataStk[0] + env->longDelay;
          goto exec_intr;
 
       DeclCase(ScrDelay_Lit):
-         delay = *codePtr++;
+         delay = *codePtr++ + env->longDelay;
          goto exec_intr;
 
       DeclCase(ScrHalt):
