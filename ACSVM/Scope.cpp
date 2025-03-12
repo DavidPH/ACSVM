@@ -133,7 +133,7 @@ namespace ACSVM
       // Delegate deferred script actions.
       for(auto itr = scriptAction.begin(), end = scriptAction.end(); itr != end;)
       {
-         auto scope = pd->scopes.find(itr->id.global);
+         auto scope = pd->scopes.find(itr->id.hub);
          if(scope && scope->active)
             itr++->link.relink(&scope->scriptAction);
          else
@@ -343,7 +343,7 @@ namespace ACSVM
       // Delegate deferred script actions.
       for(auto itr = scriptAction.begin(), end = scriptAction.end(); itr != end;)
       {
-         auto scope = pd->scopes.find(itr->id.global);
+         auto scope = pd->scopes.find(itr->id.map);
          if(scope && scope->active)
             itr++->link.relink(&scope->scriptAction);
          else
