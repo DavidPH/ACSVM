@@ -31,6 +31,8 @@ add_executable(acsvm-exec
 
 target_link_libraries(acsvm-exec acsvm-util)
 
+ACSVM_INSTALL_EXE(acsvm-exec)
+
 ##
 ## acsvm-execc
 ##
