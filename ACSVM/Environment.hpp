@@ -149,6 +149,12 @@ namespace ACSVM
 
       StringTable stringTable;
 
+      // Used when a deferred script is started. Default is null.
+      ScriptStartFunc funcScriptStartDeferred;
+
+      // Used when a deferred forced script is started. Default is null.
+      ScriptStartFunc funcScriptStartForcedDeferred;
+
       // Number of branches allowed per call to Thread::exec. Default of 0
       // means no limit.
       Word branchLimit;

@@ -638,11 +638,13 @@ namespace ACSVM
          if(script) switch(action->action)
          {
          case ScriptAction::Start:
-            scriptStart(script, {action->argV.data(), action->argV.size()});
+            scriptStart(script, {action->argV.data(), action->argV.size(),
+               nullptr, env->funcScriptStartDeferred});
             break;
 
          case ScriptAction::StartForced:
-            scriptStartForced(script, {action->argV.data(), action->argV.size()});
+            scriptStartForced(script, {action->argV.data(), action->argV.size(),
+               nullptr, env->funcScriptStartForcedDeferred});
             break;
 
          case ScriptAction::Stop:
@@ -981,7 +983,6 @@ namespace ACSVM
          thread = env->getFreeThread();
          thread->start(script, this, info.info, info.argV, info.argC);
          if(info.func) info.func(thread);
-         if(info.funcc) info.funcc(thread);
          return true;
       }
    }
@@ -1012,7 +1013,6 @@ namespace ACSVM
 
       thread->start(script, this, info.info, info.argV, info.argC);
       if(info.func) info.func(thread);
-      if(info.funcc) info.funcc(thread);
       return true;
    }
 
@@ -1042,7 +1042,6 @@ namespace ACSVM
 
       thread->start(script, this, info.info, info.argV, info.argC);
       if(info.func) info.func(thread);
-      if(info.funcc) info.funcc(thread);
       thread->exec();
 
       Word result = thread->result;

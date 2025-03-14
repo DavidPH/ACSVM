@@ -10,6 +10,7 @@
 //
 //----------------------------------------------------------------------------
 
+#include "ACSVM/Action.hpp"
 #include "ACSVM/Code.hpp"
 #include "ACSVM/CodeData.hpp"
 #include "ACSVM/Environment.hpp"
@@ -129,6 +130,27 @@ static bool CF_Exit(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
 }
 
 //
+// int ACSVM_ExecuteDelayed(int script, int map, int delay, ...)
+//
+static bool CF_ExecuteDelayed(ACSVM::Thread *thread, ACSVM::Word const *argV, ACSVM::Word argC)
+{
+   ACSVM::Word script = argV[0];
+   ACSVM::ScopeID scope{thread->scopeGbl->id, thread->scopeHub->id, argV[1]};
+   if(!scope.map) scope.map = thread->scopeMap->id;
+   ACSVM::Word delay = argV[2];
+
+   auto func = [delay](ACSVM::Thread *thread)
+   {
+      thread->delay = delay;
+   };
+
+   thread->dataStk.push(thread->scopeMap->scriptStart(
+      script, scope, {argV+3, argC-3, thread->getInfo(), func}));
+
+   return false;
+}
+
+//
 // CF_TestSave
 //
 static bool CF_TestSave(ACSVM::Thread *, ACSVM::Word const *, ACSVM::Word)
@@ -196,6 +218,7 @@ Environment::Environment() :
    addFuncDataACS0(0x10002, funcDumpLocals);
    addFuncDataACS0(0x10003, funcExit);
    addFuncDataACS0(0x10004, funcDumpStack);
+   addFuncDataACS0(0x10005, addCallFunc(CF_ExecuteDelayed));
 
    addFuncDataACS0(0x10100, addCallFunc(ACSVM::CF_AddF_W1));
    addFuncDataACS0(0x10101, addCallFunc(ACSVM::CF_DivF_W1));
