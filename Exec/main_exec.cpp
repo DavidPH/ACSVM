@@ -90,6 +90,8 @@ static bool CF_DumpLocals(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Wor
    for(std::size_t i = 0, e = thread->localReg.size(); i != e; ++i)
       std::cout << "  [" << i << "]=" << thread->localReg[i] << '\n';
 
+   std::cout << std::flush;
+
    return false;
 }
 
@@ -106,6 +108,8 @@ static bool CF_DumpStack(ACSVM::Thread *thread, ACSVM::Word const *argv, ACSVM::
       for(std::size_t i = 0, e = thread->dataStk.size(); i != e; ++i)
          std::cout << "  [" << i << "]=" << thread->dataStk[i] << '\n';
 
+   std::cout << std::flush;
+
    return false;
 }
 
@@ -114,7 +118,7 @@ static bool CF_DumpStack(ACSVM::Thread *thread, ACSVM::Word const *argv, ACSVM::
 //
 static bool CF_EndPrint(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
 {
-   std::cout << thread->printBuf.data() << '\n';
+   std::cout << thread->printBuf.data() << std::endl;
    thread->printBuf.drop();
    return false;
 }
