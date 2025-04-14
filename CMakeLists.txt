@@ -10,7 +10,7 @@
 ##
 ##-----------------------------------------------------------------------------
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.6...3.31)
 
 cmake_policy(SET CMP0017 NEW)
 
@@ -114,6 +114,28 @@ endif()
 ##
 
 ##
+## ACSVM_ENABLE_EXEC
+##
+if(NOT DEFINED ACSVM_ENABLE_EXEC)
+   if(EXISTS "${CMAKE_SOURCE_DIR}/Exec")
+      set(ACSVM_ENABLE_EXEC ON CACHE BOOL "Enable Exec build.")
+   else()
+      set(ACSVM_ENABLE_EXEC OFF CACHE BOOL "Enable Exec build.")
+   endif()
+endif()
+
+##
+## ACSVM_ENABLE_UTIL
+##
+if(NOT DEFINED ACSVM_ENABLE_UTIL)
+   if(EXISTS "${CMAKE_SOURCE_DIR}/Util")
+      set(ACSVM_ENABLE_UTIL ON CACHE BOOL "Enable Util build.")
+   else()
+      set(ACSVM_ENABLE_UTIL OFF CACHE BOOL "Enable Util build.")
+   endif()
+endif()
+
+##
 ## ACSVM_INSTALL_API
 ##
 if(NOT DEFINED ACSVM_INSTALL_API)
@@ -181,11 +203,11 @@ add_subdirectory(ACSVM)
 #   add_subdirectory(CAPI)
 #endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/Exec")
+if(ACSVM_ENABLE_EXEC)
    add_subdirectory(Exec)
 endif()
 
-if(EXISTS "${CMAKE_SOURCE_DIR}/Util")
+if(ACSVM_ENABLE_UTIL)
    add_subdirectory(Util)
 endif()
 
