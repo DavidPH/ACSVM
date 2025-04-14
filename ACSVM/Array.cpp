@@ -170,6 +170,8 @@ namespace ACSVM
    //
    void Array::loadState(Serial &in)
    {
+      clear();
+
       in.readSign(Signature::Array);
       ReadData(in, data);
       in.readSign(~Signature::Array);

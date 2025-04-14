@@ -243,8 +243,13 @@ namespace ACSVM
    //
    void GlobalScope::reset()
    {
+      for(auto &arr : arrV) arr.clear();
+      for(auto &reg : regV) reg = 0;
+
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
+
+      active = false;
 
       pd->scopes.free();
    }
@@ -453,8 +458,13 @@ namespace ACSVM
    //
    void HubScope::reset()
    {
+      for(auto &arr : arrV) arr.clear();
+      for(auto &reg : regV) reg = 0;
+
       while(scriptAction.next->obj)
          delete scriptAction.next->obj;
+
+      active = false;
 
       pd->scopes.free();
    }
