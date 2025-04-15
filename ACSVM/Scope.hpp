@@ -70,6 +70,13 @@ namespace ACSVM
 
       bool active;
 
+
+      static void LoadArrV(Serial &in, Array *arrV, std::size_t arrC);
+      static void LoadRegV(Serial &in, Word *regV, std::size_t regC);
+
+      static void SaveArrV(Serial &out, Array const *arrV, std::size_t arrC);
+      static void SaveRegV(Serial &out, Word const *regV, std::size_t regC);
+
    private:
       struct PrivData;
 

@@ -36,6 +36,8 @@ namespace ACSVM
          throw SerialError{"invalid file signature"};
 
       version = ReadVLN<unsigned int>(*this);
+      if(version > CurrentVersion)
+         throw SerialError("unknown version");
 
       auto flags = ReadVLN<std::uint_fast32_t>(*this);
       signs = flags & 0x0001;
@@ -80,7 +82,7 @@ namespace ACSVM
    void Serial::saveHead()
    {
       write("ACSVM\0", 6);
-      WriteVLN(*this, 0);
+      WriteVLN(*this, CurrentVersion);
 
       std::uint_fast32_t flags = 0;
       if(signs) flags |= 0x0001;

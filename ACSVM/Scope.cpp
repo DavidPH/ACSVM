@@ -15,6 +15,7 @@
 #include "Action.hpp"
 #include "BinaryIO.hpp"
 #include "Environment.hpp"
+#include "Error.hpp"
 #include "HashMap.hpp"
 #include "HashMapFixed.hpp"
 #include "Init.hpp"
@@ -192,11 +193,8 @@ namespace ACSVM
 
       in.readSign(Signature::GlobalScope);
 
-      for(auto &arr : arrV)
-         arr.loadState(in);
-
-      for(auto &reg : regV)
-         reg = ReadVLN<Word>(in);
+      LoadArrV(in, arrV, ArrC);
+      LoadRegV(in, regV, RegC);
 
       env->readScriptActions(in, scriptAction);
 
@@ -261,11 +259,8 @@ namespace ACSVM
    {
       out.writeSign(Signature::GlobalScope);
 
-      for(auto &arr : arrV)
-         arr.saveState(out);
-
-      for(auto &reg : regV)
-         WriteVLN(out, reg);
+      SaveArrV(out, arrV, ArrC);
+      SaveRegV(out, regV, RegC);
 
       env->writeScriptActions(out, scriptAction);
 
@@ -294,6 +289,62 @@ namespace ACSVM
 
       for(auto &scope : pd->scopes)
          scope.unlockStrings();
+   }
+
+   //
+   // GlobalScope::LoadArrV
+   //
+   void GlobalScope::LoadArrV(Serial &in, Array *arrV, std::size_t arrC)
+   {
+      std::size_t inC = in.version == 0 ? 256 : ReadVLN<std::size_t>(in);
+
+      if(inC > arrC)
+         throw SerialError("too many arrays");
+
+      while(inC--)
+         arrV++->loadState(in);
+   }
+
+   //
+   // GlobalScope::LoadRegV
+   //
+   void GlobalScope::LoadRegV(Serial &in, Word *regV, std::size_t regC)
+   {
+      std::size_t inC = in.version == 0 ? 256 : ReadVLN<std::size_t>(in);
+
+      if(inC > regC)
+         throw SerialError("too many registers");
+
+      while(inC--)
+         *regV++ = ReadVLN<Word>(in);
+   }
+
+   //
+   // GlobalScope::SaveArrV
+   //
+   void GlobalScope::SaveArrV(Serial &out, Array const *arrV, std::size_t arrC)
+   {
+      // Skip trailing empty arrays.
+      while(arrC && !arrV[arrC - 1].empty())
+         --arrC;
+
+      WriteVLN(out, arrC);
+      while(arrC--)
+         arrV++->saveState(out);
+   }
+
+   //
+   // GlobalScope::SaveRegV
+   //
+   void GlobalScope::SaveRegV(Serial &out, Word const *regV, std::size_t regC)
+   {
+      // Skip trailing 0 registers.
+      while(regC && !regV[regC - 1])
+         --regC;
+
+      WriteVLN(out, regC);
+      while(regC--)
+         WriteVLN(out, *regV++);
    }
 
    //
@@ -407,11 +458,8 @@ namespace ACSVM
 
       in.readSign(Signature::HubScope);
 
-      for(auto &arr : arrV)
-         arr.loadState(in);
-
-      for(auto &reg : regV)
-         reg = ReadVLN<Word>(in);
+      GlobalScope::LoadArrV(in, arrV, ArrC);
+      GlobalScope::LoadRegV(in, regV, RegC);
 
       env->readScriptActions(in, scriptAction);
 
@@ -476,11 +524,8 @@ namespace ACSVM
    {
       out.writeSign(Signature::HubScope);
 
-      for(auto &arr : arrV)
-         arr.saveState(out);
-
-      for(auto &reg : regV)
-         WriteVLN(out, reg);
+      GlobalScope::SaveArrV(out, arrV, ArrC);
+      GlobalScope::SaveRegV(out, regV, RegC);
 
       env->writeScriptActions(out, scriptAction);
 
@@ -1251,11 +1296,8 @@ namespace ACSVM
    {
       in.readSign(Signature::ModuleScope);
 
-      for(auto &arr : selfArrV)
-         arr.loadState(in);
-
-      for(auto &reg : selfRegV)
-         reg = ReadVLN<Word>(in);
+      GlobalScope::LoadArrV(in, selfArrV, ArrC);
+      GlobalScope::LoadRegV(in, selfRegV, RegC);
 
       in.readSign(~Signature::ModuleScope);
    }
@@ -1285,11 +1327,8 @@ namespace ACSVM
    {
       out.writeSign(Signature::ModuleScope);
 
-      for(auto &arr : selfArrV)
-         arr.saveState(out);
-
-      for(auto &reg : selfRegV)
-         WriteVLN(out, reg);
+      GlobalScope::SaveArrV(out, selfArrV, ArrC);
+      GlobalScope::SaveRegV(out, selfRegV, RegC);
 
       out.writeSign(~Signature::ModuleScope);
    }

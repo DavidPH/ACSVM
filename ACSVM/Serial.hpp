@@ -48,7 +48,7 @@ namespace ACSVM
    class Serial
    {
    public:
-      Serial() : version{0}, signs{false} {}
+      Serial() : version{CurrentVersion}, signs{false} {}
 
       void loadHead();
       void loadTail();
@@ -66,6 +66,9 @@ namespace ACSVM
 
       unsigned int version;
       bool         signs;
+
+
+      static constexpr unsigned int CurrentVersion = 1;
    };
 }
 
