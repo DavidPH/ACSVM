@@ -1,6 +1,6 @@
 ##-----------------------------------------------------------------------------
 ##
-## Copyright (C) 2015 David Hill
+## Copyright (C) 2015-2025 David Hill
 ##
 ## See COPYING for license information.
 ##
@@ -19,6 +19,15 @@ include_directories(.)
 
 
 ##----------------------------------------------------------------------------|
+## Variables                                                                  |
+##
+
+set(ACSVM_Util_H
+   Floats.hpp
+)
+
+
+##----------------------------------------------------------------------------|
 ## Targets                                                                    |
 ##
 
@@ -26,13 +35,13 @@ include_directories(.)
 ## acsvm-capi
 ##
 add_library(acsvm-util ${ACSVM_SHARED_DECL}
+   ${ACSVM_Util_H}
    Floats.cpp
-   Floats.hpp
 )
 
 target_link_libraries(acsvm-util acsvm)
 
-ACSVM_INSTALL_LIB(acsvm-util)
+ACSVM_INSTALL_LIB(acsvm-util Util Util)
 
 ## EOF
 
