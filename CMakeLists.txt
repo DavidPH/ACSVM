@@ -199,10 +199,6 @@ include_directories(.)
 
 add_subdirectory(ACSVM)
 
-#if(EXISTS "${CMAKE_SOURCE_DIR}/CAPI")
-#   add_subdirectory(CAPI)
-#endif()
-
 if(ACSVM_ENABLE_EXEC)
    add_subdirectory(Exec)
 endif()

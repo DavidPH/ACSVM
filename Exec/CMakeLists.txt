@@ -33,18 +33,5 @@ target_link_libraries(acsvm-exec acsvm-util)
 
 ACSVM_INSTALL_EXE(acsvm-exec)
 
-##
-## acsvm-execc
-##
-## Used to test the C API.
-##
-#if(EXISTS "${CMAKE_SOURCE_DIR}/CAPI")
-#   add_executable(acsvm-execc
-#      main_execc.c
-#   )
-#
-#   target_link_libraries(acsvm-execc acsvm-capi)
-#endif()
-
 ## EOF
 
