@@ -41,7 +41,7 @@ endfunction()
 ## ACSVM_INSTALL_LIB
 ##
 function(ACSVM_INSTALL_LIB name nameAPI pathAPI)
-   if(wantLib AND ACSVM_INSTALL_API)
+   if(ACSVM_INSTALL_API)
       install(FILES ${ACSVM_${nameAPI}_H}
          DESTINATION include/ACSVM/${pathAPI})
    endif()
