@@ -38,6 +38,7 @@ set(ACSVM_ACSVM_H
    ID.hpp
    Init.hpp
    Jump.hpp
+   List.hpp
    Module.hpp
    PrintBuf.hpp
    Scope.hpp
