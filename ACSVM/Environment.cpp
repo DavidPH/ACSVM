@@ -480,6 +480,14 @@ namespace ACSVM
    }
 
    //
+   // Environment::getScopeID
+   //
+   ScopeID Environment::getScopeID(Word mapnum) const
+   {
+      return {0, 0, mapnum};
+   }
+
+   //
    // Environment::hasActiveThread
    //
    bool Environment::hasActiveThread() const

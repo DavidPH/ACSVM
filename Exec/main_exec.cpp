@@ -138,10 +138,9 @@ static bool CF_Exit(ACSVM::Thread *thread, ACSVM::Word const *, ACSVM::Word)
 //
 static bool CF_ExecuteDelayed(ACSVM::Thread *thread, ACSVM::Word const *argV, ACSVM::Word argC)
 {
-   ACSVM::Word script = argV[0];
-   ACSVM::ScopeID scope{thread->scopeGbl->id, thread->scopeHub->id, argV[1]};
-   if(!scope.map) scope.map = thread->scopeMap->id;
-   ACSVM::Word delay = argV[2];
+   ACSVM::Word    script = argV[0];
+   ACSVM::ScopeID scope  = thread->env->getScopeID(argV[1]);
+   ACSVM::Word    delay  = argV[2];
 
    auto func = [delay](ACSVM::Thread *thread)
    {

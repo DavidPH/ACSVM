@@ -88,6 +88,10 @@ namespace ACSVM
       ModuleName getModuleName(char const *str);
       virtual ModuleName getModuleName(char const *str, std::size_t len);
 
+      // Used to map from a single map number to a scope-id.
+      // Default behavior is to return {0, 0, mapnum}.
+      virtual ScopeID getScopeID(Word mapnum) const;
+
       // Called to translate script type from ACS0 script number.
       // Default behavior is to modulus 1000 the name.
       virtual std::pair<Word /*type*/, Word /*name*/> getScriptTypeACS0(Word name)
