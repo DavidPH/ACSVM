@@ -387,7 +387,7 @@ namespace ACSVM
             module       = func->module;
             scopeMod     = scopeMap->getModuleScope(module);
             localArr.alloc(func->locArrC);
-            localReg.alloc(func->locRegC);
+            localReg.alloc(func->locRegC + func->argC);
 
             // Read arguments.
             dataStk.drop(func->argC);
