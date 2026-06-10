@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2025 David Hill
+// Copyright (C) 2015-2026 David Hill
 //
 // See COPYING for license information.
 //
@@ -64,6 +64,7 @@ namespace ACSVM
    class ModuleName;
    class ModuleScope;
    class PrintBuf;
+   class ProfileData;
    class ScopeID;
    class Script;
    class ScriptAction;
@@ -76,6 +77,7 @@ namespace ACSVM
    class WordInit;
 
    using CallFunc = bool (*)(Thread *thread, Word const *argv, Word argc);
+   using ProfileTime = double;
    using ScriptStartFunc = std::function<void (Thread *)>;
 }
 

@@ -1,6 +1,6 @@
 ##-----------------------------------------------------------------------------
 ##
-## Copyright (C) 2015-2025 David Hill
+## Copyright (C) 2015-2026 David Hill
 ##
 ## See COPYING for license information.
 ##
@@ -41,6 +41,7 @@ set(ACSVM_ACSVM_H
    List.hpp
    Module.hpp
    PrintBuf.hpp
+   ProfileData.hpp
    Scope.hpp
    Script.hpp
    Serial.hpp
@@ -77,6 +78,7 @@ add_library(acsvm ${ACSVM_SHARED_DECL}
    ModuleACS0.cpp
    ModuleACSE.cpp
    PrintBuf.cpp
+   ProfileData.cpp
    Scope.cpp
    Script.cpp
    Serial.cpp

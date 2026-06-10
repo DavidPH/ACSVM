@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2025 David Hill
+// Copyright (C) 2015-2026 David Hill
 //
 // See COPYING for license information.
 //
@@ -14,6 +14,7 @@
 #define ACSVM__Scope_H__
 
 #include "Array.hpp"
+#include "HashMapFixed.hpp"
 #include "List.hpp"
 
 
@@ -54,6 +55,7 @@ namespace ACSVM
       void refStrings() const;
 
       void reset();
+      void resetProfileData();
 
       void saveState(Serial &out) const;
 
@@ -114,6 +116,7 @@ namespace ACSVM
       void refStrings() const;
 
       void reset();
+      void resetProfileData();
 
       void saveState(Serial &out) const;
 
@@ -168,6 +171,12 @@ namespace ACSVM
 
       void addModules(Module *const *moduleV, std::size_t moduleC);
 
+      void addProfileCall(Function *func, ProfileTime pt);
+      void addProfileCall(Script *script, ProfileTime pt);
+
+      void addProfileTime(Function *func, ProfileTime pt);
+      void addProfileTime(Script *script, ProfileTime pt);
+
       std::size_t countActiveThread() const;
 
       void exec();
@@ -193,6 +202,7 @@ namespace ACSVM
       void refStrings() const;
 
       void reset();
+      void resetProfileData();
 
       void saveState(Serial &out) const;
 
@@ -215,6 +225,9 @@ namespace ACSVM
       HubScope    *const hub;
       Word         const id;
 
+      HashMapFixed<Function *, ProfileData> profileFunction;
+      HashMapFixed<Script   *, ProfileData> profileScript;
+
       ListLink<MapScope>     hashLink;
       ListLink<ScriptAction> scriptAction;
       ListLink<Thread>       threadActive;
@@ -232,9 +245,11 @@ namespace ACSVM
       struct PrivData;
 
       void loadModules(Serial &in);
+      void loadProfileData(Serial &in);
       void loadThreads(Serial &in);
 
       void saveModules(Serial &out) const;
+      void saveProfileData(Serial &out) const;
       void saveThreads(Serial &out) const;
 
       PrivData *pd;

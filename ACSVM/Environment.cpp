@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2025 David Hill
+// Copyright (C) 2015-2026 David Hill
 //
 // See COPYING for license information.
 //
@@ -480,6 +480,14 @@ namespace ACSVM
    }
 
    //
+   // Environment::getProfileTime
+   //
+   ProfileTime Environment::getProfileTime() const
+   {
+      return 0;
+   }
+
+   //
    // Environment::getScopeID
    //
    ScopeID Environment::getScopeID(Word mapnum) const
@@ -600,6 +608,14 @@ namespace ACSVM
    }
 
    //
+   // Environment::readFunction
+   //
+   Function *Environment::readFunction(Serial &in) const
+   {
+      return getFunction(in.readVLN<Word>());
+   }
+
+   //
    // Environment::readModuleName
    //
    ModuleName Environment::readModuleName(Serial &in) const
@@ -712,6 +728,15 @@ namespace ACSVM
    }
 
    //
+   // Environment::resetProfileData
+   //
+   void Environment::resetProfileData()
+   {
+      for(auto &scope : pd->scopes)
+         scope.resetProfileData();
+   }
+
+   //
    // Environment::saveFunctions
    //
    void Environment::saveFunctions(Serial &out) const
@@ -769,6 +794,17 @@ namespace ACSVM
    void Environment::saveStringTable(Serial &out) const
    {
       stringTable.saveState(out);
+   }
+
+   //
+   // Environment::writeFunction
+   //
+   void Environment::writeFunction(Serial &out, Function *in) const
+   {
+      if(in)
+         out.writeVLN(in->idx);
+      else
+         out.writeByte(0);
    }
 
    //

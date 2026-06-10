@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2017-2025 David Hill
+// Copyright (C) 2017-2026 David Hill
 //
 // See COPYING for license information.
 //
@@ -55,20 +55,24 @@ namespace ACSVM
 
       virtual void read(char *data, std::size_t size) = 0;
       virtual char readByte();
+      double readFloat();
       void readSign(Signature sign);
+      template<typename T> T readVLN();
 
       void saveHead();
       void saveTail();
 
       virtual void write(char const *data, std::size_t size) = 0;
       virtual void writeByte(char data);
+      void writeFloat(double data);
       void writeSign(Signature sign);
+      template<typename T> void writeVLN(T in);
 
       unsigned int version;
       bool         signs;
 
 
-      static constexpr unsigned int CurrentVersion = 1;
+      static constexpr unsigned int CurrentVersion = 2;
    };
 }
 
@@ -83,26 +87,28 @@ namespace ACSVM
       {return static_cast<Signature>(~static_cast<std::uint32_t>(sign));}
 
    //
-   // ReadVLN
+   // Serial::readVLN
    //
    template<typename T>
-   T ReadVLN(Serial &in)
+   T Serial::readVLN()
    {
       T out{0};
 
       unsigned char c;
-      while(((c = in.readByte()) & 0x80))
+      while(((c = readByte()) & 0x80))
          out = (out << 7) + (c & 0x7F);
       out = (out << 7) + c;
 
       return out;
    }
+   template<typename T>
+   T ReadVLN(Serial &in) {return in.readVLN<T>();}
 
    //
-   // WriteVLN
+   // Serial::WriteVLN
    //
    template<typename T>
-   void WriteVLN(Serial &out, T in)
+   void Serial::writeVLN(T in)
    {
       constexpr std::size_t len = (sizeof(T) * CHAR_BIT + 6) / 7;
       char buf[len], *ptr = buf + len;
@@ -111,8 +117,10 @@ namespace ACSVM
       while((in >>= 7))
          *--ptr = static_cast<char>(in & 0x7F) | 0x80;
 
-      out.write(ptr, (buf + len) - ptr);
+      write(ptr, (buf + len) - ptr);
    }
+   template<typename T>
+   void WriteVLN(Serial &out, T in) {out.writeVLN<T>(in);}
 }
 
 #endif//ACSVM__Serial_H__

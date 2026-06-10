@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2025 David Hill
+// Copyright (C) 2015-2026 David Hill
 //
 // See COPYING for license information.
 //
@@ -16,10 +16,12 @@
 #include "BinaryIO.hpp"
 #include "Environment.hpp"
 #include "Error.hpp"
+#include "Function.hpp"
 #include "HashMap.hpp"
 #include "HashMapFixed.hpp"
 #include "Init.hpp"
 #include "Module.hpp"
+#include "ProfileData.hpp"
 #include "Script.hpp"
 #include "Serial.hpp"
 #include "Thread.hpp"
@@ -250,6 +252,15 @@ namespace ACSVM
       active = false;
 
       pd->scopes.free();
+   }
+
+   //
+   // GlobalScope::resetProfileData
+   //
+   void GlobalScope::resetProfileData()
+   {
+      for(auto &scope : pd->scopes)
+         scope.resetProfileData();
    }
 
    //
@@ -518,6 +529,15 @@ namespace ACSVM
    }
 
    //
+   // HubScope::resetProfileData
+   //
+   void HubScope::resetProfileData()
+   {
+      for(auto &scope : pd->scopes)
+         scope.resetProfileData();
+   }
+
+   //
    // HubScope::saveState
    //
    void HubScope::saveState(Serial &out) const
@@ -611,17 +631,22 @@ namespace ACSVM
       for(auto itr = moduleV, end = itr + moduleC; itr != end; ++itr)
          modules.add(*itr);
 
-      // Count scripts.
+      // Count functions and scripts.
 
-      std::size_t scriptThrC = 0;
+      std::size_t funcC      = 0;
+      std::size_t scriptC    = 0;
       std::size_t scriptIntC = 0;
       std::size_t scriptStrC = 0;
 
       for(auto &module : modules.vec)
       {
+         for(auto &func : module->functionV)
+            if(func->module == module)
+               ++funcC;
+
          for(auto &script : module->scriptV)
          {
-            ++scriptThrC;
+            ++scriptC;
             if(script.name.s)
                ++scriptStrC;
             else
@@ -631,10 +656,16 @@ namespace ACSVM
 
       // Create lookup tables.
 
+      profileFunction.alloc(funcC);
+      profileScript.alloc(scriptC);
+
       pd->scopes.alloc(modules.vec.size());
       pd->scriptInt.alloc(scriptIntC);
       pd->scriptStr.alloc(scriptStrC);
-      pd->scriptThread.alloc(scriptThrC);
+      pd->scriptThread.alloc(scriptC);
+
+      auto profFuncItr = profileFunction.begin();
+      auto profScrItr  = profileScript.begin();
 
       auto scopeItr     = pd->scopes.begin();
       auto scriptIntItr = pd->scriptInt.begin();
@@ -647,11 +678,22 @@ namespace ACSVM
 
          new(scopeItr++) ElemScope{module, {this, module}, nullptr};
 
+         for(auto &func : module->functionV)
+         {
+            using ElemPF = HashMapFixed<Function *, ProfileData>::Elem;
+
+            if(func->module == module)
+               new(profFuncItr++) ElemPF{func, {}, nullptr};
+         }
+
          for(auto &script : module->scriptV)
          {
             using ElemInt = HashMapFixed<Word,     Script *>::Elem;
+            using ElemPS  = HashMapFixed<Script *, ProfileData>::Elem;
             using ElemStr = HashMapFixed<String *, Script *>::Elem;
             using ElemThr = HashMapFixed<Script *, Thread *>::Elem;
+
+            new(profScrItr++) ElemPS{&script, {}, nullptr};
 
             new(scriptThrItr++) ElemThr{&script, nullptr, nullptr};
 
@@ -662,6 +704,9 @@ namespace ACSVM
          }
       }
 
+      profileFunction.build();
+      profileScript.build();
+
       pd->scopes.build();
       pd->scriptInt.build();
       pd->scriptStr.build();
@@ -669,6 +714,48 @@ namespace ACSVM
 
       for(auto &scope : pd->scopes)
          scope.val.import();
+   }
+
+   //
+   // MapScope::addProfileCall Function
+   //
+   void MapScope::addProfileCall(Function *func, ProfileTime pt)
+   {
+      if(auto lookup = profileFunction.find(func))
+      {
+         lookup->addTime(pt);
+         lookup->addCall();
+      }
+   }
+
+   //
+   // MapScope::addProfileCall Script
+   //
+   void MapScope::addProfileCall(Script *script, ProfileTime pt)
+   {
+      if(auto lookup = profileScript.find(script))
+      {
+         lookup->addTime(pt);
+         lookup->addCall();
+      }
+   }
+
+   //
+   // MapScope::addProfileTime Function
+   //
+   void MapScope::addProfileTime(Function *func, ProfileTime pt)
+   {
+      if(auto lookup = profileFunction.find(func))
+         lookup->addTime(pt);
+   }
+
+   //
+   // MapScope::addProfileTime Script
+   //
+   void MapScope::addProfileTime(Script *script, ProfileTime pt)
+   {
+      if(auto lookup = profileScript.find(script))
+         lookup->addTime(pt);
    }
 
    //
@@ -839,6 +926,32 @@ namespace ACSVM
    }
 
    //
+   // MapScope::loadProfileData
+   //
+   void MapScope::loadProfileData(Serial &in)
+   {
+      ProfileData dummy;
+
+      // Load function profiling.
+      for(auto c = in.readVLN<std::size_t>(); c--;)
+      {
+         if(auto lookup = profileFunction.find(env->readFunction(in)))
+            lookup->loadState(in);
+         else
+            dummy.loadState(in);
+      }
+
+      // Load script profiling.
+      for(auto c = in.readVLN<std::size_t>(); c--;)
+      {
+         if(auto lookup = profileScript.find(env->readScript(in)))
+            lookup->loadState(in);
+         else
+            dummy.loadState(in);
+      }
+   }
+
+   //
    // MapScope::loadState
    //
    void MapScope::loadState(Serial &in)
@@ -850,6 +963,8 @@ namespace ACSVM
       env->readScriptActions(in, scriptAction);
       active = in.readByte();
       loadModules(in);
+      if(in.version >= 2)
+         loadProfileData(in);
       loadThreads(in);
 
       in.readSign(~Signature::MapScope);
@@ -922,11 +1037,26 @@ namespace ACSVM
 
       active = false;
 
+      profileFunction.free();
+      profileScript.free();
+
       pd->scopes.free();
 
       pd->scriptInt.free();
       pd->scriptStr.free();
       pd->scriptThread.free();
+   }
+
+   //
+   // MapScope::resetProfileData
+   //
+   void MapScope::resetProfileData()
+   {
+      for(auto &prof : profileFunction)
+         prof.val.reset();
+
+      for(auto &prof : profileScript)
+         prof.val.reset();
    }
 
    //
@@ -944,6 +1074,42 @@ namespace ACSVM
    }
 
    //
+   // MapScope::saveProfileData
+   //
+   void MapScope::saveProfileData(Serial &out) const
+   {
+      // Save function profiling.
+      std::size_t count = 0;
+      for(auto &prof : profileFunction)
+         if(prof.val) ++count;
+
+      out.writeVLN(count);
+
+      for(auto &prof : profileFunction)
+      {
+         if(!prof.val) continue;
+
+         env->writeFunction(out, prof.key);
+         prof.val.saveState(out);
+      }
+
+      // Save script profiling.
+      count = 0;
+      for(auto &prof : profileScript)
+         if(prof.val) ++count;
+
+      out.writeVLN(count);
+
+      for(auto &prof : profileScript)
+      {
+         if(!prof.val) continue;
+
+         env->writeScript(out, prof.key);
+         prof.val.saveState(out);
+      }
+   }
+
+   //
    // MapScope::saveState
    //
    void MapScope::saveState(Serial &out) const
@@ -953,6 +1119,7 @@ namespace ACSVM
       env->writeScriptActions(out, scriptAction);
       out.writeByte(active);
       saveModules(out);
+      saveProfileData(out);
       saveThreads(out);
 
       out.writeSign(~Signature::MapScope);
